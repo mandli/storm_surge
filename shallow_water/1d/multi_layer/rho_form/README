@@ -1,0 +1,10 @@
+**Multi-Layer Shallow Water Equations**
+
+Solves the modified multilayer system similar to that found in
+
+Abgrall and Karni. Two-Layer Shallow Water Systems: A Relaxation Approach. 
+SIAM Journal of Scientific Computing (2009) vol. 31 (3) pp. 1603-1627
+
+containing a slightly different flux function for the bottom layer but the 
+source terms are mirrored.  Here we use the eigen-system found by linearizing
+about the steady state rho_1 h_1 and rho_2 h_2.
