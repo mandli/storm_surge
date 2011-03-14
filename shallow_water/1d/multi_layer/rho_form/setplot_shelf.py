@@ -38,12 +38,12 @@ def setplot(plotdata):
         
     def kinetic_energy(current_data):
         q = current_data.q
-        h = eta_1 - bathy(current_data)
+        h = eta_1(current_data) - bathy(current_data)
         u = 0.5 * (u_1(current_data) + u_2(current_data))
-        return np.sum(0.5*h*u**2)
+        return 0.5*h*u**2
         
     def potential_energy(current_data):
-        return np.sum(0.5*eta_1(current_data)**2)
+        return 0.5*eta_1(current_data)**2
 
     def total_energy(current_data):
         return kinetic_energy(current_data) + potential_energy(current_data)
@@ -84,13 +84,21 @@ def setplot(plotdata):
         u_2[index] = current_data.q[index,3] / h_2[index]
         return u_2
 
+    def print_energy(current_data):
+        PE = np.sum(potential_energy(current_data))
+        KE = np.sum(kinetic_energy(current_data))
+        total = PE + KE
+        print 'PE = %g, KE = %g, total = %23.16e' % (PE,KE,total)
+        
     plotdata.clearfigures()  # clear any old figures,axes,items data
-
-    plotdata.afterframe = "print 'PE = %g, KE = %g, total = %23.16e' % (PE,KE,total)"
+    plotdata.afterframe = print_energy
     
-    # Figure for eta
+    # ========================================================================
+    #  Figure for eta
+    # ========================================================================
     plotfigure = plotdata.new_plotfigure(name='eta', figno=0)
     plotfigure.kwargs = {'figsize':(8,3)}
+    plotfigure.show = True
 
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes()
@@ -124,8 +132,10 @@ def setplot(plotdata):
     plotitem.kwargs = {'linewidth':2}
     plotitem.show = True       # show on plot?
     
-    # Figure for energy
-    plotfigure = plotdata.new_plotfigure(name='energy', figno=4)
+    # ========================================================================
+    #  Figure for energy
+    # ========================================================================
+    plotfigure = plotdata.new_plotfigure(name='energy', figno=1)
     plotfigure.show = True
 
     # Set up for axes in this figure:
@@ -148,8 +158,8 @@ def setplot(plotdata):
 
     plotdata.printfigs = True                # print figures
     plotdata.print_format = 'png'            # file format
-    plotdata.print_framenos = 'all'          # list of frames to print
-    plotdata.print_fignos = [2,3]            # list of figures to print
+    plotdata.print_framenos = [0,1,2]          # list of frames to print
+    plotdata.print_fignos = [0,1]            # list of figures to print
     plotdata.html = True                     # create html files of plots?
     plotdata.html_homelink = '../README.html'   # pointer for top of index
     plotdata.latex = True                    # create latex file of plots?
