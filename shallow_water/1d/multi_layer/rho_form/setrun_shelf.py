@@ -43,7 +43,7 @@ class MultilayerData(data.Data):
         self.add_attribute('bathy_right',-200.0)
         
         # Wind
-        self.add_attribute('wind_type',1)
+        self.add_attribute('wind_type',0)
         self.add_attribute('A',5.0)
         self.add_attribute('omega',2.0)
         self.add_attribute('N',2.0)
@@ -136,11 +136,11 @@ def setrun(claw_pkg='Classic'):
     # Lower and upper edge of computational domain:
     # clawdata.xlower = 0.0
     # clawdata.xupper = 1.0
-    clawdata.xlower = 0.0
-    clawdata.xupper = 400e3
+    clawdata.xlower = -400e3
+    clawdata.xupper = 0e3
         
     # Number of grid cells:
-    clawdata.mx = 800
+    clawdata.mx = 2000
 
     # ---------------
     # Size of system:
@@ -184,8 +184,8 @@ def setrun(claw_pkg='Classic'):
         # clawdata.tfinal = num_hours * 60.0**2
         # clawdata.nout = 40
         # clawdata.tfinal = 40
-        clawdata.nout = 48
-        clawdata.tfinal = 4800.0
+        clawdata.nout = 300
+        clawdata.tfinal = 7200.0
         
 
     elif clawdata.outstyle == 2:
@@ -256,7 +256,7 @@ def setrun(claw_pkg='Classic'):
     
     # List of limiters to use for each wave family:  
     # Required:  len(mthlim) == mwaves
-    clawdata.mthlim = [3,3,3,3]
+    clawdata.mthlim = [4,4,4,4]
     
     # Source terms splitting:
     #   src_split == 0  => no source term (src routine never called)
