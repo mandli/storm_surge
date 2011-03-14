@@ -55,6 +55,13 @@ def setplot(plotdata):
         labels = np.flipud(locs)/1.e3
         mpl.xticks(locs,labels)
         jump_afteraxes(current_data)
+        
+    def jump_afteraxes(current_data):
+        # Plot position of jump on plot
+        mpl.hold(True)
+        mpl.plot([370e3,370e3],[-6,6],'k--')
+        mpl.plot([0.0,400e3],[0.0,0.0],'k--')
+        mpl.hold(False)
 
     def bathy(current_data):
         out_dir = current_data.plotdata.outdir
@@ -89,6 +96,14 @@ def setplot(plotdata):
         KE = np.sum(kinetic_energy(current_data))
         total = PE + KE
         print 'PE = %g, KE = %g, total = %23.16e' % (PE,KE,total)
+        
+    # Settings
+    xlimits = [-400e3,0.0]
+    ylimits_depth = [-4000.0,100.0]
+    xlimits_zoomed = xlimits
+    ylimits_surface_zoomed = [-0.5,0.5]
+    ylimits_internal_zoomed = [-301,-299]
+    ylimits_velocities = [-1.0,1.0]
         
     plotdata.clearfigures()  # clear any old figures,axes,items data
     plotdata.afterframe = print_energy
@@ -150,7 +165,118 @@ def setplot(plotdata):
     plotitem.plot_var = total_energy
     plotitem.plotstyle = '-o'
     plotitem.color = 'b'
-    plotitem.show = True       # show on plot?
+    plotitem.show = True 
+    
+    # ========================================================================
+    #  Fill plot zoom
+    # ========================================================================
+    plotfigure = plotdata.new_plotfigure(name='full_zoom',figno=2)
+    
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(3,1,1)'
+    plotaxes.title = 'Top Surface'
+    plotaxes.xlimits = xlimits_zoomed
+    plotaxes.ylimits = ylimits_surface_zoomed
+    plotaxes.afteraxes = km_labels
+     
+    # Top layer
+    plotitem = plotaxes.new_plotitem(plot_type='1d_fill_between')
+    plotitem.plot_var = eta_1
+    plotitem.plot_var2 = eta_2
+    plotitem.color = (0.2,0.8,1.0)
+    plotitem.show = True
+    
+    # Bottom Layer
+    plotitem = plotaxes.new_plotitem(plot_type='1d_fill_between')
+    plotitem.plot_var = eta_2
+    plotitem.plot_var2 = bathy
+    plotitem.color = 'b'
+    plotitem.show = True
+    
+    # Plot bathy
+    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
+    plotitem.plot_var = bathy
+    plotitem.color = 'k'
+    # plotitem.plotstyle = '-'
+    plotitem.show = True
+    
+    # Plot line in between layers
+    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
+    plotitem.plot_var = eta_2
+    plotitem.color = 'k'
+    plotitem.plotstyle = '+'
+    plotitem.show = True
+    
+    # Plot line on top layer
+    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
+    plotitem.plot_var = eta_1
+    plotitem.color = 'k'
+    plotitem.plotstyle = 'x'
+    plotitem.show = True
+    
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(3,1,2)'
+    plotaxes.title = 'Internal Surface'
+    plotaxes.xlimits = xlimits_zoomed
+    plotaxes.ylimits = ylimits_internal_zoomed
+    plotaxes.afteraxes = km_labels
+     
+    # Top layer
+    plotitem = plotaxes.new_plotitem(plot_type='1d_fill_between')
+    plotitem.plot_var = eta_1
+    plotitem.plot_var2 = eta_2
+    plotitem.color = (0.2,0.8,1.0)
+    plotitem.show = True
+    
+    # Bottom Layer
+    plotitem = plotaxes.new_plotitem(plot_type='1d_fill_between')
+    plotitem.plot_var = eta_2
+    plotitem.plot_var2 = bathy
+    plotitem.color = 'b'
+    plotitem.show = True
+    
+    # Plot bathy
+    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
+    plotitem.plot_var = bathy
+    plotitem.color = 'k'
+    # plotitem.plotstyle = '-'
+    plotitem.show = True
+    
+    # Plot line in between layers
+    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
+    plotitem.plot_var = eta_2
+    plotitem.color = 'k'
+    plotitem.plotstyle = '+'
+    plotitem.show = True
+    
+    # Plot line on top layer
+    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
+    plotitem.plot_var = eta_1
+    plotitem.color = 'k'
+    plotitem.plotstyle = 'x'
+    plotitem.show = True
+    
+    # Layer Velocities
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(3,1,3)'
+    plotaxes.title = "Layer Velocities"
+    plotaxes.xlimits = xlimits_zoomed
+    # plotaxes.ylimits = ylimits_velocities
+    plotaxes.afteraxes = jump_afteraxes
+    
+    # Bottom layer
+    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
+    plotitem.plot_var = u_2
+    plotitem.color = 'b'
+    plotitem.plotstyle = '+-'
+    plotitem.show = True
+
+    # Top layer
+    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
+    plotitem.color = (0.2,0.8,1.0)
+    plotitem.plot_var = u_1
+    plotitem.plotstyle = 'x-'
+    plotitem.show = True
     
 
     # Parameters used only when creating html and/or latex hardcopy
@@ -158,8 +284,8 @@ def setplot(plotdata):
 
     plotdata.printfigs = True                # print figures
     plotdata.print_format = 'png'            # file format
-    plotdata.print_framenos = [0,1,2]          # list of frames to print
-    plotdata.print_fignos = [0,1]            # list of figures to print
+    plotdata.print_framenos = 'all'          # list of frames to print
+    plotdata.print_fignos = 'all'            # list of figures to print
     plotdata.html = True                     # create html files of plots?
     plotdata.html_homelink = '../README.html'   # pointer for top of index
     plotdata.latex = True                    # create latex file of plots?

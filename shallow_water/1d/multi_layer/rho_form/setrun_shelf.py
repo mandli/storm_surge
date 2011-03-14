@@ -29,7 +29,7 @@ class MultilayerData(data.Data):
         self.add_attribute('eigen_method',4)
         
         # Initial condition
-        self.add_attribute('init_type',2)
+        self.add_attribute('init_type',4)
         self.add_attribute('init_location',300e3)
         self.add_attribute('wave_family',wave_family)
         self.add_attribute('eta_1',0.0)
@@ -38,7 +38,7 @@ class MultilayerData(data.Data):
         self.add_attribute('sigma',25e3)
         
         # Bathymetry
-        self.add_attribute('bathy_location',370e3)
+        self.add_attribute('bathy_location',-30e3)
         self.add_attribute('bathy_left',-4000.0)
         self.add_attribute('bathy_right',-200.0)
         
