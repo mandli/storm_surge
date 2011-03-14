@@ -61,6 +61,7 @@ class MultilayerData(data.Data):
         print "Creating data file %s" % file
         out_file = data.open_datafile(file)
         
+        data.data_write(out_file,self,'rho_air','(Density of air)')
         data.data_write(out_file,self,'rho_1','(Density of top layer)')
         data.data_write(out_file,self,'rho_2','(Density of bottom layer)')
         data.data_write(out_file,self,None)
