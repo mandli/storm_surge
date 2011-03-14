@@ -13,7 +13,7 @@ subroutine qinit(maxmx,meqn,mbc,mx,xlower,dx,q,maux,aux)
 
     ! Locals
     integer :: i
-    double precision :: x,eigen_vector(4),gamma,lambda,alpha,h_1,h_2
+    double precision :: x,xmid,eigen_vector(4),gamma,lambda,alpha,h_1,h_2,deta
 
     if (.not.((0 <= init_type).and.(init_type <= 3))) then
         print "(a,i2)","Invalid initialization type requested, init_type = ",init_type
@@ -58,11 +58,22 @@ subroutine qinit(maxmx,meqn,mbc,mx,xlower,dx,q,maux,aux)
         else if (init_type == 2) then
             gamma = aux(i,4) / aux(i,3)
             alpha = 0.5d0 * (gamma - 1.d0 + sqrt((gamma-1.d0)**2+4.d0*r*gamma))
-            q(i,1) = q(i,1) + rho(1) * epsilon * exp(-((x-init_location)/sigma)**2)
-            q(i,3) = q(i,3) + rho(2) * alpha * epsilon * exp(-((x-init_location)/sigma)**2)
+            deta = epsilon * exp(-((x-init_location)/sigma)**2)
+            q(i,1) = q(i,1) + rho(1) * deta
+            q(i,3) = q(i,3) + rho(2) * alpha * deta
         else if (init_type == 3) then
-            q(i,1) = q(i,1) - rho(1) * epsilon * exp(-((x-init_location)/sigma)**2)
-            q(i,3) = q(i,3) + rho(2) * epsilon * exp(-((x-init_location)/sigma)**2)
+            deta = epsilon * exp(-((x-init_location)/sigma)**2)
+            q(i,1) = q(i,1) - rho(1) * deta
+            q(i,3) = q(i,3) + rho(2) * deta
+        else if (init_type == 4) then
+            gamma = aux(i,4) / aux(i,3)
+            alpha = 0.5d0 * (gamma - 1.d0 + sqrt((gamma-1.d0)**2+4.d0*r*gamma))
+            xmid = 0.5d0*(-180.e3+-80.e3)
+            if ((x > -130.e3).and.(x < -80.e3)) then
+                deta = epsilon * sin((x-xmid)*PI/(-80.e3-xmid))
+                q(i,1) = q(i,1) + rho(1) * deta
+                q(i,3) = q(i,3) + rho(2) * alpha * deta
+            endif
         endif
     enddo
     
