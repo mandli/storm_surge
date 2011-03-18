@@ -16,14 +16,16 @@ import matplotlib
 import matplotlib.pyplot as mpl
 
 from pyclaw.plotters import geoplot, colormaps
+from pyclaw.data import Data
 
 # matplotlib.rcParams['figure.figsize'] = [6.0,10.0]
 
+# Load claw data 
+claw_data = Data('./claw.data')
+prob_data = Data('./problem.data')
 g = 9.81
 
-#--------------------------
 def setplot(plotdata):
-#--------------------------
     
     """ 
     Specify what is to be plotted at each frame.
@@ -31,11 +33,9 @@ def setplot(plotdata):
     Output: a modified version of plotdata.
     
     """
-
-    def add_dashes(current_data):
-        from pylab import ylim,plot
-        plot([-30000,-30000], [-1,1],'k--')
         
+    # ========================================================================
+    # Energy functions
     def kinetic_energy(current_data):
         q = current_data.q
         h = eta_1(current_data) - bathy(current_data)
@@ -48,21 +48,31 @@ def setplot(plotdata):
     def total_energy(current_data):
         return kinetic_energy(current_data) + potential_energy(current_data)
 
+    # ========================================================================
+    #  Labels    
+    def add_bathy_dashes(current_data):
+        mpl.hold(True)
+        mpl.plot([-30e3,-30e3],[-10,10],'k--')
+        mpl.hold(False)
+        
+    def add_horizontal_dashes(current_data):
+        mpl.hold(True)
+        mpl.plot([-400e3,0.0],[0.0,0.0],'k--')
+        mpl.hold(False)
+
     def km_labels(current_data):
         r"""Flips xaxis and labels with km"""
         mpl.xlabel('km')
         locs,labels = mpl.xticks()
-        labels = np.flipud(locs)/1.e3
+        labels = -np.flipud(locs)/1.e3
         mpl.xticks(locs,labels)
-        jump_afteraxes(current_data)
         
-    def jump_afteraxes(current_data):
-        # Plot position of jump on plot
-        mpl.hold(True)
-        mpl.plot([370e3,370e3],[-6,6],'k--')
-        mpl.plot([0.0,400e3],[0.0,0.0],'k--')
-        mpl.hold(False)
-
+    def time_labels(current_data):
+        r"""Convert time to hours"""
+        pass
+        
+    # ========================================================================
+    #  Plot variable functions
     def bathy(current_data):
         out_dir = current_data.plotdata.outdir
         return np.loadtxt(os.path.join(out_dir,'fort.aux'),converters={0:(lambda x:float(re.compile("[Dd]").sub("e",x)))})
@@ -96,15 +106,17 @@ def setplot(plotdata):
         KE = np.sum(kinetic_energy(current_data))
         total = PE + KE
         print 'PE = %g, KE = %g, total = %23.16e' % (PE,KE,total)
-        
-    # Settings
-    xlimits = [-400e3,0.0]
+    
+    # ========================================================================
+    # Limit Settings
+    xlimits = [claw_data.xlower,claw_data.xupper]
     ylimits_depth = [-4000.0,100.0]
     xlimits_zoomed = xlimits
-    ylimits_surface_zoomed = [-0.5,0.5]
-    ylimits_internal_zoomed = [-301,-299]
+    ylimits_surface_zoomed = [prob_data.eta_1 - 0.5,prob_data.eta_1 + 0.5]
+    ylimits_internal_zoomed = [prob_data.eta_2 - 5.0,prob_data.eta_2 + 5.0] 
     ylimits_velocities = [-1.0,1.0]
         
+    # Create data object
     plotdata.clearfigures()  # clear any old figures,axes,items data
     plotdata.afterframe = print_energy
     
@@ -113,7 +125,7 @@ def setplot(plotdata):
     # ========================================================================
     plotfigure = plotdata.new_plotfigure(name='eta', figno=0)
     plotfigure.kwargs = {'figsize':(8,3)}
-    plotfigure.show = True
+    plotfigure.show = False
 
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes()
@@ -155,10 +167,14 @@ def setplot(plotdata):
 
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes()
-    plotaxes.afteraxes = add_dashes
-    #plotaxes.xlimits = [-150.e3, 50e3]
+    plotaxes.xlimits = xlimits
     plotaxes.ylimits = 'auto'
     plotaxes.title = 'Energy'
+    def energy_axes(current_data):
+        add_horizontal_dashes(current_data)
+        add_bathy_dashes(current_data)
+        km_labels(current_data)
+    plotaxes.afteraxes = energy_axes
 
     # Set up for item on these axes:
     plotitem = plotaxes.new_plotitem(plot_type='1d')
@@ -170,99 +186,78 @@ def setplot(plotdata):
     # ========================================================================
     #  Fill plot zoom
     # ========================================================================
-    plotfigure = plotdata.new_plotfigure(name='full_zoom',figno=2)
+    def fill_items(plotaxes):
+        # Top layer
+        plotitem = plotaxes.new_plotitem(plot_type='1d_fill_between')
+        plotitem.plot_var = eta_1
+        plotitem.plot_var2 = eta_2
+        plotitem.color = (0.2,0.8,1.0)
+        plotitem.show = True
+    
+        # Bottom Layer
+        plotitem = plotaxes.new_plotitem(plot_type='1d_fill_between')
+        plotitem.plot_var = eta_2
+        plotitem.plot_var2 = bathy
+        plotitem.color = 'b'
+        plotitem.show = True
+    
+        # Plot bathy
+        plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
+        plotitem.plot_var = bathy
+        plotitem.color = 'k'
+        plotitem.show = True
+            
+        # Plot line in between layers
+        plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
+        plotitem.plot_var = eta_2
+        plotitem.color = 'k'
+        plotitem.plotstyle = '-'
+        plotitem.show = True
+    
+        # Plot line on top layer
+        plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
+        plotitem.plot_var = eta_1
+        plotitem.color = 'k'
+        plotitem.plotstyle = '-'
+        plotitem.show = True
+    
+    # Top surface
+    plotfigure = plotdata.new_plotfigure(name='full_zoom',figno=100)
     
     plotaxes = plotfigure.new_plotaxes()
-    plotaxes.axescmd = 'subplot(3,1,1)'
     plotaxes.title = 'Top Surface'
     plotaxes.xlimits = xlimits_zoomed
     plotaxes.ylimits = ylimits_surface_zoomed
-    plotaxes.afteraxes = km_labels
+    def top_afteraxes(cd):
+        km_labels(cd)
+        add_bathy_dashes(cd)
+    plotaxes.afteraxes = top_afteraxes
      
-    # Top layer
-    plotitem = plotaxes.new_plotitem(plot_type='1d_fill_between')
-    plotitem.plot_var = eta_1
-    plotitem.plot_var2 = eta_2
-    plotitem.color = (0.2,0.8,1.0)
-    plotitem.show = True
-    
-    # Bottom Layer
-    plotitem = plotaxes.new_plotitem(plot_type='1d_fill_between')
-    plotitem.plot_var = eta_2
-    plotitem.plot_var2 = bathy
-    plotitem.color = 'b'
-    plotitem.show = True
-    
-    # Plot bathy
-    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
-    plotitem.plot_var = bathy
-    plotitem.color = 'k'
-    # plotitem.plotstyle = '-'
-    plotitem.show = True
-    
-    # Plot line in between layers
-    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
-    plotitem.plot_var = eta_2
-    plotitem.color = 'k'
-    plotitem.plotstyle = '+'
-    plotitem.show = True
-    
-    # Plot line on top layer
-    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
-    plotitem.plot_var = eta_1
-    plotitem.color = 'k'
-    plotitem.plotstyle = 'x'
-    plotitem.show = True
-    
+    plotaxes = fill_items(plotaxes)
+
+    # Internal surface
+    plotfigure = plotdata.new_plotfigure(name='internal_zoom',figno=101)
     plotaxes = plotfigure.new_plotaxes()
-    plotaxes.axescmd = 'subplot(3,1,2)'
     plotaxes.title = 'Internal Surface'
     plotaxes.xlimits = xlimits_zoomed
     plotaxes.ylimits = ylimits_internal_zoomed
     plotaxes.afteraxes = km_labels
      
-    # Top layer
-    plotitem = plotaxes.new_plotitem(plot_type='1d_fill_between')
-    plotitem.plot_var = eta_1
-    plotitem.plot_var2 = eta_2
-    plotitem.color = (0.2,0.8,1.0)
-    plotitem.show = True
+    plotaxes = fill_items(plotaxes)
     
-    # Bottom Layer
-    plotitem = plotaxes.new_plotitem(plot_type='1d_fill_between')
-    plotitem.plot_var = eta_2
-    plotitem.plot_var2 = bathy
-    plotitem.color = 'b'
-    plotitem.show = True
-    
-    # Plot bathy
-    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
-    plotitem.plot_var = bathy
-    plotitem.color = 'k'
-    # plotitem.plotstyle = '-'
-    plotitem.show = True
-    
-    # Plot line in between layers
-    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
-    plotitem.plot_var = eta_2
-    plotitem.color = 'k'
-    plotitem.plotstyle = '+'
-    plotitem.show = True
-    
-    # Plot line on top layer
-    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
-    plotitem.plot_var = eta_1
-    plotitem.color = 'k'
-    plotitem.plotstyle = 'x'
-    plotitem.show = True
-    
-    # Layer Velocities
+    # ========================================================================
+    #  Velocities
+    # ========================================================================
+    plotfigure = plotdata.new_plotfigure(name="Velocities",figno=200)
     plotaxes = plotfigure.new_plotaxes()
-    plotaxes.axescmd = 'subplot(3,1,3)'
     plotaxes.title = "Layer Velocities"
     plotaxes.xlimits = xlimits_zoomed
-    # plotaxes.ylimits = ylimits_velocities
-    plotaxes.afteraxes = jump_afteraxes
+    plotaxes.ylimits = ylimits_velocities
+    def velocity_afteraxes(cd):
+         add_bathy_dashes(cd)
+         add_horizontal_dashes(cd)
+         km_labels(cd)
+    plotaxes.afteraxes = velocity_afteraxes
     
     # Bottom layer
     plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
@@ -278,7 +273,6 @@ def setplot(plotdata):
     plotitem.plotstyle = 'x-'
     plotitem.show = True
     
-
     # Parameters used only when creating html and/or latex hardcopy
     # e.g., via pyclaw.plotters.frametools.printframes:
 

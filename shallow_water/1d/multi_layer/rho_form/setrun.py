@@ -25,7 +25,7 @@ class MultilayerData(data.Data):
         
         # Algorithm
         self.add_attribute('dry_tolerance',1e-3)
-        self.add_attribute('eigen_method',4)
+        self.add_attribute('eigen_method',1)
         
         # Initial condition
         self.add_attribute('init_type',1)

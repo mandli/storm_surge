@@ -34,7 +34,8 @@ class MultilayerData(data.Data):
         self.add_attribute('wave_family',wave_family)
         self.add_attribute('eta_1',0.0)
         self.add_attribute('eta_2',-300)
-        self.add_attribute('epsilon',0.027)
+        # self.add_attribute('epsilon',0.027)
+        self.add_attribute('epsilon',0.4)
         self.add_attribute('sigma',25e3)
         
         # Bathymetry

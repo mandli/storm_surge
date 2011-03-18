@@ -22,7 +22,7 @@ subroutine qinit(maxmx,meqn,mbc,mx,xlower,dx,q,maux,aux)
     do i=1,mx
         x = xlower+(i-0.5)*dx
 
-        ! Set initial perturbation to zero
+        ! Set initial perturbation to zero and constant depths
         q(i,1) = aux(i,3) * rho(1)
         q(i,3) = aux(i,4) * rho(2)
         q(i,2) = 0.d0
@@ -67,12 +67,13 @@ subroutine qinit(maxmx,meqn,mbc,mx,xlower,dx,q,maux,aux)
             q(i,3) = q(i,3) + rho(2) * deta
         else if (init_type == 4) then
             gamma = aux(i,4) / aux(i,3)
-            alpha = 0.5d0 * (gamma - 1.d0 + sqrt((gamma-1.d0)**2+4.d0*r*gamma))
+!             alpha = 0.5d0 * (gamma - 1.d0 + sqrt((gamma-1.d0)**2+4.d0*r*gamma))
+            alpha = 0.d0
             xmid = 0.5d0*(-180.e3+-80.e3)
             if ((x > -130.e3).and.(x < -80.e3)) then
                 deta = epsilon * sin((x-xmid)*PI/(-80.e3-xmid))
-                q(i,1) = q(i,1) + rho(1) * deta
                 q(i,3) = q(i,3) + rho(2) * alpha * deta
+                q(i,1) = q(i,1) + rho(1) * deta * (1.d0 - alpha)
             endif
         endif
     enddo
