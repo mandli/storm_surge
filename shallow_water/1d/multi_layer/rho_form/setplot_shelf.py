@@ -35,47 +35,11 @@ def setplot(plotdata):
     """
         
     # ========================================================================
-    # Energy functions
-    def kinetic_energy(current_data):
-        q = current_data.q
-        h = eta_1(current_data) - bathy(current_data)
-        u = 0.5 * (u_1(current_data) + u_2(current_data))
-        return 0.5*h*u**2
-        
-    def potential_energy(current_data):
-        return 0.5*eta_1(current_data)**2
-
-    def total_energy(current_data):
-        return kinetic_energy(current_data) + potential_energy(current_data)
-
-    # ========================================================================
-    #  Labels    
-    def add_bathy_dashes(current_data):
-        mpl.hold(True)
-        mpl.plot([-30e3,-30e3],[-10,10],'k--')
-        mpl.hold(False)
-        
-    def add_horizontal_dashes(current_data):
-        mpl.hold(True)
-        mpl.plot([-400e3,0.0],[0.0,0.0],'k--')
-        mpl.hold(False)
-
-    def km_labels(current_data):
-        r"""Flips xaxis and labels with km"""
-        mpl.xlabel('km')
-        locs,labels = mpl.xticks()
-        labels = -np.flipud(locs)/1.e3
-        mpl.xticks(locs,labels)
-        
-    def time_labels(current_data):
-        r"""Convert time to hours"""
-        pass
-        
-    # ========================================================================
     #  Plot variable functions
     def bathy(current_data):
         out_dir = current_data.plotdata.outdir
-        return np.loadtxt(os.path.join(out_dir,'fort.aux'),converters={0:(lambda x:float(re.compile("[Dd]").sub("e",x)))})
+        return np.loadtxt(os.path.join(out_dir,'fort.aux'),
+            converters={0:(lambda x:float(re.compile("[Dd]").sub("e",x)))})
     
     def eta_1(current_data):
         r"""Top surface"""
@@ -101,11 +65,48 @@ def setplot(plotdata):
         u_2[index] = current_data.q[index,3] / h_2[index]
         return u_2
 
+    def kinetic_energy(current_data):
+        q = current_data.q
+        h = eta_1(current_data) - bathy(current_data)
+        u = 0.5 * (u_1(current_data) + u_2(current_data))
+        return 0.5*h*u**2
+        
+    def potential_energy(current_data):
+        return 0.5*eta_1(current_data)**2
+
+    def total_energy(current_data):
+        return kinetic_energy(current_data) + potential_energy(current_data)
+
     def print_energy(current_data):
         PE = np.sum(potential_energy(current_data))
         KE = np.sum(kinetic_energy(current_data))
         total = PE + KE
         print 'PE = %g, KE = %g, total = %23.16e' % (PE,KE,total)
+        
+            
+    # ========================================================================
+    #  Labels    
+    def add_bathy_dashes(current_data):
+        mpl.hold(True)
+        mpl.plot([-30e3,-30e3],[-10,10],'k--')
+        mpl.hold(False)
+        
+    def add_horizontal_dashes(current_data):
+        mpl.hold(True)
+        mpl.plot([-400e3,0.0],[0.0,0.0],'k--')
+        mpl.hold(False)
+
+    def km_labels(current_data):
+        r"""Flips xaxis and labels with km"""
+        mpl.xlabel('km')
+        locs,labels = mpl.xticks()
+        labels = np.flipud(locs)/1.e3
+        mpl.xticks(locs,labels)
+        
+    def time_labels(current_data):
+        r"""Convert time to hours"""
+        pass
+        
     
     # ========================================================================
     # Limit Settings
@@ -228,9 +229,9 @@ def setplot(plotdata):
     plotaxes.title = 'Top Surface'
     plotaxes.xlimits = xlimits_zoomed
     plotaxes.ylimits = ylimits_surface_zoomed
-    def top_afteraxes(cd):
-        km_labels(cd)
-        add_bathy_dashes(cd)
+    def top_afteraxes(current_data):
+        km_labels(current_data)
+        add_bathy_dashes(current_data)
     plotaxes.afteraxes = top_afteraxes
      
     plotaxes = fill_items(plotaxes)
@@ -272,6 +273,46 @@ def setplot(plotdata):
     plotitem.plot_var = u_1
     plotitem.plotstyle = 'x-'
     plotitem.show = True
+    
+    # ========================================================================
+    #  Combined Top and Internal Surface
+    # ========================================================================
+    plotfigure = plotdata.new_plotfigure(name='combined_surface',figno=13)
+    plotfigure.show = True
+    plotfigure.kwargs = {'figsize':(6,6)}
+    
+    # Top surface
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(2,1,1)'
+    plotaxes.title = 'Surfaces'
+    plotaxes.xlimits = xlimits_zoomed
+    plotaxes.ylimits = ylimits_surface_zoomed
+    def top_afteraxes(cd):
+        mpl.xlabel('')
+        locs,labels = mpl.xticks()
+        # labels = np.flipud(locs)/1.e3
+        labels = ['' for i in xrange(len(locs))]
+        mpl.xticks(locs,labels)
+        add_bathy_dashes(cd)
+        mpl.ylabel('m')
+    plotaxes.afteraxes = top_afteraxes
+    plotaxes = fill_items(plotaxes)
+    
+    # Internal surface
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(2,1,2)'
+    plotaxes.title = ''
+    plotaxes.xlimits = xlimits_zoomed
+    plotaxes.ylimits = ylimits_internal_zoomed
+    def internal_surf_afteraxes(cd):
+        km_labels(cd)
+        mpl.title('')
+        mpl.ylabel('m')
+        mpl.subplots_adjust(hspace=0.05)
+    plotaxes.afteraxes = internal_surf_afteraxes
+    plotaxes = fill_items(plotaxes)
+    
+    
     
     # Parameters used only when creating html and/or latex hardcopy
     # e.g., via pyclaw.plotters.frametools.printframes:
