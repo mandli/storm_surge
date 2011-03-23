@@ -10,96 +10,9 @@ import os
 import numpy as np
 
 import pyclaw.data as data
+from multilayer_data import MultilayerData
 
 wave_family = 4
-
-# Simple hurricane data format
-class MultilayerData(data.Data):
-    def __init__(self,rundata):
-        super(MultilayerData,self).__init__()
-
-        # Physics
-        self.add_attribute('rho_air',1.0)
-        self.add_attribute('rho_1',0.95)
-        self.add_attribute('rho_2',1.0)
-        
-        # Algorithm
-        self.add_attribute('dry_tolerance',1e-3)
-        self.add_attribute('eigen_method',1)
-        
-        # Initial condition
-        self.add_attribute('init_type',1)
-        self.add_attribute('init_location',0.45)
-        self.add_attribute('wave_family',wave_family)
-        self.add_attribute('eta_1',0.0)
-        self.add_attribute('eta_2',-0.6)
-        self.add_attribute('epsilon',0.05)
-        self.add_attribute('sigma',0.02)
-        
-        # Bathymetry
-        self.add_attribute('bathy_location',0.5)
-        self.add_attribute('bathy_left',-1.0)
-        self.add_attribute('bathy_right',-0.2)
-        
-        # Wind
-        self.add_attribute('wind_type',1)
-        self.add_attribute('A',5.0)
-        self.add_attribute('omega',2.0)
-        self.add_attribute('N',2.0)
-        self.add_attribute('t_length',rundata.clawdata.tfinal-rundata.clawdata.t0)
-        self.add_attribute('B',1.5)
-        self.add_attribute('Pn',1005.0)
-        self.add_attribute('Pc',950.0)
-        self.add_attribute('hurricane_velocity',5.0)
-        self.add_attribute('R_eye_init',0.0)
-        self.add_attribute('ramp_up_time',0.0)
-        
-        
-    def write(self,file='./problem.data',datasource='setrun.py'):
-        """Write out the data file to the path given"""
-
-        print "Creating data file %s" % file
-        out_file = data.open_datafile(file)
-        
-        data.data_write(out_file,self,'rho_1','(Density of top layer)')
-        data.data_write(out_file,self,'rho_2','(Density of bottom layer)')
-        data.data_write(out_file,self,None)
-        data.data_write(out_file,self,'dry_tolerance','(Dry state tolerance)')
-        data.data_write(out_file,self,'eigen_method','(Method for calculating eigenspace)')
-        data.data_write(out_file,self,None)
-        data.data_write(out_file,self,'init_type','(Type of initial condition)')
-        data.data_write(out_file,self,'init_location','(Location for perturbation)')
-        data.data_write(out_file,self,'wave_family','(Wave family of the perturbation)')
-        data.data_write(out_file,self,'eta_1','(Steady state top surface)')
-        data.data_write(out_file,self,'eta_2','(Steady state internal surface)')
-        data.data_write(out_file,self,'epsilon','(Perturbation strength)')
-        data.data_write(out_file,self,'sigma','(Gaussian width for init_type=2,3)')
-        data.data_write(out_file,self,None)
-        data.data_write(out_file,self,'bathy_location','(Bathymetry jump location)')
-        data.data_write(out_file,self,'bathy_left','(Depth to left of bathy_location)')
-        data.data_write(out_file,self,'bathy_right','(Depth to right of bathy_location)')
-        data.data_write(out_file,self,None)
-        data.data_write(out_file,self,'wind_type','(Type of wind field to use)')
-        if self.wind_type == 1:
-            data.data_write(out_file,self,'A','(Wind speed)')
-        elif self.wind_type == 2:
-            data.data_write(out_file,self,'A','(Hurricane strength parameters)')
-            data.data_write(out_file,self,'B','')
-            data.data_write(out_file,self,'Pn','(Nominal pressure)')
-            data.data_write(out_file,self,'Pc','(Central pressure)')
-            self.ramp_up_time = -self.ramp_up_time
-            data.data_write(out_file,self,'ramp_up_time','(Time over which the hurricane wind field ramps up to full strength)')
-            data.data_write(out_file,self,'hurricane_velocity','(Speed of hurricane)')
-            data.data_write(out_file,self,'R_eye_init','(Location of hurricane at t=0)')
-        elif self.wind_type == 3:
-            data.data_write(out_file,self,'A','(Amplitude of wind)')
-            data.data_write(out_file,self,'N','(Number of periods within domain)')
-            data.data_write(out_file,self,'omega','(Speed of modulation)')
-            data.data_write(out_file,self,'t_length',"(Length of simulation time)")
-        
-        out_file.close()
-
-
 
 #------------------------------
 def setrun(claw_pkg='Classic'):
@@ -283,6 +196,45 @@ def setrun(claw_pkg='Classic'):
     # end of function setrun
     # ----------------------
 
+def set_multilayer(run_data):
+    
+    prob_data = MultilayerData(run_Data)
+    
+    # Physics
+    prob_data.rho_air = 1.0
+    prob_data.rho_1 = 0.95
+    prob_data.rho_2 = 1.0
+    
+    # Algorithm
+    prob_data.dry_tolerance = 1e-3
+    prob_data.eigen_method = 1
+    
+    # Initial condition
+    prob_data.init_type = 1
+    prob_data.init_location = 0.45
+    prob_data.wave_family = wave_family
+    prob_data.eta_1 = 0.0
+    prob_data.eta_2 = -0.6
+    prob_data.epsilon = 0.05
+    prob_data.sigma = 0.02
+    
+    # Bathymetry
+    prob_data.bathy_location = 0.5
+    prob_data.bathy_left = -1.0
+    prob_data.bathy_right = -0.2
+    
+    # Wind
+    prob_data.wind_type = 1
+    prob_data.A = 5.0
+    prob_data.omega = 2.0
+    prob_data.N = 2.0
+    prob_data.t_length = rundata.clawdata.tfinal-rundata.clawdata.t0
+    prob_data.B = 1.5
+    prob_data.Pn = 1005.0
+    prob_data.Pc = 950.0
+    prob_data.hurricane_velocity = 5.0
+    prob_data.R_eye_init = 0.0
+    prob_data.ramp_up_time = 0.0
 
 if __name__ == '__main__':
     # Set up run-time parameters and write all data files.
