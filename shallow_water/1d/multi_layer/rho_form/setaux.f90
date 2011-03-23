@@ -23,7 +23,7 @@ subroutine setaux(maxmx,mbc,mx,xlower,dx,maux,aux)
     integer :: i, ios
     double precision :: x
     
-    do i=1-mbc,mx+2*mbc
+    do i=1-mbc,mx+mbc
         x = xlower+(i-0.5)*dx
         if (x < bathy_location) then
             aux(i,1) = bathy_left

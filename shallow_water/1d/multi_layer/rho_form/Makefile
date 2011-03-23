@@ -9,9 +9,9 @@ CLAWMAKE = $(CLAW)/util/Makefile.common
 CLAW_PKG = Classic                  # Clawpack package to use
 CLAW_EXE = xclaw                    # Executable to create
 CLAW_setrun_file = setrun_shelf.py        # File containing function to make data
-CLAW_OUTDIR = _output               # Directory for output
+CLAW_OUTDIR = _sl_output               # Directory for output
 CLAW_setplot_file = setplot_shelf.py      # File containing function to set plots
-CLAW_PLOTDIR = _plots               # Directory for plots
+CLAW_PLOTDIR = _sl_plots               # Directory for plots
 LFLAGS = -framework veclib
 
 # ---------------------------------

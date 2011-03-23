@@ -85,9 +85,9 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         kappa_l = (u_l(1)-u_l(2))**2 / (g*one_minus_r*sum(h_l))
         kappa_r = (u_r(1)-u_r(2))**2 / (g*one_minus_r*sum(h_r))
         if ((kappa_l > RICH_TOLERANCE).and.(.not.dry_state_l(2))) then
-            print "(a,i3,a,d16.8)","Hyperbolicity may have failed, kappa(",i,") = ",kappa_l
+            print "(a,i4,a,d16.8)","Hyperbolicity may have failed, kappa(",i,") = ",kappa_l
         else if ((kappa_r > RICH_TOLERANCE).and.(.not.dry_state_r(2))) then
-            print "(a,i3,a,d16.8)","Hyperbolicity may have failed, kappa(",i,") = ",kappa_r
+            print "(a,i4,a,d16.8)","Hyperbolicity may have failed, kappa(",i,") = ",kappa_r
         endif
         
         ! ====================================================================
@@ -119,19 +119,33 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
                 s(i,2) = -sqrt(g*h_l(1)*(1+alpha(2)))
                 s(i,3) = sqrt(g*h_r(1)*(1+alpha(3)))
                 s(i,4) = sqrt(g*h_r(1)*(1+alpha(4)))
-            else if (eigen_method == 3) then        
-                total_depth_l = sum(h_l)
-                total_depth_r = sum(h_r)
-                mult_depth_l = product(h_l)
-                mult_depth_r = product(h_r)
+            else if (eigen_method == 3) then 
+                if (dry_state_l(2).and.dry_state_r(2)) then
+                    s(i,1) = u_l(1) - sqrt(g*h_l(1))
+                    s(i,2) = 0.d0
+                    s(i,3) = 0.d0
+                    s(i,4) = u_r(1) + sqrt(g*h_r(1))
+                    alpha = 0.d0
+                else
+                    total_depth_l = sum(h_l)
+                    total_depth_r = sum(h_r)
+                    mult_depth_l = product(h_l)
+                    mult_depth_r = product(h_r)
 
-                s(i,1) = (h_l(1)*u_l(1)+h_l(2)*u_l(2)) / total_depth_l - sqrt(g*total_depth_l)
-                s(i,2) = (h_l(2)*u_l(1)+h_l(1)*u_l(2)) / total_depth_l - sqrt(g*one_minus_r*mult_depth_l/total_depth_l * (1-(u_l(1)-u_l(2))**2/(g*one_minus_r*total_depth_l)))
-                s(i,3) = (h_r(2)*u_r(1)+h_r(1)*u_r(2)) / total_depth_r + sqrt(g*one_minus_r*mult_depth_r/total_depth_r * (1-(u_r(1)-u_r(2))**2/(g*one_minus_r*total_depth_r)))
-                s(i,4) = (h_r(1)*u_r(1)+h_r(2)*u_r(2)) / total_depth_r + sqrt(g*total_depth_r)
-        
-                alpha(1:2) = g * h_l(2) / (s(i,1:2)**2 - g*h_l(2))
-                alpha(3:4) = g * h_r(2) / (s(i,3:4)**2 - g*h_r(2))
+                    s(i,1) = (h_l(1)*u_l(1)+h_l(2)*u_l(2)) / total_depth_l &
+                                - sqrt(g*total_depth_l)
+                    s(i,2) = (h_l(2)*u_l(1)+h_l(1)*u_l(2)) / total_depth_l &
+                                - sqrt(g*one_minus_r*mult_depth_l/total_depth_l &
+                                * (1-(u_l(1)-u_l(2))**2/(g*one_minus_r*total_depth_l)))
+                    s(i,3) = (h_r(2)*u_r(1)+h_r(1)*u_r(2)) / total_depth_r &
+                                + sqrt(g*one_minus_r*mult_depth_r/total_depth_r &
+                                * (1-(u_r(1)-u_r(2))**2/(g*one_minus_r*total_depth_r)))
+                    s(i,4) = (h_r(1)*u_r(1)+h_r(2)*u_r(2)) / total_depth_r &
+                                + sqrt(g*total_depth_r)
+                
+                    alpha(1:2) = ((s(i,1:2) - u_l(1))**2 - g * h_l(1)) / (g*h_l(1))
+                    alpha(3:4) = ((s(i,3:4) - u_r(1))**2 - g * h_r(1)) / (g*h_r(1))
+                endif
             endif
         
             eigen_vectors(1,:) = 1.d0
@@ -287,6 +301,9 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             A = eigen_vectors
             call dgesv(4,1,A,4,ipiv,delta,4,info)
             if (.not.(info == 0)) then 
+                print *, "Location (i) = (",i,")"
+                print *, "Dry states, L=",dry_state_l(2)," R=",dry_state_r(2)
+                print *, "h_l(2) = ",h_l(2)," h_r(2) = ",h_r(2)
                 print *, "Error solving R beta = delta, ",info
                 print *, "Eigen-speeds:",(s(i,mw),mw=1,mwaves)
                 print *, "Eigen-vectors:"
