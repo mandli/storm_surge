@@ -260,7 +260,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
 
                 delta(3) = rho(2) * (hu_r(2) - hu_l(2))                                
                 flux_r(4) = rho(2) * h_r(2) * u_r(2)**2 + 0.5d0 * g * rho(2) * h_r(2)**2
-                flux_l(4) = rho(2) * h_r(2) * u_r(2)**2 + 0.5d0 * g * rho(2) * h_l(2)**2
+                flux_l(4) = rho(2) * h_l(2) * u_l(2)**2 + 0.5d0 * g * rho(2) * h_l(2)**2
                 delta(4) = flux_r(4) - flux_l(4)
                 
             ! Left dry state
