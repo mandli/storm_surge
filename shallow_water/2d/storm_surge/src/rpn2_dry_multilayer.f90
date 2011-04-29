@@ -556,6 +556,7 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
                         print *,"f = ",fwave(i,m,mw)
                         print *,"amdq = ",(amdq(i,m))
                         print *,"apdq = ",(apdq(i,m))
+                        stop
                     endif
                 enddo
                 apdq(i,4:6) = 0.d0

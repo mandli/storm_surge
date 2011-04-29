@@ -406,6 +406,7 @@ def set_multilayer_data():
     data.eigen_method = 1
     data.richardson_tolerance = 0.95
     data.wave_tolerance = [0.1,0.1]
+    data.dry_limit = True
     
     # Initial conditions
     # data.eta = [0.0,-5000.0]
@@ -417,7 +418,7 @@ def set_multilayer_data():
     data.sigma = 0.08
     
     # Bathy settings
-    data.bathy_location = 0.5
+    data.bathy_location = 0.8
     data.bathy_left = -1.0
     data.bathy_right = -0.2
     

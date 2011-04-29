@@ -413,7 +413,7 @@ def set_multilayer_data():
     data.eigen_method = 1
     data.richardson_tolerance = 0.95
     data.wave_tolerance = [0.1,0.1]
-    data.dry_limit = False
+    data.dry_limit = True
     
     # Initial conditions
     # data.eta = [0.0,-5000.0]

@@ -79,6 +79,7 @@ contains
         read(13,"(i2)") eigen_method
         read(13,"(d16.8)") richardson_tolerance
         read(13,*) wave_tol
+        read(13,*) dry_limit
         read(13,*)
         
         ! Initial conditions

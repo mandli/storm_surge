@@ -111,6 +111,7 @@ c
       dimension  fwave(1-mbc:maxm+mbc, meqn, mwaves)
 c
       logical limit, relimit, dry_l, dry_r
+      integer eqn_index
       common /comxyt/ dtcom,dxcom,dycom,tcom,icom,jcom
 
 
@@ -183,36 +184,66 @@ c
 c     # apply limiter to fwaves:
       if (limit) call limiter(maxm,meqn,mwaves,mbc,mx,fwave,s,mthlim)
 c
-      do 120 i = 1, mx+1
-c
-c        # For correction terms below, need average of dtdx in cell
-c        # i-1 and i.  Compute these and overwrite dtdx1d:
-c
-         dtdx1d(i-1) = 0.5d0 * (dtdx1d(i-1) + dtdx1d(i))
-c
-c        Check to see if we are near a dry state and skip the correction if we
-c        are, dry_limit turns this on and off as well
-c
-
-         dry_l = q1d(i-1,4) / rho(2) < drytolerance
-         dry_r = q1d(i,4) / rho(2) < drytolerance
-         if (dry_limit.and.((dry_l.and.(.not.dry_r))
+      cqxx = 0.d0
+      do i=1,mx+1
+          dtdx1d(i-1) = 0.5d0 * (dtdx1d(i-1) + dtdx1d(i))
+          
+          dry_l = q1d(i-1,4) / rho(2) < drytolerance
+          dry_r = q1d(i,4) / rho(2)  < drytolerance
+          if (dry_limit.and.((dry_l.and.(.not.dry_r))
      &           .or.(dry_r.and.(.not.dry_l)))) then
-             cycle
-         endif
-         
-         do 120 m=1,meqn
-            cqxx(i,m) = 0.d0
-            do 119 mw=1,mwaves
-c
-c              # second order corrections:
-               cqxx(i,m) = cqxx(i,m) + dsign(1.d0,s(i,mw))
-     &            * (1.d0 - dabs(s(i,mw))*dtdx1d(i-1)) * fwave(i,m,mw)
-c
-  119          continue
-            faddm(i,m) = faddm(i,m) + 0.5d0 * cqxx(i,m)
-            faddp(i,m) = faddp(i,m) + 0.5d0 * cqxx(i,m)
-  120       continue
+              eqn_index = 3
+C               print *,"i,i-1 =  ",i,i-1
+C               print *," right = ",q1d(i,4) / rho(2)
+C               print *," left =  ",q1d(i-1,4) / rho(2)  
+          else
+              eqn_index = 6
+          endif
+          
+          do m=1,eqn_index
+              do mw=1,mwaves
+                  cqxx(i,m) = cqxx(i,m) + dsign(1.d0,s(i,mw))
+     &                * (1.d0 - dabs(s(i,mw)) * dtdx1d(i-1)) 
+     &                * fwave(i,m,mw)
+              enddo
+              faddm(i,m) = faddm(i,m) + 0.5d0 * cqxx(i,m)
+              faddp(i,m) = faddp(i,m) + 0.5d0 * cqxx(i,m)
+          enddo
+      enddo
+      
+C       do 120 i = 1, mx+1
+C c
+C c        # For correction terms below, need average of dtdx in cell
+C c        # i-1 and i.  Compute these and overwrite dtdx1d:
+C c
+C          dtdx1d(i-1) = 0.5d0 * (dtdx1d(i-1) + dtdx1d(i))
+C c
+C c        Check to see if we are near a dry state and skip the correction if we
+C c        are, dry_limit turns this on and off as well
+C c
+C 
+C          dry_l = q1d(i-1,4) / rho(2) < drytolerance
+C          dry_r = q1d(i,4) / rho(2) < drytolerance
+C          if (dry_limit.and.((dry_l.and.(.not.dry_r))
+C      &           .or.(dry_r.and.(.not.dry_l)))) then
+C              print q1d
+C              print *,q1d(i-1,4) / rho(2)
+C              print *,q1d(i,4) / rho(2)
+C              cycle
+C          endif
+C          
+C          do 120 m=1,meqn
+C             cqxx(i,m) = 0.d0
+C             do 119 mw=1,mwaves
+C c
+C c              # second order corrections:
+C                cqxx(i,m) = cqxx(i,m) + dsign(1.d0,s(i,mw))
+C      &            * (1.d0 - dabs(s(i,mw))*dtdx1d(i-1)) * fwave(i,m,mw)
+C c
+C   119          continue
+C             faddm(i,m) = faddm(i,m) + 0.5d0 * cqxx(i,m)
+C             faddp(i,m) = faddp(i,m) + 0.5d0 * cqxx(i,m)
+C   120       continue
 c
 c
   130  continue
