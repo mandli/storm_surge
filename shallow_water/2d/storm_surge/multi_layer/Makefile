@@ -3,7 +3,7 @@
 #
 
 # Path to storm surge specific source
-HURRICANE_SRC = ../src
+MULTILAYER_SRC = ../src
 
 # Adjust these variables if desired:
 # ----------------------------------
@@ -40,26 +40,26 @@ endif
 # List of sources for this program:
 # ---------------------------------
 CLAW_SOURCES = \
-	$(HURRICANE_SRC)/multilayer_module.f90 \
-	$(HURRICANE_SRC)/hurricane.f90 \
-	$(HURRICANE_SRC)/setaux_geo.f \
-	$(HURRICANE_SRC)/b4step2_geo.f \
-	$(HURRICANE_SRC)/setprob.f90 \
-	$(HURRICANE_SRC)/src2_geo.f90 \
-	$(HURRICANE_SRC)/src1d_geo.f90 \
-	$(HURRICANE_SRC)/qinit.f90 \
-	$(HURRICANE_SRC)/valout_geo.f \
-	./flux2fw.f \
-	./flag2refine_geo.f \
-	./rpn2_dry_multilayer.f90 \
-	./rpt2_dry_multilayer.f90 \
-	$(HURRICANE_SRC)/tick.f \
-	$(GEOLIB)/riemannsolvers_geo.f
+	$(MULTILAYER_SRC)/multilayer_module.f90 \
+	$(MULTILAYER_SRC)/hurricane.f90 \
+	$(MULTILAYER_SRC)/setaux_geo.f \
+	$(MULTILAYER_SRC)/b4step2_geo.f \
+	$(MULTILAYER_SRC)/setprob.f90 \
+	$(MULTILAYER_SRC)/src2_geo.f90 \
+	$(MULTILAYER_SRC)/src1d_geo.f90 \
+	$(MULTILAYER_SRC)/qinit.f90 \
+	$(MULTILAYER_SRC)/valout_geo.f \
+	$(MULTILAYER_SRC)/flux2fw.f \
+	$(MULTILAYER_SRC)/flag2refine_geo.f \
+	$(MULTILAYER_SRC)/rpn2_dry_multilayer.f90 \
+	$(MULTILAYER_SRC)/rpt2_dry_multilayer.f90 \
+	$(MULTILAYER_SRC)/tick.f
 
 DATA_FILES = hurricane.data topo.data multilayer.data
 	
 CLAW_LIBSOURCES = \
 	$(GEOLIB)/geoclaw_mod.f90 \
+	$(GEOLIB)/riemannsolvers_geo.f \
 	$(GEOLIB)/topo_mod.f90 \
 	$(GEOLIB)/dtopo_mod.f90 \
 	$(GEOLIB)/readqinit_geo.f \

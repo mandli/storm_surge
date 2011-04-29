@@ -27,6 +27,7 @@ c
 
 c ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 c
+      use multilayer_module
       use hurricane_module
       use topo_module
       use geoclaw_module
@@ -39,7 +40,13 @@ c
       dimension   amrflags(1-mbc:mx+mbc,1-mbc:my+mbc)
       logical     allowflag
       external  allowflag
-      logical shoreregion,wave,shoreline
+      logical shoreregion,shoreline
+ 
+      logical wave
+      dimension wave(2)     
+      double precision speed
+      dimension speed(2)
+      integer layer
       
       double precision :: R_eye(2)
 
@@ -64,6 +71,9 @@ c         # below is satisfied:
 
           amrflags(i,j) = DONTFLAG
           
+c ----------------------------------------------------------------------------
+c  Hurricane Refinement criteria
+c
 c         Refine based solely on distance from the eye of the hurricane
           R_eye = t * hurricane_velocity + R_eye_init
           do m=1,max_R_nest
@@ -82,7 +92,8 @@ c         Refine based on wind speed
                   go to 100
               endif
           enddo
-
+c ----------------------------------------------------------------------------
+c  Refinement based on regions
           do 30 m=1,mtopofiles
 c           # check to see if refinement is forced in any topo file region:
             if (level .lt. minleveltopo(m) .and.
@@ -146,30 +157,39 @@ c        -----------------------------------------------------------------
 
 c        # refinement not forced, so check if it is allowed, and if so,
 c        # check if there is a reason to flag this point:
-
-         if (allowflag(x,y,t,level)) then
-
-             surface = q(i,j,1) + aux(i,j,1)
-c
-c            # RJL: not sure why this next line is done?  
-c            # Need to fix for arb.  sealevel?
-c            surface = dsign(surface,q(i,j,1))
-
-c            # DLG: it was a way to prevent refining on dry land...
-c            # probably should be changed if we allow arbitrary sealevel
-c            # by adding sealevel to surface or something.
-
-c            # determine region type and refinement params
+C          if (allowflag(x,y,t,level)) then
+         if (.true.) then
+             
+             wave = .false.
+c            Check to see if bottom layer is dry
+             if (q(i,j,4) / rho(2) > drytolerance) then
+                 eta2 = q(i,j,4) / rho(2) + aux(i,j,1)
+                 wave(2) = (abs(eta2-eta(2)) > wave_tol(2))
+             else
+                 eta2 = aux(i,j,1)
+                 wave(2) = .false.
+             endif
+             eta1 = q(i,j,1) / rho(1) + eta2
+             
+             shoreregion = abs(aux(i,j,1)) < depthdeep
+             wave(1) = (abs(eta1-eta(1)) > wave_tol(1)).and.
+     &               (q(i,j,1) / rho(1) > drytolerance)
+             
+C              wave = (((dabs(eta1-sealevel) > wavetolerance).and.
+C      &                (q(i,j,4) / rho(2) > drytolerance)).or.
+C      &               ((dabs(eta2-internallevel) > wavetolerance).and.
+C      &                (q(i,j,1) / rho(1) > drytolerance)))
+     
             
-             shoreregion = dabs(aux(i,j,1)) .lt. depthdeep
-             wave = (dabs(surface-sealevel).gt.wavetolerance.and.
-     &                q(i,j,1).gt.drytolerance)
+C              shoreregion = dabs(aux(i,j,1)) .lt. depthdeep
+C              wave = (dabs(surface-sealevel).gt.wavetolerance.and.
+C      &                q(i,j,1).gt.drytolerance)
 c             #DLG: changing following: didn't work so well for non-lat-lon grids
 c              shoretol = depthdeep*(dx*dy)
                shoretol = depthdeep
 c
 
-             if (wave) then
+             if (wave(1).or.wave(2)) then
 c               # the surface is not at sea level here
 
                 if (level.lt.maxleveldeep) then
@@ -205,20 +225,53 @@ c        Refine based on momentum or speed of water
 c        Had to remove this form the allow flag block as it checks for t > 0
 c        and was not allowing refinement before t = 0, we need this as the 
 c        storm surge has ramp up time that may need refinement (KTM 2010-8-4)
-         speed = sqrt(q(i,j,2)**2 + q(i,j,3)**2)
-         if (.not.momentum_refinement) then
-             if (q(i,j,1) > drytolerance) then
-                 speed = speed / q(i,j,1)
-             endif
-         endif
-         do m=1,max_speed_nest
-             if ((speed > speed_refine(m)).and.(level <= m)) then
-                 amrflags(i,j) = DOFLAG
-                 go to 100
+         do m=1,layers
+             index = 3*(m-1)
+             if (q(i,j,index+1) > drytolerance) then
+                 speed(m) = sqrt((q(i,j,index+2) / q(i,j,index+1))**2 
+     &                         + (q(i,j,index+3) / q(i,j,index+1))**2)
+             else
+                 speed(m) = 0.d0
              endif
          enddo
+                 
+C          if (q(i,j,1) / rho(1) < drytolerance) then
+C          if (q(i,j,1) / rho(1) < drytolerance) then
+C             speed(1) = sqrt((q(i,j,2) / q(i,j,1))**2 
+C      &                   + (q(i,j,3) / q(i,j,1))**2)
+C          else if (q(i,j,4) / rho(2) < drytolerance) then
+C             speed(2) = sqrt((q(i,j,5) / q(i,j,4))**2 
+C      &                   + (q(i,j,6) / q(i,j,4))**2)
+C          endif
 
- 100     continue  !# end loop on i
+         do m=1,max_speed_nest
+             do index=1,layers
+                 if ((speed(index) > speed_refine(m)).and.
+     &               (level <= m)) then
+                     amrflags(i,j) = DOFLAG
+                     goto 100
+                 endif
+             enddo
+         enddo
+C          speed1 = sqrt(q(i,j,2)**2 + q(i,j,3)**2) / rho(1)
+C          speed2 = sqrt(q(i,j,5)**2 + q(i,j,6)**2) / rho(2)
+C          if (.not.momentum_refinement) then
+C              if (q(i,j,1) > drytolerance) then
+C                  speed1 = speed1 / (q(i,j,1))
+C              endif
+C              if (q(i,j,4) > drytolerance) then
+C                  speed2 = speed2 / (q(i,j,4) * rho(2))
+C              endif
+C          endif
+C          do m=1,max_speed_nest
+C              if (((speed1 > speed_refine(m)).and.(level <= m)).or.
+C      &           ((speed2 > speed_refine(m)).and.(level <= m))) then
+C                  amrflags(i,j) = DOFLAG
+C                  go to 100
+C              endif
+C          enddo
+
+ 100    continue  !# end loop on i
  200    continue   !# end loop on j
  
 C       print *,dmax_grad_wind
