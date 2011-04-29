@@ -12,7 +12,7 @@ import numpy as np
 import pyclaw.data as data
 from multilayer_data import MultilayerData
 
-wave_family = 4
+wave_family = 3
 
 #------------------------------
 def setrun(claw_pkg='Classic'):
@@ -83,7 +83,7 @@ def setrun(claw_pkg='Classic'):
     # Note that the time integration stops after the final output time.
     # The solution at initial time t0 is always written in addition.
 
-    clawdata.outstyle = 3
+    clawdata.outstyle = 1
     
     # For outstyle 1 specified in hours
     num_hours = 40
@@ -198,16 +198,16 @@ def setrun(claw_pkg='Classic'):
 
 def set_multilayer(run_data):
     
-    prob_data = MultilayerData(run_Data)
+    prob_data = MultilayerData(run_data)
     
     # Physics
     prob_data.rho_air = 1.0
-    prob_data.rho_1 = 0.95
+    prob_data.rho_1 = 0.98
     prob_data.rho_2 = 1.0
     
     # Algorithm
     prob_data.dry_tolerance = 1e-3
-    prob_data.eigen_method = 1
+    prob_data.eigen_method = 4
     
     # Initial condition
     prob_data.init_type = 1
@@ -215,7 +215,7 @@ def set_multilayer(run_data):
     prob_data.wave_family = wave_family
     prob_data.eta_1 = 0.0
     prob_data.eta_2 = -0.6
-    prob_data.epsilon = 0.05
+    prob_data.epsilon = 0.1
     prob_data.sigma = 0.02
     
     # Bathymetry
@@ -235,6 +235,8 @@ def set_multilayer(run_data):
     prob_data.hurricane_velocity = 5.0
     prob_data.R_eye_init = 0.0
     prob_data.ramp_up_time = 0.0
+    
+    return prob_data
 
 if __name__ == '__main__':
     # Set up run-time parameters and write all data files.
@@ -243,7 +245,7 @@ if __name__ == '__main__':
         rundata = setrun(sys.argv[1])
     else:
     	rundata = setrun()
-    prob_data = MultilayerData(rundata)
+    prob_data = set_multilayer(rundata)
 
     rundata.write()
     prob_data.write()

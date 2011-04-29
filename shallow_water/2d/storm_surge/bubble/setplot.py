@@ -415,12 +415,12 @@ def setplot(plotdata):
     xlimits_zoomed = xlimits
     ylimits = [amrdata.ylower,amrdata.yupper]
     eta = [multilayer_data.eta[0],multilayer_data.eta[1]]
-    top_surface_limits = [eta[0]-0.1,eta[0]+0.1]
-    internal_surface_limits = [eta[1]-2.0,eta[1]+2.0]
+    top_surface_limits = [eta[0]-0.4,eta[0]+0.4]
+    internal_surface_limits = [eta[1]-0.25,eta[1]+0.25]
     top_speed_limits = [0.0,2.0]
     internal_speed_limits = [0.0,0.15]
     
-    top_surf_zoomed = [eta[0] - 0.25,eta[0]+0.25]
+    top_surf_zoomed = [eta[0] - 0.2,eta[0]+0.2]
     bottom_surf_zoomed = [-1.0,0.1]
     # bottom_surf_zoomed = [eta[1] - 0.5,eta[1] + 0.5]
     velocities_zoomed = [-0.6,0.6]
@@ -433,7 +433,7 @@ def setplot(plotdata):
     #  Surface Elevations
     # ========================================================================
     plotfigure = plotdata.new_plotfigure(name='Surface', figno=0)
-    plotfigure.show = False
+    plotfigure.show = True
     plotfigure.kwargs = {'figsize':(14,4)}
     
     # Top surface
@@ -444,9 +444,9 @@ def setplot(plotdata):
     plotaxes.xlimits = xlimits
     plotaxes.ylimits = ylimits
     plotaxes.afteraxes = pcolor_afteraxes
-    add_surface_elevation(plotaxes,1,bounds=top_surface_limits)
+    # add_surface_elevation(plotaxes,1,bounds=top_surface_limits)
     # add_surface_elevation(plotaxes,1,bounds=[-0.06,0.06])
-    # add_surface_elevation(plotaxes,1)
+    add_surface_elevation(plotaxes,1)
     add_land(plotaxes)
     
     # Bottom surface
@@ -495,7 +495,7 @@ def setplot(plotdata):
     #  Water Speed
     # ========================================================================
     plotfigure = plotdata.new_plotfigure(name='speed', figno=1)
-    plotfigure.show = False
+    plotfigure.show = True
     plotfigure.kwargs = {'figsize':(14,4)}
 
     # Top layer speed
@@ -526,7 +526,7 @@ def setplot(plotdata):
     
     # Individual components
     plotfigure = plotdata.new_plotfigure(name='speed_components',figno=401)
-    plotfigure.show = False
+    plotfigure.show = True
     plotfigure.kwargs = {'figsize':(14,14)}
     
     # Top layer
@@ -811,7 +811,7 @@ def setplot(plotdata):
     # ========================================================================
     # Surfaces
     plotfigure = plotdata.new_plotfigure(name='combined_surface',figno=130)
-    plotfigure.show = True
+    plotfigure.show = False
     plotfigure.kwargs = {'figsize':(6,6)}
     
     # Top surface
@@ -858,7 +858,7 @@ def setplot(plotdata):
     
     # Velocities
     plotfigure = plotdata.new_plotfigure(name='combined_velocities',figno=131)
-    plotfigure.show = True
+    plotfigure.show = False
     # plotfigure.kwargs = {'figsize':(6,6)}
     
     # Top surface

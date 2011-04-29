@@ -32,7 +32,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
     double precision :: real_evalues(4),imag_evalues(4)
     double precision :: empty,work(1,lwork)
     
-    logical, parameter :: FWAVES = .true.
+    logical, parameter :: FWAVES = .false.
     double precision, parameter :: RICH_TOLERANCE = 0.95d0
 
     ! Common block

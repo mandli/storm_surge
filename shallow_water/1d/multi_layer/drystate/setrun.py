@@ -35,7 +35,7 @@ class MultilayerData(data.Data):
         # self.add_attribute('bathy_right',-100.0)
 
         # Physics
-        self.add_attribute('rho_1',0.95)
+        self.add_attribute('rho_1',0.98)
         self.add_attribute('rho_2',1.0)
         
         # Algorithm
@@ -45,16 +45,16 @@ class MultilayerData(data.Data):
         self.add_attribute('wave_family',4)
         self.add_attribute('eta_1',0.0)
         # self.add_attribute('eta_2',-1.0)
-        # self.add_attribute('eta_2',-0.8)
-        self.add_attribute('eta_2',-0.6)
+        self.add_attribute('eta_2',-0.8)
+        # self.add_attribute('eta_2',-0.6)
         self.add_attribute('epsilon',0.05)
         self.add_attribute('init_location',0.48)
         
         # Bathymetry
         self.add_attribute('bathy_location',0.5)
         self.add_attribute('bathy_left',-1.0)
-        self.add_attribute('bathy_right',-1.0)
-        # self.add_attribute('bathy_right',-0.2)
+        # self.add_attribute('bathy_right',-1.0)
+        self.add_attribute('bathy_right',-0.2)
         
         
     def write(self,file='./problem.data',datasource='setrun.py'):

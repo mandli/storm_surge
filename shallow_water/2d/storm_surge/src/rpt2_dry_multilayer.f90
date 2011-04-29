@@ -120,11 +120,13 @@ subroutine rpt2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,aux1,aux2,aux3,imp,asdq,bmasdq
         if (h(2) < drytolerance) then
             do m=4,6
                 if (asdq(i,m) /= 0.d0) then
+                    print *,"asdq(i,4:6) > 0"
                     print *,ixy,imp,i
-                    print *,h(1),h(2),hu(1),hu(2)
+                    print *,h(1),h(2)
+                    print *,hu(1),hu(2)
                     print *,(asdq(i,mw),mw=4,6)
-                    stop
-                    asdq(i,m) = 0.d0
+!                     stop
+!                     asdq(i,m) = 0.d0
                 endif
             enddo
         endif

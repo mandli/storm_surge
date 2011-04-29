@@ -72,7 +72,7 @@ def setplot(plotdata):
     plotfigure = plotdata.new_plotfigure(name='full',figno=0)
     
     plotaxes = plotfigure.new_plotaxes()
-    # plotaxes.axescmd = 'subplot(2,1,1)'
+    plotaxes.axescmd = 'subplot(2,1,1)'
     plotaxes.title = 'Multilayer Surfaces'
     plotaxes.xlimits = [0.0,1.0]
     plotaxes.ylimits = [-1.0,0.5]
@@ -118,7 +118,7 @@ def setplot(plotdata):
     
     # Layer Velocities
     plotaxes = plotfigure.new_plotaxes()
-    # plotaxes.axescmd = 'subplot(2,1,2)'
+    plotaxes.axescmd = 'subplot(2,1,2)'
     plotaxes.title = "Layer Velocities"
     plotaxes.xlimits = [0.0,1.0]
     # plotaxes.xlimits = [0.45,0.55]
@@ -130,7 +130,7 @@ def setplot(plotdata):
     plotitem.plot_var = u_2
     plotitem.color = 'b'
     plotitem.show = True
-
+    
     # Top layer
     plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
     plotitem.color = (0.2,0.8,1.0)

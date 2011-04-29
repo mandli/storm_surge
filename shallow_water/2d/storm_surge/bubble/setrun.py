@@ -18,8 +18,6 @@ import multilayer_data
 import hurricane_data
 import topo_data
 
-wave_family = 3
-
 #------------------------------
 def setrun(claw_pkg='geoclaw'):
 #------------------------------
@@ -75,8 +73,8 @@ def setrun(claw_pkg='geoclaw'):
 
     # Number of grid cells:
     # clawdata.mx = 70
-    clawdata.mx = 480
-    clawdata.my = 60
+    clawdata.mx = 140
+    clawdata.my = 120
     # clawdata.my = 120
     # clawdata.mx = 100
     # clawdata.my = 100
@@ -411,12 +409,12 @@ def set_multilayer_data():
     
     # Initial conditions
     # data.eta = [0.0,-5000.0]
-    data.eta = [0.0,-0.6]
-    data.init_type = 1
-    data.init_location = [0.45,0.0]
-    data.wave_family = wave_family
-    data.epsilon = 0.05
-    data.sigma = 0.02
+    data.eta = [0.0,-0.5]
+    data.init_type = 3
+    data.init_location = [0.25,0.5]
+    data.wave_family = 0
+    data.epsilon = 0.4
+    data.sigma = 0.08
     
     # Bathy settings
     data.bathy_location = 0.5

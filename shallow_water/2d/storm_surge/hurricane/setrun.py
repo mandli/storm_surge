@@ -116,7 +116,7 @@ def setrun(claw_pkg='geoclaw'):
     # Note that the time integration stops after the final output time.
     # The solution at initial time t0 is always written in addition.
 
-    clawdata.outstyle = 1
+    clawdata.outstyle = 2
     # Number of hours to simulate
     num_hours = 40
     # Output interval per hour, 1 = every hour, 0.5 = every half hour, etc...
@@ -131,12 +131,12 @@ def setrun(claw_pkg='geoclaw'):
 
     elif clawdata.outstyle == 2:
         # Specify a list of output times.
-        t_start = 0.71100e5
-        dt = 0.4046e2
+        t_start = 0.18000e4
+        dt = 0.4053e2
         # clawdata.tout = [0.0,3.0,3.1,3.2,3.3,3.4,3.5,3.6,3.7,3.8,3.9,4.0]
         # clawdata.tout = [x*60**2 for x in clawdata.tout]
         clawdata.tout = []
-        for i in xrange(100):
+        for i in xrange(20):
             clawdata.tout.append(i*dt+t_start)
         clawdata.nout = len(clawdata.tout)
     elif clawdata.outstyle == 3:
@@ -408,12 +408,12 @@ def set_multilayer_data():
     data.layers = 2
     # data.rho = [1.0,0.0]
     data.rho = [1025.0,0.0]
-    data.rho[1] = data.rho[0] / 0.95
+    data.rho[1] = data.rho[0] / 0.90
     
     # Algorithm Parameters
     data.eigen_method = 1
     data.richardson_tolerance = 0.95
-    data.wave_tolerance = [1e-1,1.0]
+    data.wave_tolerance = [0.1,0.5]
     
     # Initial conditions
     # data.eta = [0.0,-5000.0]
