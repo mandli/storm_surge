@@ -61,7 +61,7 @@ CLAW_LIBSOURCES = \
 	$(GEOLIB)/geoclaw_mod.f90 \
 	$(GEOLIB)/rpn2ez_geo.f \
 	$(GEOLIB)/riemannsolvers_geo.f \
-	./rpt2_geo.f \
+	$(GEOLIB)/rpt2_geo.f \
 	$(GEOLIB)/topo_mod.f90 \
 	$(GEOLIB)/dtopo_mod.f90 \
 	$(GEOLIB)/readqinit_geo.f \
