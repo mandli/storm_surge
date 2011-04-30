@@ -44,7 +44,7 @@ for (i,test) in enumerate(tests):
     multilayer_data = setrun.set_multilayer_data()
     
     # Set data particular to this test
-    hurricane_data.hurricane_velocity.hurricane_velocity = (test["velocity"] 
+    hurricane_data.hurricane_velocity = (test["velocity"] 
         * np.cos(test["angle"]),test["velocity"] * np.sin(test["angle"]))
     hurricane_data.R_eye_init = test["eye"]
     
@@ -58,6 +58,8 @@ for (i,test) in enumerate(tests):
     run_simulation(prefix)
     
     # Tar up the results
-    subprocess.Popen(["tar -cvzf ~/sl_%s_plots.tgz _plots_sl_%s" % (i,i)]).wait()
+    cmd = "tar -cvzf ~/sl_%s_plots.tgz _plots_sl_%s" % (i,i)
+    print cmd
+    subprocess.Popen(cmd,shell=True).wait()
     
     
