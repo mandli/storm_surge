@@ -208,6 +208,7 @@ subroutine rpt2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,aux1,aux2,aux3,imp,asdq,bmasdq
             do j=1,6
                 print "(a,6d16.8)","  ",(eig_vec(j,mw),mw=1,6)
             enddo
+            print "(6d16.8)",h,hu,hv
             stop
         endif
 

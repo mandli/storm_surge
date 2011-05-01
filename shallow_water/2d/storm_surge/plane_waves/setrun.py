@@ -18,7 +18,7 @@ import multilayer_data
 import hurricane_data
 import topo_data
 
-direction = 2
+direction = 1
 
 #------------------------------
 def setrun(claw_pkg='geoclaw'):

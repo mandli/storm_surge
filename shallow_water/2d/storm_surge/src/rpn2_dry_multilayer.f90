@@ -45,12 +45,12 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
     integer :: n_index,t_index,layer_index
     
     ! Physics
-    double precision :: g,wind_speed,tau,dxdc
+    double precision :: g,dxdc
     
     ! State variables
     double precision, dimension(2) :: h_l,h_r,hu_l,hu_r,hv_l,hv_r
     double precision, dimension(2) :: u_l,u_r,v_l,v_r,advected_speed
-    double precision :: b_l,b_r,wx,wy,kappa_l,kappa_r
+    double precision :: b_l,b_r,w_normal,w_transverse,kappa_l,kappa_r
     double precision :: eta_l(2),eta_r(2),h_ave(2),momentum_transfer(2)
     double precision :: h_hat_l(2),h_hat_r(2),gamma_l,gamma_r
     double precision :: flux_transfer_l,flux_transfer_r
@@ -160,8 +160,17 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         
         b_l = auxr(i-1,1)
         b_r = auxl(i,1)
-        wx = 0.5d0 * (auxr(i-1,n_index+2) + auxl(i,n_index+2))
-        wy = 0.5d0 * (auxr(i-1,t_index+2) + auxl(i,t_index+2))
+        
+        ! Calculate wind stress
+!         w_normal = 0.5d0 * (auxr(i-1,n_index+2) + auxl(i,n_index+2))
+!         w_transverse = 0.5d0 * (auxr(i-1,t_index+2) + auxl(i,t_index+2))
+!         wind_speed = sqrt(w_normal**2 + w_transverse**2)
+!         tau = wind_drag(wind_speed) * rho_air * wind_speed
+!         if (ixy == 1) then
+!             wind_stress = dxcom * tau * w_normal
+!         else if (ixy == 2) then
+!             wind_stress = dycom * tau * w_normal
+!         endif
 
         ! ====================================================================
         ! Dry state Handling
@@ -235,6 +244,11 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
                                     hu_r(1),hv_l(1),hv_r(1),b_l,b_r,u_l(1), &
                                     u_r(1),v_l(1),v_r(1),phi_l(1),phi_r(1), &
                                     s_E(1),s_E(2),drytolerance,g,sw,fw)
+            
+!             call riemann_fwave(max_iterations,3,3,h_l(1),h_r(1),hu_l(1), &
+!                                     hu_r(1),hv_l(1),hv_r(1),b_l,b_r,u_l(1), &
+!                                     u_r(1),v_l(1),v_r(1),phi_l(1),phi_r(1), &
+!                                     s_E(1),s_E(2),drytolerance,g,sw,fw)
             
             ! Eliminate ghost fluxes for wall
             do mw=1,3
@@ -402,38 +416,12 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         ! Add extra flux terms
         flux_r(3 + n_index) = flux_r(3 + n_index) + flux_transfer_r
         flux_l(3 + n_index) = flux_l(3 + n_index) + flux_transfer_l
-!         if ((.not.dry_state_r(2)).and.(.not.dry_state_l(2))) then
-!             flux_r(layer_index+n_index) = flux_r(layer_index+n_index) &
-!                                             + g * rho(1) * h_r(1) * h_r(2)
-!             flux_l(layer_index+n_index) = flux_l(layer_index+n_index) &
-!                                             + g * rho(1) * h_l(1) * h_l(2)
-!         endif
-!         else if (dry_state_r(2).and.(.not.dry_state_l(2))) then
-!             flux_l(layer_index+n_index) = flux_l(layer_index+n_index) &
-!                                             + g * rho(1) * h_l(1) * h_l(2)
-!         else if (dry_state_l(2).and.(.not.dry_state_r(2))) then
-!             flux_r(layer_index+n_index) = flux_r(layer_index+n_index) &
-!                                             + g * rho(1) * h_r(1) * h_r(2)
-!         endif
         
         delta = flux_r - flux_l
             
         ! Momentum transfer and bathy terms
         delta(n_index) = delta(n_index) + momentum_transfer(1)
         delta(n_index+3) = delta(n_index+3) + momentum_transfer(2)
-        
-        ! Solve single layer again, this is an approximation
-!         if (abs(alpha(2)) < 1d-10) then
-!             print *,"something is amiss"
-!             print *,alpha(2)
-!             stop
-!             goto 13
-!         else if (abs(alpha(3)) < 1d-10) then
-!             print *,"something is amiss"
-!             print *,alpha(3)
-!             stop
-!             goto 13
-!         endif
         
         ! ====================================================================
         ! Project jump in fluxes - Use LAPACK's dgesv routine

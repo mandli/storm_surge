@@ -80,9 +80,9 @@ def setrun(claw_pkg='geoclaw'):
 
     # Number of grid cells:
     clawdata.mx = 70
-    # clawdata.mx = 140
+    # clawdata.mx = 560
     clawdata.my = 60
-    # clawdata.my = 120
+    # clawdata.my = 480
     # clawdata.mx = 100
     # clawdata.my = 100
 
@@ -131,12 +131,12 @@ def setrun(claw_pkg='geoclaw'):
 
     elif clawdata.outstyle == 2:
         # Specify a list of output times.
-        t_start = 0.18000e4
+        t_start = 0.69300e5
         dt = 0.4053e2
         # clawdata.tout = [0.0,3.0,3.1,3.2,3.3,3.4,3.5,3.6,3.7,3.8,3.9,4.0]
         # clawdata.tout = [x*60**2 for x in clawdata.tout]
         clawdata.tout = []
-        for i in xrange(20):
+        for i in xrange(100):
             clawdata.tout.append(i*dt+t_start)
         clawdata.nout = len(clawdata.tout)
     elif clawdata.outstyle == 3:
@@ -237,7 +237,7 @@ def setrun(claw_pkg='geoclaw'):
 
 
     # max number of refinement levels:
-    mxnest = 5
+    mxnest = 1
 
     clawdata.mxnest = -mxnest   # negative ==> anisotropic refinement in x,y,t
 
@@ -263,6 +263,11 @@ def setrun(claw_pkg='geoclaw'):
     clawdata.cutoff = 0.7   # efficiency cutoff for grid generation
     clawdata.kcheck = 2     # how often to regrid (every kcheck steps)
     clawdata.ibuff  = 2     # width of buffer zone around flagged points
+
+    # Restart parameters
+    clawdata.restart = False
+    clawdata.checkpt_iousr = -2
+    clawdata.tchk = [0.0,0.69300e5]
 
     # More AMR parameters can be set -- see the defaults in pyclaw/data.py
 
@@ -343,7 +348,7 @@ def setgeo(rundata):
     # for fixed grids append lines of the form
     # [t1,t2,noutput,x1,x2,y1,y2,xpoints,ypoints,\
     #  ioutarrivaltimes,ioutsurfacemax]
-    # geodata.fixedgrids.append([1., 2., 4, 0., 100., 0., 100., 11, 11, 0, 0])
+    geodata.fixedgrids.append([0.0,1e10, 4, 430e3, 470e3, -325e3, 325e3, 11, 11, 48, 960])
     
     return rundata
     # end of function setgeo

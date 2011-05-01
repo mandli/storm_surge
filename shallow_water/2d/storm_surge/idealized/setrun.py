@@ -232,7 +232,7 @@ def setrun(claw_pkg='geoclaw'):
 
 
     # max number of refinement levels:
-    mxnest = 1
+    mxnest = 2
 
     clawdata.mxnest = -mxnest   # negative ==> anisotropic refinement in x,y,t
 

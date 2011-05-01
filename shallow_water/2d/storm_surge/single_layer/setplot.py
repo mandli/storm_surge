@@ -221,7 +221,7 @@ def setplot(plotdata):
     
     # Water
     plotitem = plotaxes.new_plotitem(plot_type='2d_imshow')
-    plotitem.plot_var = eta
+    plotitem.plot_var = geoplot.surface
     # plotitem.plot_var = 0
     # plotitem.imshow_cmin = -2.5
     # plotitem.imshow_cmax = 2.5

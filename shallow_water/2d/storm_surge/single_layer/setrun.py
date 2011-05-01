@@ -78,10 +78,10 @@ def setrun(claw_pkg='geoclaw'):
         
 
     # Number of grid cells:
-    # clawdata.mx = 70
-    # clawdata.my = 60
-    clawdata.mx = 140
-    clawdata.my = 120
+    clawdata.mx = 70
+    clawdata.my = 60
+    # clawdata.mx = 140
+    # clawdata.my = 120
     # clawdata.mx = 100
     # clawdata.my = 100
 
