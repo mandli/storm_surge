@@ -115,7 +115,7 @@ def setrun(claw_pkg='geoclaw'):
     # Note that the time integration stops after the final output time.
     # The solution at initial time t0 is always written in addition.
 
-    clawdata.outstyle = 3
+    clawdata.outstyle = 1
     # Number of hours to simulate
     num_hours = 40
     # Output interval per hour, 1 = every hour, 0.5 = every half hour, etc...
@@ -233,7 +233,7 @@ def setrun(claw_pkg='geoclaw'):
 
 
     # max number of refinement levels:
-    mxnest = 1
+    mxnest = 5
 
     clawdata.mxnest = -mxnest   # negative ==> anisotropic refinement in x,y,t
 
@@ -362,7 +362,7 @@ def set_hurricane_data(ramp_up_time=RAMP_UP_TIME):
     data.R_refine = [60.0e3,40e3,20e3]
         
     # Wind strength based refinement
-    data.max_wind_nest = 0
+    data.max_wind_nest = 3
     # data.wind_refine = [0.001,0.005,0.001]
     data.wind_refine = [20.0,40.0,60.0]
     
