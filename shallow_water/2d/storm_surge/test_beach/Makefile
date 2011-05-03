@@ -13,10 +13,14 @@ CLAW_setplot_file = setplot.py
 CLAW_OUTDIR = _output
 CLAW_PLOTDIR = _plots
 
+GEOCLAW=$(CLAW)/geoclaw/2d/lib
+AMRCLAW=$(CLAW)/amrclaw/2d/lib
+SINGLE_LAYER=../single_layer
+HURRICANE_SRC=../src/
 
 # Flagging
 FC ?= gfortran
-FFLAGS += -I$(GEOLIB)
+FFLAGS += -I$(GEOCLAW) -I$(AMRCLAW)
 UNAME = $(shell uname)
 ifeq ($(UNAME),Darwin)
 	ifndef LFLAGS
@@ -37,12 +41,6 @@ endif
 # List of sources for this program:
 # ---------------------------------
     
-# Library pahts
-AMRCLAW = $(CLAW)/amrclaw/2d/lib
-GEOCLAW = $(CLAW)/geoclaw/2d/lib
-HURRICANE_SRC = ../src
-SINGLE_LAYER = ../single_grid
-
 CLAW_SOURCES = \
     $(HURRICANE_SRC)/multilayer_module.f90 \
 	$(HURRICANE_SRC)/hurricane.f90 \
@@ -55,7 +53,7 @@ CLAW_SOURCES = \
 	$(SINGLE_LAYER)/src2_geo.f90 \
 	$(SINGLE_LAYER)/src1d_geo.f90
 
-AMRCLAWSOURCES = \
+CLAW_LIBSOURCES = \
 	$(GEOCLAW)/geoclaw_mod.f90 \
 	$(GEOCLAW)/rpn2ez_geo.f \
 	$(GEOCLAW)/riemannsolvers_geo.f \
