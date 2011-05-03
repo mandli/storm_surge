@@ -33,6 +33,8 @@ def run_simulation(file_suffix):
 tests = [{"velocity":5.0, "angle": 0.00 * np.pi, "eye":(0.0,0.0)},
          {"velocity":5.0, "angle": 0.25 * np.pi, "eye":(200e3,0.0)},
          {"velocity":5.0, "angle": 0.50 * np.pi, "eye":(400e3,0.0)},]
+         
+parallel = False
 
 # Setup and run the tests
 for (i,test) in enumerate(tests):    

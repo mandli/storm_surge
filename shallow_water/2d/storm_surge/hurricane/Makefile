@@ -55,7 +55,7 @@ CLAW_SOURCES = \
 	$(MULTILAYER_SRC)/rpt2_dry_multilayer.f90 \
 	$(MULTILAYER_SRC)/tick.f \
 	$(MULTILAYER_SRC)/qad_geo.f \
-	$(MULTILAYER_SRC)/stepgrid_geo.f \
+	$(MULTILAYER_SRC)/stepgrid_noupdate.f \
 	$(CLAW_LIB)/filval.f \
 	$(CLAW_LIB)/filpatch.f 
 

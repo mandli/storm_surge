@@ -132,7 +132,7 @@ def setrun(claw_pkg='geoclaw'):
     elif clawdata.outstyle == 2:
         # Specify a list of output times.
         # t_start = 0.69300e5
-        t_start = 0.286933e5
+        t_start = -.362213e5
         dt = 0.4053e2
         # clawdata.tout = [0.0,3.0,3.1,3.2,3.3,3.4,3.5,3.6,3.7,3.8,3.9,4.0]
         # clawdata.tout = [x*60**2 for x in clawdata.tout]
@@ -267,8 +267,8 @@ def setrun(claw_pkg='geoclaw'):
 
     # Restart parameters
     clawdata.restart = False
-    clawdata.checkpt_iousr = -3
-    clawdata.tchk = [0.0,0.286933e5,0.69300e5]
+    clawdata.checkpt_iousr = 2000
+    clawdata.tchk = [0.0,0.69300e5]
 
     # More AMR parameters can be set -- see the defaults in pyclaw/data.py
 
@@ -332,7 +332,7 @@ def setgeo(rundata):
     # to specify regions of refinement append lines of the form
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
     # geodata.regions.append([1, 1, 0.e0, 1.e10, -100.,100., -100.,100.])
-    # geodata.regions.append([5, 5, -RAMP_UP_TIME, 1.e10,    445e3,455e3, -325e3,325e3])
+    # geodata.regions.append([3, 3, -RAMP_UP_TIME, 1.e10,    400e3,525e3, -325e3,325e3])
 
     # == setgauges.data values ==
     geodata.gauges = []

@@ -57,7 +57,9 @@ CLAW_SOURCES = \
 	$(MULTILAYER_SRC)/qad_geo.f \
 	$(MULTILAYER_SRC)/stepgrid_geo.f \
 	$(CLAW_LIB)/filval.f \
-	$(CLAW_LIB)/filpatch.f
+	$(CLAW_LIB)/filpatch.f \
+	$(CLAW_LIB)/update.f \
+	$(CLAW_LIB)/upbnd.f  \
 
 DATA_FILES = hurricane.data topo.data multilayer.data
 	
@@ -75,7 +77,6 @@ CLAW_LIBSOURCES = \
 	$(GEOLIB)/fgridout_geo.f \
 	$(GEOLIB)/step2_geo.f \
 	$(GEOLIB)/bc2amr_geo.f \
-	$(GEOLIB)/update_geo.f \
 	$(GEOLIB)/amr2ez_geo.f \
 	$(GEOLIB)/setqinit_geo.f \
 	$(GEOLIB)/setregions_geo.f \
@@ -83,7 +84,6 @@ CLAW_LIBSOURCES = \
 	$(GEOLIB)/setfixedgrids_geo.f \
 	$(GEOLIB)/allowflag_geo.f  \
 	$(GEOLIB)/dumpgauge_geo.f \
-	$(GEOLIB)/upbnd_geo.f  \
 	$(GEOLIB)/setgrd_geo.f \
 	$(GEOLIB)/gfixup_geo.f \
 	$(GEOLIB)/ginit_geo.f \

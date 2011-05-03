@@ -262,12 +262,12 @@ def setrun(claw_pkg='geoclaw'):
 
     clawdata.cutoff = 0.7   # efficiency cutoff for grid generation
     clawdata.kcheck = 2     # how often to regrid (every kcheck steps)
-    clawdata.ibuff  = 4     # width of buffer zone around flagged points
+    clawdata.ibuff  = 2     # width of buffer zone around flagged points
 
     # Restart parameters
     clawdata.restart = False
-    clawdata.checkpt_iousr = -2
-    clawdata.tchk = [0.0,0.70000e5]
+    clawdata.checkpt_iousr = -3
+    clawdata.tchk = [0.0,0.666e5,0.69e5]
 
     # More AMR parameters can be set -- see the defaults in pyclaw/data.py
 

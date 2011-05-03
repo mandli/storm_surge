@@ -403,7 +403,7 @@ def set_hurricane_data(ramp_up_time=RAMP_UP_TIME):
     data.B = 1.5     
     data.Pn = 1005.0        # Nominal atmospheric pressure     
     data.Pc = 950.0         # Pressure in the eye of the hurricane    
-    data.rho_air = 1.15     # Density of air
+    data.rho_air = 1.15e-3     # Density of air
     
     return data
     
@@ -412,9 +412,7 @@ def set_multilayer_data():
     
     # Physical parameters
     data.layers = 2
-    # data.rho = [1.0,0.0]
-    data.rho = [1025.0,0.0]
-    data.rho[1] = data.rho[0] / 0.95
+    data.rho = [1.0,0.95]
     
     # Algorithm Parameters
     data.eigen_method = 1
