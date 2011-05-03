@@ -354,9 +354,9 @@ c
  499   continue
 
 c      # for source terms:
-       if (method(5) .ne. 0) then
-           call src1d(nvar,nghost,lenbc,qc1d,maux,auxc1d,tgrid,delt)
-           endif
-
+c       if (method(5) .ne. 0) then
+c           call src1d(nvar,nghost,lenbc,qc1d,maux,auxc1d,tgrid,delt)
+c           endif
+c
        return
        end

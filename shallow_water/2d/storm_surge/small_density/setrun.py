@@ -412,7 +412,7 @@ def set_multilayer_data():
     
     # Physical parameters
     data.layers = 2
-    data.rho = [1.0,0.95]
+    data.rho = [0.95,1.0]
     
     # Algorithm Parameters
     data.eigen_method = 1
