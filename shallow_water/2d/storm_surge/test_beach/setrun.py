@@ -14,60 +14,12 @@ import numpy as np
 from pyclaw import data 
 import pyclaw.util as util
 
+import hurricane_data
+import multilayer_data
+import topo_data
+
 # Ramp up constants
 RAMP_UP_TIME = 12*60**2
-
-# Simple hurricane data format
-class HurricaneData(data.Data):
-    def __init__(self):
-        super(HurricaneData,self).__init__()
-
-        # Source terms to be included
-        self.add_attribute('wind_src',True)
-        self.add_attribute('pressure_src',False)
-        
-        # Momentum based refinement
-        self.add_attribute('momentum_refinement',False)
-        self.add_attribute('max_speed_nest',5)
-        # self.add_attribute('speed_nest',[1.0,2.0,3.0,4.0,5.0])
-        self.add_attribute('speed_nest',[0.5,1.0,2.0,3.0,4.0,5.0]) # Just added another level of refinement
-        
-        # Hurricane location based refinement
-        self.add_attribute('max_R_nest',3)
-        self.add_attribute('R_refine',[60.0e3,40e3,20e3])
-        
-        # Wind strength based refinement
-        self.add_attribute('max_wind_nest',0)
-        # self.add_attribute('wind_refine',[0.001,0.005,0.001])
-        self.add_attribute('wind_refine',[20.0,40.0,60.0])
-        
-        # Pressure source term tolerance
-        self.add_attribute('pressure_tolerance',1e-4)
-        
-        # Ramp up time for hurricane
-        self.add_attribute("ramp_up_t",RAMP_UP_TIME)
-        
-        # Path of hurricane, speed in m/s
-        self.add_attribute('hurricane_velocity_X',5.0)  # Speed of hurricane
-        self.add_attribute('hurricane_velocity_Y',0.0)
-        
-        # Initial position of hurricane eye at t = 0
-        self.add_attribute('R_eye_init_X',0.0)     # Initial position
-        self.add_attribute('R_eye_init_Y',0.0)
-
-        # Hurricane parameters
-        # These match Hurricane Tracy
-        self.add_attribute('A',23.0)        # Hurricane model fit parameter
-        self.add_attribute('B',1.5)     
-        self.add_attribute('Pn',1005.0)     # Nominal atmospheric pressure     
-        self.add_attribute('Pc',950.0)      # Pressure in the eye of the hurricane    
-        self.add_attribute('rho_air',1.15e-3) # Density of air
-        
-    def write(self,file='./hurricane.data'):
-        """Write out the data file to the path given"""
-
-        print "Creating data file %s" % file
-        super(HurricaneData,self).write(supplementary_file=file)
 
 #------------------------------
 def setrun(claw_pkg='geoclaw'):
@@ -390,145 +342,80 @@ def setgeo(rundata):
     # end of function setgeo
     # ----------------------
 
-# ============================================================================
-#  Topography generation functions 
-# ============================================================================
-def write_topo_file(file,plot=False):
-    """Creates topography file needed by the simulation"""
-
-    from pyclaw.data import Data
-    from pyclaw.util import create_topo_func
-
-    print "Creating topography file ",file
+def set_hurricane_data(ramp_up_time=RAMP_UP_TIME):
+    data = hurricane_data.HurricaneData(ramp_up_time)
     
-    # Parameters
-    data = Data('amr2ez.data')
-    dx = abs(data.xupper-data.xlower) / (data.mx * 2**4)
-    dy = abs(data.yupper-data.ylower) / (data.my * 2**4)
-    d = min(dx,dy)
-    mx = int((data.xupper-data.xlower) / d) + 4
-    my = int((data.yupper-data.ylower) / d) + 4
+    # Source terms to be included
+    data.wind_src = True
+    data.pressure_src = False
     
-    xlower = data.xlower-d*2.0
-    ylower = data.ylower-d*2.0
-    xupper = data.xupper+d*2.0
-    yupper = data.yupper+d*2.0
+    # Momentum based refinement
+    data.momentum_refinement = False
+    data.max_speed_nest = 5
+    # data.speed_nest = [1.0,2.0,3.0,4.0,5.0]
+    data.speed_nest = [0.5,1.0,2.0,3.0,4.0,5.0]
     
-    topo_type = 1
-    
-    # Bathy types
-    beach_slope = 0.05
-    y_end = beach_slope * (xupper - 477e3) - 100.0
-    shallow_shelf = [(477e3,-100),(xupper,y_end)]
-    # Points and depths
-    #  1: (25°39'2.85"N, 86° 7'24.77"W)   --   -3228 m   --   0.0 m
-    #  2: (27°53'44.74"N, 88° 0'34.02"W)   --   -2438 m   --   312.17313 km
-    #  3: (28°59'47.14"N, 88°59'53.19"W)   --   -188 m   --    467.59957 km
-    #  4: ( 29° 4'6.90"N,  89° 4'11.39"W)    --   0 m   --   479.10557 km
-    gulf_shelf = [(0.0,-3228),(312e3,-2438),(467e3,-188),(479e3,0.0),(579e3,300.0)]
-    continental_shelf_2 = [(2000e3,-7000),(2800e3,-3000),(2900e3,-100),(3000e3,0.0)]
-    flat = [(0.0,-100)]
-    
-    import pyclaw.geotools.topotools as tt
-    bathy_func = util.create_topo_func(shallow_shelf)
-    N = len(shallow_shelf)
-    tt.topo1writer(file,bathy_func,xlower,xupper,ylower,yupper,N,N)
-    # 
-    # topo_type = 1
-    # out_file = open(file,'w')
-    # for point in flat:
-    #     out_file.write("%f %f %f\n" % (point[0],upper_coord[1],point[1]))
-    #     out_file.write("%f %f %f\n" % (point[0],lower_coord[1],point[1]))
-    # out_file.close()
-    
-    
-    # util.write_topo_file(file,bathy_func,mx,my,lower_coord,upper_coord,topo_type)
-    
-    if plot:
-        import matplotlib.pyplot as plot
-        # plot.subplot(2,1,1)
-        # [x,y,Z] = tt.topofile2griddata(file,topo_type=topo_type)
-        # [X,Y] = np.meshgrid(x,y)
-        # plot.pcolor(X,Y,Z.T)
-        # plot.colorbar()
-        # plot.axis('equal')
-        # plot.xlabel('km')
-        # plot.ylabel('km')
-        # locs,labels = plot.xticks()
-        # labels = locs/1.e3
-        # plot.xticks(locs,labels)
-        # locs,labels = plot.yticks()
-        # labels = locs/1.e3
-        # plot.yticks(locs,labels)
-        # plot.subplot(2,1,2)
-        plot.hold(True)
-        plot.plot(x,Z.T[10,:],'k',x,Z.T[10,:],'ro')
-        plot.fill_between(x,Z.T[10,:],where=Z.T[10,:]<0.0,color='b')
-        # plot.plot(x,np.zeros(x.shape),'b-')
-        plot.axis([data.xlower,data.xupper,-120,100])
-        plot.title('Topography Cross-Section')
-        plot.xlabel('km')
-        plot.ylabel('m')
-        locs,labels = plot.xticks()
-        labels = locs/1.e3
-        plot.xticks(locs,labels)
-        plot.show()
+    # Hurricane location based refinement
+    data.max_R_nest = 3
+    data.R_refine = [60.0e3,40e3,20e3]
         
+    # Wind strength based refinement
+    data.max_wind_nest = 3
+    # data.wind_refine = [0.001,0.005,0.001]
+    data.wind_refine = [20.0,40.0,60.0]
+    
+    # Pressure source term tolerance
+    data.pressure_tolerance = 1e-4
+    
+    # Ramp up time for hurricane
+    data.ramp_up_t = RAMP_UP_TIME
+    
+    # Path of hurricane, speed in m/s
+    velocity = 5.0
+    angle = 0.0 * np.pi
+    # Speeds of hurricane
+    data.hurricane_velocity = (velocity * np.cos(angle),velocity * np.sin(angle))
+    # Initial position of hurricane eye at t = 0
+    data.R_eye_init = (0.0,0.0) 
 
-# =========================
-#  Qinit data generation 
-# =========================
-def gaussian(x,y): 
-    """Simple gaussian hump""" 
-    center = (0.0,0.0) 
-    sigma = (20e3,20e3) 
-    # sigma = (0.5,0.5)
-    amplitude = 1.0 
-     
-     
-    return amplitude * np.exp( -((x-center[0])/sigma[0])**2 ) \
-                     * np.exp( -((y-center[1])/sigma[1])**2 ) 
- 
- 
-def write_qinit_file(file,plot=False): 
-    """Creates each of the files needed by the simulation.""" 
+    # Hurricane parameters
+    # These match Hurricane Tracy
+    data.A = 23.0           # Hurricane model fit parameter
+    data.B = 1.5     
+    data.Pn = 1005.0        # Nominal atmospheric pressure     
+    data.Pc = 950.0         # Pressure in the eye of the hurricane    
+    data.rho_air = 1.15     # Density of air, this also includes 
     
-    from pyclaw.data import Data
-    from pyclaw.util import create_topo_func
-     
-    print "Creating qinit file ", file 
+    return data
+
+def set_multilayer_data():
+    data = multilayer_data.MultilayerData()
     
-    # Parameters
-    data = Data('amr2ez.data')
-    dx = abs(data.xupper-data.xlower) / float(data.mx)
-    dy = abs(data.yupper-data.ylower) / float(data.my)
-    d = min(dx,dy)
-    mx = int((data.xupper-data.xlower) / d) + 20
-    my = int((data.yupper-data.ylower) / d) + 20
+    # Physical parameters
+    data.layers = 1
+    data.rho = [1025.0]
+    # The rest of these are ignored for single layers
     
-    lower_coord = (data.xlower-d*10.0,data.ylower-d*10.0)
-    upper_coord = (data.xupper+d*10.0,data.yupper+d*10.0)
+    # Algorithm Parameters
+    data.eigen_method = 1
+    data.richardson_tolerance = 0.95
+    data.wave_tolerance = 1e-1
     
-    # Calculate function and write to file 
-    eta = np.zeros((mx,my)) 
-    qinit_file = open(file,'w') 
-    for (j,y) in enumerate(-np.linspace(-upper_coord[1],-lower_coord[1],my)): 
-        for (i,x) in enumerate(np.linspace(lower_coord[0],upper_coord[0],mx)): 
-            eta[i,j] = gaussian(x,y) 
-            qinit_file.write("%s %s %s\n" % (x,y,eta[i,j])) 
-    qinit_file.close() 
-     
-    # Plot qinit if requested 
-    if plot: 
-        import matplotlib.pyplot as plot 
-         
-        [X,Y] = np.meshgrid(np.linspace(lower_coord[0],upper_coord[0],mx), 
-                            np.linspace(lower_coord[1],upper_coord[1],my)) 
-        plot.pcolor(X,Y,eta.T) 
-        plot.title("Initial Condition Data") 
-        plot.axis("equal") 
-        plot.colorbar() 
-        plot.show() 
+    # Initial conditions
+    data.eta = [0.0]
+    data.init_type = 0
+    data.init_location = [300e3,0.0]
+    data.wave_family = 4
+    data.epsilon = 0.4
+    data.sigma = 25e3
+    
+    # Bathy settings
+    data.bathy_location = 450e3
+    data.bathy_left = -4000
+    data.bathy_right = -200
+    
+    return data
+    
 
 # =====================
 #  Main run function 
@@ -536,23 +423,20 @@ def write_qinit_file(file,plot=False):
 if __name__ == '__main__':
     # Set up run-time parameters and write all data files.
     import sys
-    # if len(sys.argv) == 2:
-    #     rundata = setrun(sys.argv[1])
-    # else:
-    rundata = setrun()
+    if len(sys.argv) == 2:
+        rundata = setrun(sys.argv[1])
+    else:
+        rundata = setrun()
+    hurricane_data = set_hurricane_data()
+    multilayer_data = set_multilayer_data()
 
     # Write our run data file
     rundata.write()
-    
-    # Write out hurricane data info
-    hurricane_data = HurricaneData()
     hurricane_data.write()
+    multilayer_data.write()
     
     # Write out topography and qinit data files if needed
     topo_file = './topo.data'
-    qinit_file = './qinit.data'
-    if not(os.path.exists(topo_file)):
-        write_topo_file(topo_file,plot=True)
-    # if not(os.path.exists(qinit_file)):
-    #     write_qinit_file(qinit_file,plot=True)
+    topo_data.write_topo_file(topo_file,bathy_type='shallow_shelf',
+                                        plot=False,force=False)
     
