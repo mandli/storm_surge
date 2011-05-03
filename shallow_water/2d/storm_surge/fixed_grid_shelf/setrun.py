@@ -131,7 +131,8 @@ def setrun(claw_pkg='geoclaw'):
 
     elif clawdata.outstyle == 2:
         # Specify a list of output times.
-        t_start = 0.69300e5
+        # t_start = 0.69300e5
+        t_start = 0.286933e5
         dt = 0.4053e2
         # clawdata.tout = [0.0,3.0,3.1,3.2,3.3,3.4,3.5,3.6,3.7,3.8,3.9,4.0]
         # clawdata.tout = [x*60**2 for x in clawdata.tout]
@@ -154,7 +155,7 @@ def setrun(claw_pkg='geoclaw'):
     # The current t, dt, and cfl will be printed every time step
     # at AMR levels <= verbosity.  Set verbosity = 0 for no printing.
     #   (E.g. verbosity == 2 means print only on levels 1 and 2.)
-    clawdata.verbosity = 2
+    clawdata.verbosity = 1
     
     
 
@@ -169,7 +170,7 @@ def setrun(claw_pkg='geoclaw'):
     # Initial time step for variable dt.  
     # If dt_variable==0 then dt=dt_initial for all steps:
     # clawdata.dt_initial = 0.64e2
-    clawdata.dt_initial = 0.4046e2
+    clawdata.dt_initial = 0.2026e2
     
     # Max time step to be allowed if variable dt used:
     clawdata.dt_max = 1e+99
@@ -262,12 +263,12 @@ def setrun(claw_pkg='geoclaw'):
 
     clawdata.cutoff = 0.7   # efficiency cutoff for grid generation
     clawdata.kcheck = 2     # how often to regrid (every kcheck steps)
-    clawdata.ibuff  = 4     # width of buffer zone around flagged points
+    clawdata.ibuff  = 2     # width of buffer zone around flagged points
 
     # Restart parameters
     clawdata.restart = False
-    clawdata.checkpt_iousr = -2
-    clawdata.tchk = [0.0,0.70000e5]
+    clawdata.checkpt_iousr = -3
+    clawdata.tchk = [0.0,0.286933e5,0.69300e5]
 
     # More AMR parameters can be set -- see the defaults in pyclaw/data.py
 
@@ -331,7 +332,7 @@ def setgeo(rundata):
     # to specify regions of refinement append lines of the form
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
     # geodata.regions.append([1, 1, 0.e0, 1.e10, -100.,100., -100.,100.])
-    # geodata.regions.append([1, 2, 0.e0, 1.e10,    0.,100., -100.,100.])
+    # geodata.regions.append([5, 5, -RAMP_UP_TIME, 1.e10,    445e3,455e3, -325e3,325e3])
 
     # == setgauges.data values ==
     geodata.gauges = []
@@ -348,7 +349,7 @@ def setgeo(rundata):
     # for fixed grids append lines of the form
     # [t1,t2,noutput,x1,x2,y1,y2,xpoints,ypoints,\
     #  ioutarrivaltimes,ioutsurfacemax]
-    # geodata.fixedgrids.append([0.0,1e10, 4, 430e3, 470e3, -325e3, 325e3, 11, 11, 48, 960])
+    # geodata.fixedgrids.append([0.0,1e10, 4, 430e3, 470e3, -325e3, 325e3, 11, 11, 48, 120])
     
     return rundata
     # end of function setgeo
@@ -413,7 +414,7 @@ def set_multilayer_data():
     data.layers = 2
     # data.rho = [1.0,0.0]
     data.rho = [1025.0,0.0]
-    data.rho[1] = data.rho[0] / 0.90
+    data.rho[1] = data.rho[0] / 0.95
     
     # Algorithm Parameters
     data.eigen_method = 1

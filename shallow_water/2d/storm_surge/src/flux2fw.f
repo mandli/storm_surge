@@ -217,20 +217,6 @@ C c        # For correction terms below, need average of dtdx in cell
 C c        # i-1 and i.  Compute these and overwrite dtdx1d:
 C c
 C          dtdx1d(i-1) = 0.5d0 * (dtdx1d(i-1) + dtdx1d(i))
-C c
-C c        Check to see if we are near a dry state and skip the correction if we
-C c        are, dry_limit turns this on and off as well
-C c
-C 
-C          dry_l = q1d(i-1,4) / rho(2) < drytolerance
-C          dry_r = q1d(i,4) / rho(2) < drytolerance
-C          if (dry_limit.and.((dry_l.and.(.not.dry_r))
-C      &           .or.(dry_r.and.(.not.dry_l)))) then
-C              print q1d
-C              print *,q1d(i-1,4) / rho(2)
-C              print *,q1d(i,4) / rho(2)
-C              cycle
-C          endif
 C          
 C          do 120 m=1,meqn
 C             cqxx(i,m) = 0.d0

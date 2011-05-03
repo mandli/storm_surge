@@ -57,17 +57,17 @@ CLAW_SOURCES = \
 	$(MULTILAYER_SRC)/qad_geo.f \
 	$(MULTILAYER_SRC)/stepgrid_geo.f \
 	$(CLAW_LIB)/filval.f \
-	$(CLAW_LIB)/filpatch.f 
+	$(CLAW_LIB)/filpatch.f
 
 DATA_FILES = hurricane.data topo.data multilayer.data
 	
 CLAW_LIBSOURCES = \
 	$(GEOLIB)/geoclaw_mod.f90 \
-	$(GEOLIB)/riemannsolvers_geo.f \
 	$(GEOLIB)/topo_mod.f90 \
 	$(GEOLIB)/dtopo_mod.f90 \
 	$(GEOLIB)/readqinit_geo.f \
 	$(GEOLIB)/movetopo_geo.f \
+	$(GEOLIB)/riemannsolvers_geo.f \
 	$(GEOLIB)/cellgridintegrate_geo.f \
 	$(GEOLIB)/topointegral_geo.f \
 	$(GEOLIB)/bilinearintegral_geo.f \

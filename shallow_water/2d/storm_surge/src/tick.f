@@ -2,7 +2,7 @@ c
 c  -------------------------------------------------------------
 c
       subroutine tick(nvar,iout,nstart,nstop,cut,vtime,time,ichkpt,
-     &                naux,nout,tout,tchk,t0)
+     &                naux,nout,tout,tchk,t0,rest)
 c
       use  geoclaw_module
 
@@ -10,7 +10,7 @@ c
 
       include  "call.i"
 
-      logical    vtime, dumpout, dumpchk
+      logical    vtime, dumpout, dumpchk, rest
       dimension dtnew(maxlv), ntogo(maxlv), tlevel(maxlv)
       dimension tout(nout)
       dimension tchk(maxout)
@@ -183,7 +183,7 @@ c
 101       format(8h  level ,i5,32h  stays fixed during regridding )
           call regrid(nvar,lbase,cut,naux,t0)
           call setbestsrc()     ! need at every grid change
-c         call conck(1,nvar,time)
+c         call conck(1,nvar,time,rest)
 c         call outtre(lstart(lbase+1),.true.,nvar,naux)
 c note negative time to signal regridding output in plots
 c         call valout(lbase,lfine,-tlevel(lbase),nvar,naux)
@@ -289,7 +289,7 @@ c
  110      continue
           time    = time   + possk(1)
           ncycle  = ncycle + 1
-          call conck(1,nvar,time)
+          call conck(1,nvar,time,rest)
 
        if ((ichkpt.gt.0 .and. mod(ncycle,ichkpt).eq.0) 
      &      .or. dumpchk) then

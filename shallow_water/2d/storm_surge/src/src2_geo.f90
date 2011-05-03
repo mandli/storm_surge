@@ -21,7 +21,6 @@ subroutine src2(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
     double precision :: P_atmos_x,P_atmos_y
     
     integer :: mn,n
-    double precision :: local_dt,local_t
 
     ! Check for NANs in solution:
 !     call check4nans(maxmx,maxmy,meqn,mbc,mx,my,q,t,2)

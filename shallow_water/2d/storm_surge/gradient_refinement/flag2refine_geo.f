@@ -217,8 +217,21 @@ c                    # this cell is wet and a neighbor is dry ==> shoreline
                      go to 100 !# flagged, so no need to check anything else
                  endif
 
-c               endif
+c                
              endif
+C            Gradient based refinement
+             dq = 0.d0
+             do ml=1,layers
+                 do m=1,3 
+                 index = 3*(m-1)
+                 dqi = abs(q(i+1,j,index+m) / rho(ml) 
+     &                       - q(i-1,j,index+m) / rho(ml))
+                 dqj = abs(q(i,j+1,index+m) / rho(ml) 
+     &                       - q(i,j-1,index+m) / rho(ml))
+                 dq = max(dq,dqi,dqj)
+             enddo
+             if (dq > tolsp) amrflags(i,j) = DOFLAG
+             
           endif
           
 c        Refine based on momentum or speed of water

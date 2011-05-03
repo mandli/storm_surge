@@ -151,13 +151,6 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             endif
         enddo
         
-        if (dry_state_r(2).and.(.not.dry_state_l(2))) then
-            continue
-        endif
-        if (ixy == 2 .and. icom == 130) then
-            continue
-        endif
-        
         b_l = auxr(i-1,1)
         b_r = auxl(i,1)
         

@@ -20,7 +20,7 @@ subroutine rpt2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,aux1,aux2,aux3,imp,asdq,bmasdq
 !  The i-1/2 Riemann problem has left state qr(i-1) and right state ql(i)
 !
 !  If ixy == 1 then the sweep direction is x, ixy == 2 implies the y direction
-!  if ilr == 1 then 
+!  if imp == 1 then the split is in the negative direction, imp == 2 positive
 !
 !  Kyle T. Mandli (10-13-2010)
 ! ============================================================================
@@ -148,14 +148,6 @@ subroutine rpt2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,aux1,aux2,aux3,imp,asdq,bmasdq
             call rpt2_single_layer(ixy,ql_sl,qr_sl,aux1_sl,aux2_sl, &
                                    aux3_sl,imp,asdq_sl,bmasdq_sl,bpasdq_sl)
             
-            ! Parse output
-!             do mw=1,3
-!                 if (asdq(i,mw) > drytolerance) then
-!                     print *,asdq(i,1:3) / rho(1)
-!                     print *,bmasdq_sl,bpasdq_sl
-!                     exit
-!                 endif
-!             enddo
             bmasdq(i,1:3) = bmasdq_sl * rho(1)
             bmasdq(i,4:6) = 0.d0
             bpasdq(i,1:3) = bpasdq_sl * rho(1)
@@ -178,7 +170,7 @@ subroutine rpt2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,aux1,aux2,aux3,imp,asdq,bmasdq
         s(5:6) = sqrt(g * h_hat(1) * (1.d0 + alpha(3:4)))
 
         eig_vec(1,:) = [1.d0,1.d0,0.d0,0.d0,1.d0,1.d0]
-        eig_vec(t_index,:) = s
+        eig_vec(t_index,:) = [s(1),s(2),0.d0,0.d0,s(5),s(6)]
         eig_vec(n_index,:) = [u(1),u(1),1.d0,0.d0,u(1),u(1)]
         eig_vec(4,:) = [alpha(1),alpha(2),0.d0,0.d0,alpha(3),alpha(4)]
         eig_vec(t_index+3,:) = eig_vec(4,:) * s

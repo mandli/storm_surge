@@ -234,15 +234,6 @@ c        storm surge has ramp up time that may need refinement (KTM 2010-8-4)
                  speed(m) = 0.d0
              endif
          enddo
-                 
-C          if (q(i,j,1) / rho(1) < drytolerance) then
-C          if (q(i,j,1) / rho(1) < drytolerance) then
-C             speed(1) = sqrt((q(i,j,2) / q(i,j,1))**2 
-C      &                   + (q(i,j,3) / q(i,j,1))**2)
-C          else if (q(i,j,4) / rho(2) < drytolerance) then
-C             speed(2) = sqrt((q(i,j,5) / q(i,j,4))**2 
-C      &                   + (q(i,j,6) / q(i,j,4))**2)
-C          endif
 
          do m=1,max_speed_nest
              do index=1,layers
@@ -253,23 +244,6 @@ C          endif
                  endif
              enddo
          enddo
-C          speed1 = sqrt(q(i,j,2)**2 + q(i,j,3)**2) / rho(1)
-C          speed2 = sqrt(q(i,j,5)**2 + q(i,j,6)**2) / rho(2)
-C          if (.not.momentum_refinement) then
-C              if (q(i,j,1) > drytolerance) then
-C                  speed1 = speed1 / (q(i,j,1))
-C              endif
-C              if (q(i,j,4) > drytolerance) then
-C                  speed2 = speed2 / (q(i,j,4) * rho(2))
-C              endif
-C          endif
-C          do m=1,max_speed_nest
-C              if (((speed1 > speed_refine(m)).and.(level <= m)).or.
-C      &           ((speed2 > speed_refine(m)).and.(level <= m))) then
-C                  amrflags(i,j) = DOFLAG
-C                  go to 100
-C              endif
-C          enddo
 
  100    continue  !# end loop on i
  200    continue   !# end loop on j

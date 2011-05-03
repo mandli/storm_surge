@@ -155,7 +155,7 @@ def setrun(claw_pkg='geoclaw'):
     # The current t, dt, and cfl will be printed every time step
     # at AMR levels <= verbosity.  Set verbosity = 0 for no printing.
     #   (E.g. verbosity == 2 means print only on levels 1 and 2.)
-    clawdata.verbosity = 1
+    clawdata.verbosity = 2
     
     
 
@@ -258,8 +258,7 @@ def setrun(claw_pkg='geoclaw'):
 
 
     clawdata.tol = -1.0     # negative ==> don't use Richardson estimator
-    clawdata.tolsp = 0.5    # used in default flag2refine subroutine
-                            # (Not used in geoclaw!)
+    clawdata.tolsp = 0.25   # used in default flag2refine subroutine
 
     clawdata.cutoff = 0.7   # efficiency cutoff for grid generation
     clawdata.kcheck = 2     # how often to regrid (every kcheck steps)
