@@ -41,7 +41,7 @@ endif
 # ---------------------------------
 CLAW_SOURCES = \
 	$(HURRICANE_SRC)/multilayer_module.f90 \
-    $(HURRICANE_SRC)/hurricane.f90 \
+        $(HURRICANE_SRC)/hurricane.f90 \
 	./qinit_geo.f90 \
 	$(HURRICANE_SRC)/setprob.f90 \
 	$(HURRICANE_SRC)/b4step2_geo.f \

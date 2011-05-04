@@ -438,6 +438,6 @@ if __name__ == '__main__':
     
     # Write out topography and qinit data files if needed
     topo_file = './topo.data'
-    topo_data.write_topo_file(topo_file,bathy_type='shelf',
+    topo_data.write_topo_file(topo_file,bathy_type='shallow_shelf',
                                         plot=False,force=False)
     
