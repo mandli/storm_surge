@@ -75,7 +75,7 @@ def setrun(claw_pkg='geoclaw'):
 
     # Number of grid cells:
     # clawdata.mx = 70
-    factor = 4
+    factor = 1
     if direction == 1:
         clawdata.mx = 70 * factor
         clawdata.my = 60
@@ -116,7 +116,7 @@ def setrun(claw_pkg='geoclaw'):
     # Note that the time integration stops after the final output time.
     # The solution at initial time t0 is always written in addition.
 
-    clawdata.outstyle = 1
+    clawdata.outstyle = 3
     # Number of hours to simulate
     num_hours = 40
     # Output interval per hour, 1 = every hour, 0.5 = every half hour, etc...
@@ -410,7 +410,7 @@ def set_multilayer_data():
     data.rho = [0.90,1.0]
     
     # Algorithm Parameters
-    data.eigen_method = 1
+    data.eigen_method = 2
     data.richardson_tolerance = 0.95
     data.wave_tolerance = [0.1,0.1]
     data.dry_limit = True

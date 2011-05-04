@@ -812,7 +812,7 @@ def setplot(plotdata):
     # Surfaces
     plotfigure = plotdata.new_plotfigure(name='combined_surface',figno=130)
     plotfigure.show = True
-    plotfigure.kwargs = {'figsize':(6,6)}
+    plotfigure.kwargs = {'figsize':(6,8)}
     
     # Top surface
     plotaxes = plotfigure.new_plotaxes()

@@ -212,8 +212,8 @@ def setplot(plotdata):
         return current_data.q[:,:,6] - h1 - h2
     
     def extract_velocity(h,hu,DRY_TOL=10**-8):
-        # u = np.ones(hu.shape) * np.nan
-        u = np.zeros(hu.shape)
+        u = np.ones(hu.shape) * np.nan
+        # u = np.zeros(hu.shape)
         index = np.nonzero((np.abs(h) > DRY_TOL) * (h != np.nan))
         u[index[0],index[1]] = hu[index[0],index[1]] / h[index[0],index[1]]
         return u

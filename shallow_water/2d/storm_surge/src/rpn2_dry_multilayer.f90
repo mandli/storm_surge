@@ -61,6 +61,8 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
     double precision :: beta(6),alpha(4)
     logical :: dry_state_l(2), dry_state_r(2)
     
+    double precision :: tgamma_l,tgamma_r,ts(6),talpha(4)
+    
     ! Single layer locals
     integer, parameter :: max_iterations = 1
     double precision :: wall(3),fw(3,3),sw(3),phi_r(2),phi_l(2)
@@ -76,7 +78,7 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
     common /comxyt/ dtcom,dxcom,dycom,tcom,icom,jcom
 
     external dgesv
-
+    
     ! Initialize output variables
     amdq = 0.d0
     apdq = 0.d0
@@ -120,11 +122,6 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             
             ! Check for dry states
             if (h_l(j) < drytolerance) then
-!                 print *,"==================="
-!                 print "(a)","Left side dry"
-!                 print "(a,2d16.8)","h_l",h_l
-!                 print "(a,2d16.8)","h_r",h_r
-                
                 dry_state_l(j) = .true.
                 hu_l(j) = 0.d0
                 hv_l(j) = 0.d0
@@ -135,11 +132,6 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
                 v_l(j) = hv_l(j) / h_l(j)
             endif
             if (h_r(j) < drytolerance) then
-!                 print *,"==================="
-!                 print "(a)","Right side dry"
-!                 print "(a,2d16.8)","h_l",h_l
-!                 print "(a,2d16.8)","h_r",h_r
-                
                 dry_state_r(j) = .true.
                 hu_r(j) = 0.d0
                 hv_r(j) = 0.d0
@@ -269,22 +261,57 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         ! ====================================================================
         ! Dry state, bottom layer to right
         else if(dry_state_r(2).and.(.not.dry_state_l(2))) then
-            ! Assume currently no wetting or drying, otherwise we need to
-            ! to check here if the state to the right is dry but shold be wet
-            h_r(2) = h_l(2)
-            hu_r(2) = -hu_l(2)
-            u_r(2) = -u_l(2)
-            hv_r(2) = hv_l(2)
-            v_r(2) = v_l(2)
+            if (h_l(2) + b_l > b_r) then
+                ! Bathy is shorter than water, time to wet
+                momentum_transfer(1) =  g * rho(1) * h_ave(1) * (h_r(2) - h_l(2) + b_r - b_l)
+                momentum_transfer(2) = -g * rho(1) * h_ave(1) * (h_r(2) - h_l(2)) + g * rho(2) * h_ave(2) * (b_r - b_l)
+                flux_transfer_r = g * rho(1) * h_r(1) * h_r(2)
+                flux_transfer_l = g * rho(1) * h_l(1) * h_l(2)
+            else
+                if (tcom >= 0.88623361E-01) then
+                    continue
+                endif
+                ! Bathy is taller than current water    
+                gamma_l = h_l(2) / h_l(1)
+                gamma_r = h_r(2) / h_r(1)
+                    
+                alpha(1) = 0.5d0*(gamma_l-1.d0+sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
+                alpha(2) = 0.5d0*(gamma_l-1.d0-sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
+                alpha(3) = 0.5d0*(gamma_r-1.d0-sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
+                alpha(4) = 0.5d0*(gamma_r-1.d0+sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
+
+                s(i,1) = -sqrt(g*h_l(1)*(1+alpha(1)))
+                s(i,2) = -sqrt(g*h_l(1)*(1+alpha(2)))
+                s(i,5) = sqrt(g*h_r(1)*(1+alpha(3)))
+                s(i,6) = sqrt(g*h_r(1)*(1+alpha(4)))
+
+                h_r(2) = h_l(2)
+                hu_r(2) = -hu_l(2)
+                u_r(2) = -u_l(2)
+                hv_r(2) = hv_l(2)
+                v_r(2) = v_l(2)
             
-            flux_transfer_r = 0.d0
-            flux_transfer_l = 0.d0
-            momentum_transfer(1) = g * rho(1) * h_ave(1) * (b_r - h_l(2) - b_l)
-            momentum_transfer(2) = 0.d0
-            
+                flux_transfer_r = 0.d0
+                flux_transfer_l = 0.d0
+                momentum_transfer(1) = g * rho(1) * h_ave(1) * (b_r - h_l(2) - b_l)
+                momentum_transfer(2) = 0.d0
+            endif
         ! ====================================================================
         ! Dry state, bottom layer to left
-        else if(dry_state_l(2).and.(.not.dry_state_r(2))) then
+        else if(dry_state_l(2).and.(.not.dry_state_r(2))) then    
+            gamma_l = h_l(2) / h_l(1)
+            gamma_r = h_r(2) / h_r(1)
+                        
+            alpha(1) = 0.5d0*(gamma_l-1.d0+sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
+            alpha(2) = 0.5d0*(gamma_l-1.d0-sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
+            alpha(3) = 0.5d0*(gamma_r-1.d0-sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
+            alpha(4) = 0.5d0*(gamma_r-1.d0+sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
+
+            s(i,1) = -sqrt(g*h_l(1)*(1+alpha(1)))
+            s(i,2) = -sqrt(g*h_l(1)*(1+alpha(2)))
+            s(i,5) = sqrt(g*h_r(1)*(1+alpha(3)))
+            s(i,6) = sqrt(g*h_r(1)*(1+alpha(4)))
+            
             h_l(2) = h_r(2)
             hu_l(2) = -hu_r(2)
             u_l(2) = -u_r(2)
@@ -298,7 +325,20 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             
         ! ====================================================================
         ! Full two layer case
-        else
+        else    
+            gamma_l = h_l(2) / h_l(1)
+            gamma_r = h_r(2) / h_r(1)
+                        
+            alpha(1) = 0.5d0*(gamma_l-1.d0+sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
+            alpha(2) = 0.5d0*(gamma_l-1.d0-sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
+            alpha(3) = 0.5d0*(gamma_r-1.d0-sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
+            alpha(4) = 0.5d0*(gamma_r-1.d0+sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
+
+            s(i,1) = -sqrt(g*h_l(1)*(1+alpha(1)))
+            s(i,2) = -sqrt(g*h_l(1)*(1+alpha(2)))
+            s(i,5) = sqrt(g*h_r(1)*(1+alpha(3)))
+            s(i,6) = sqrt(g*h_r(1)*(1+alpha(4)))
+            
             momentum_transfer(1) =  g * rho(1) * h_ave(1) * (h_r(2) - h_l(2) + b_r - b_l)
             momentum_transfer(2) = -g * rho(1) * h_ave(1) * (h_r(2) - h_l(2)) + g * rho(2) * h_ave(2) * (b_r - b_l)
             flux_transfer_r = g * rho(1) * h_r(1) * h_r(2)
@@ -334,33 +374,74 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
 !         enddo
         if ((eigen_method > 0).and.(eigen_method <= 3)) then
             if (eigen_method == 1) then
-                gamma_l = h_hat_l(2) / h_hat_l(1)
-                gamma_r = h_hat_r(2) / h_hat_r(1)
-                
-                alpha(1) = 0.5d0*(gamma_l-1.d0+sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
-                alpha(2) = 0.5d0*(gamma_l-1.d0-sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
-                alpha(3) = 0.5d0*(gamma_r-1.d0-sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
-                alpha(4) = 0.5d0*(gamma_r-1.d0+sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
-                
-                s(i,1) = -sqrt(g*h_hat_l(1)*(1+alpha(1)))
-                s(i,2) = -sqrt(g*h_hat_l(1)*(1+alpha(2)))
-                s(i,5) = sqrt(g*h_hat_r(1)*(1+alpha(3)))
-                s(i,6) = sqrt(g*h_hat_r(1)*(1+alpha(4)))
-            else if (eigen_method == 2) then
-                gamma_l = h_l(2) / h_l(1)
-                gamma_r = h_r(2) / h_r(1)
+                if ((dry_state_r(2).and.(.not.dry_state_l(2))).and.(h_l(2) + b_l > b_r))  then
+                                        
+                    gamma_l = h_l(2) / h_l(1)
+                    gamma_r = h_r(2) / h_r(1)
             
-                alpha(1) = 0.5d0*(gamma_l-1.d0+sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
-                alpha(2) = 0.5d0*(gamma_l-1.d0-sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
-                alpha(3) = 0.5d0*(gamma_r-1.d0-sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
-                alpha(4) = 0.5d0*(gamma_r-1.d0+sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
+                    alpha(1) = 0.5d0*(gamma_l-1.d0+sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
+                    alpha(2) = 0.5d0*(gamma_l-1.d0-sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
+            
+                    s(i,1) = -sqrt(g*h_l(1)*(1+alpha(1)))
+                    s(i,2) = -sqrt(g*h_l(1)*(1+alpha(2)))
+                    s(i,5) = u_l(2) + 2.d0 * sqrt(g * h_l(2))
+                    s(i,6) = u_r(1) + sqrt(g * h_r(1))
+                    
+                    alpha(3) = (s(i,5)**2 - g * h_r(1)) / (g*h_r(1))
+                    alpha(4) = (s(i,6)**2 - g * h_r(1)) / (g*h_r(1))
+                else if ((dry_state_l(2).and.(.not.dry_state_l(2))).and.(h_r(2) > b_l)) then
+                    stop
+                else
+                    gamma_l = h_hat_l(2) / h_hat_l(1)
+                    gamma_r = h_hat_r(2) / h_hat_r(1)
+            
+                    alpha(1) = 0.5d0*(gamma_l-1.d0+sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
+                    alpha(2) = 0.5d0*(gamma_l-1.d0-sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
+                    alpha(3) = 0.5d0*(gamma_r-1.d0-sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
+                    alpha(4) = 0.5d0*(gamma_r-1.d0+sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
+            
+                    s(i,1) = -sqrt(g*h_hat_l(1)*(1+alpha(1)))
+                    s(i,2) = -sqrt(g*h_hat_l(1)*(1+alpha(2)))
+                    s(i,5) = sqrt(g*h_hat_r(1)*(1+alpha(3)))
+                    s(i,6) = sqrt(g*h_hat_r(1)*(1+alpha(4)))
+                    
+                endif
+            else if (eigen_method == 2) then
+                
+                tgamma_l = h_hat_l(2) / h_hat_l(1)
+                tgamma_r = h_hat_r(2) / h_hat_r(1)
+                
+                talpha(1) = 0.5d0*(tgamma_l-1.d0+sqrt((tgamma_l-1.d0)**2+4.d0*r*tgamma_l))
+                talpha(2) = 0.5d0*(tgamma_l-1.d0-sqrt((tgamma_l-1.d0)**2+4.d0*r*tgamma_l))
+                talpha(3) = 0.5d0*(tgamma_r-1.d0-sqrt((tgamma_r-1.d0)**2+4.d0*r*tgamma_r))
+                talpha(4) = 0.5d0*(tgamma_r-1.d0+sqrt((tgamma_r-1.d0)**2+4.d0*r*tgamma_r))
 
-                s(i,1) = -sqrt(g*h_l(1)*(1+alpha(1)))
-                s(i,2) = -sqrt(g*h_l(1)*(1+alpha(2)))
-                s(i,3) = sqrt(g*h_r(1)*(1+alpha(3)))
-                s(i,4) = sqrt(g*h_r(1)*(1+alpha(4)))
+                ts(1) = -sqrt(g*h_hat_l(1)*(1+talpha(1)))
+                ts(2) = -sqrt(g*h_hat_l(1)*(1+talpha(2)))
+                ts(5) = sqrt(g*h_hat_r(1)*(1+talpha(3)))
+                ts(6) = sqrt(g*h_hat_r(1)*(1+talpha(4)))
+            
+!                 alpha(1) = 0.5d0*(gamma_l-1.d0+sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
+!                 alpha(2) = 0.5d0*(gamma_l-1.d0-sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
+!                 alpha(3) = 0.5d0*(gamma_r-1.d0-sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
+!                 alpha(4) = 0.5d0*(gamma_r-1.d0+sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
+! 
+!                 s(i,1) = -sqrt(g*h_l(1)*(1+alpha(1)))
+!                 s(i,2) = -sqrt(g*h_l(1)*(1+alpha(2)))
+!                 s(i,5) = sqrt(g*h_r(1)*(1+alpha(3)))
+!                 s(i,6) = sqrt(g*h_r(1)*(1+alpha(4)))
+                                    
+                if (tgamma_l - gamma_l > 1.d-5 .or. tgamma_r - gamma_r > 1.d-5) then
+    !                         print *,tgamma_l - gamma_l,tgamma_r - gamma_r
+                    continue
+                endif
+                
             else if (eigen_method == 3) then
                 stop "Eigenstructure calculation not implemented!"
+            endif
+            
+            if (h_r(2) > 0.4.and.dry_state_r(2)) then
+                continue
             endif
             
             s(i,3:4) = advected_speed
@@ -457,43 +538,6 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         forall(mw=1:mwaves)
             fwave(i,:,mw) = eig_vec(:,mw) * beta(mw)
         end forall
-        
-        ! ====================================================================
-        !  Zero out waves that should be zero
-        if (dry_state_r(2).and.(.not.dry_state_l(2))) then
-!             do mw=1,6
-!                 if (s(i,mw) > 0.d0) then
-!                     do m=4,6
-!                         if (fwave(i,m,mw) /= 0.d0) then
-!                             print "(d16.8)",s(i,mw)
-!                             print "(3d16.8)",(fwave(i,j,mw),j=4,6)
-!                             fwave(i,4:6,mw) = 0.d0
-!                         endif
-!                     enddo
-!                 endif
-!             enddo
-!             fwave(i,4:6,4) = 0.d0
-!             print *,"======================================="
-!             print *,"Right dry state...",i,jcom
-!             do j=1,6
-!                 print "(6d16.8)",(fwave(i,j,m),m=1,6)
-!             enddo
-!             fwave(i,4:6,4:6) = 0.d0
-!             fwave(i,4:6,6) = 0.d0
-!             print *,"======================================="
-!             print *,"Right dry state..."
-!             do j=1,6
-!                 print "(6d16.8)",(fwave(i,j,m),m=1,6)
-!             enddo
-        else if (dry_state_l(2).and.(.not.dry_state_r(2))) then
-!             fwave(i,4:6,1) = 0.d0
-!             fwave(i,4:6,3) = 0.d0
-!             print *,"======================================="
-!             print *,"Left dry state..."
-!             do j=1,6
-!                 print "(6d16.8)",(fwave(i,j,m),m=1,6)
-!             enddo
-        endif
             
     enddo
     ! == End of Riemann Solver Loop per grid cell ============================

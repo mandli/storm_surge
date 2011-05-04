@@ -14,7 +14,7 @@ subroutine qinit(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
     integer, intent(in) :: maxmx,maxmy,meqn,mbc,mx,my,maux
     double precision, intent(in) :: xlower,ylower,dx,dy
     double precision, intent(inout) :: q(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc,meqn)
-    double precision, intent(in) :: aux(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc,maux)
+    double precision, intent(inout) :: aux(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc,maux)
     
     ! Locals
     integer :: i,j
@@ -105,6 +105,13 @@ subroutine qinit(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
 !                 if (q(i+1,j,4) / rho(2) < drytolerance .and. .not.(q(i,j,4) / rho(2) < drytolerance)) then
                     q(i,j,1) = q(i,j,1) + epsilon * rho(1)
 !                     q(i,j,4) = q(i,j,4) + epsilon * rho(2)
+                endif
+            else if (init_type == 8) then
+                if (init_location(1) < x) then
+                    aux(i,j,7) = eta(1) - aux(i,j,1)
+                    aux(i,j,8) = 0.d0
+                    q(i,j,1) = aux(i,j,7) * rho(1)
+                    q(i,j,4) = aux(i,j,8) * rho(2)
                 endif
             endif
         enddo

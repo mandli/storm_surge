@@ -74,8 +74,8 @@ def setrun(claw_pkg='geoclaw'):
         
 
     # Number of grid cells:
-    # clawdata.mx = 70
-    clawdata.mx = 480
+    clawdata.mx = 70
+    # clawdata.mx = 480
     clawdata.my = 60
     # clawdata.my = 120
     # clawdata.mx = 100
@@ -111,7 +111,7 @@ def setrun(claw_pkg='geoclaw'):
     # Note that the time integration stops after the final output time.
     # The solution at initial time t0 is always written in addition.
 
-    clawdata.outstyle = 1
+    clawdata.outstyle = 3
     # Number of hours to simulate
     num_hours = 40
     # Output interval per hour, 1 = every hour, 0.5 = every half hour, etc...
@@ -171,10 +171,10 @@ def setrun(claw_pkg='geoclaw'):
     
     # Desired Courant number if variable dt used, and max to allow without 
     # retaking step with a smaller dt:
-    clawdata.cfl_desired = 0.8
-    clawdata.cfl_max = 0.9
-    # clawdata.cfl_desired = 0.4
-    # clawdata.cfl_max = 0.5
+    # clawdata.cfl_desired = 0.8
+    # clawdata.cfl_max = 0.9
+    clawdata.cfl_desired = 0.4
+    clawdata.cfl_max = 0.5
     
     # Maximum number of time steps to allow between output times:
     clawdata.max_steps = 5000
@@ -187,10 +187,10 @@ def setrun(claw_pkg='geoclaw'):
     # ------------------
 
     # Order of accuracy:  1 => Godunov,  2 => Lax-Wendroff plus limiters
-    clawdata.order = 2
+    clawdata.order = 1
     
     # Transverse order for 2d or 3d (not used in 1d):
-    clawdata.order_trans = 2
+    clawdata.order_trans = 0
     
     # Number of waves in the Riemann solution:
     clawdata.mwaves = 6
@@ -232,7 +232,7 @@ def setrun(claw_pkg='geoclaw'):
 
 
     # max number of refinement levels:
-    mxnest = 2
+    mxnest = 1
 
     clawdata.mxnest = -mxnest   # negative ==> anisotropic refinement in x,y,t
 
@@ -412,9 +412,9 @@ def set_multilayer_data():
     
     # Initial conditions
     # data.eta = [0.0,-5000.0]
-    data.eta = [0.0,-0.6]
-    data.init_type = 1
-    data.init_location = [0.45,0.0]
+    data.eta = [0.0,-0.5]
+    data.init_type = 0
+    data.init_location = [0.5,0.0]
     data.wave_family = wave_family
     data.epsilon = 0.05
     data.sigma = 0.02
@@ -422,7 +422,7 @@ def set_multilayer_data():
     # Bathy settings
     data.bathy_location = 0.5
     data.bathy_left = -1.0
-    data.bathy_right = -0.2
+    data.bathy_right = -0.6
     
     return data
     
