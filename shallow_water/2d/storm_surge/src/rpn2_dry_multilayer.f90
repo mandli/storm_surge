@@ -262,8 +262,8 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         ! Dry state, bottom layer to right
         else if(dry_state_r(2).and.(.not.dry_state_l(2))) then
             if (h_l(2) + b_l > b_r) then
-                ! Bathy is shorter than water, time to wet
-                stop "Inundation not handled"
+                print *,"h_l(2) + b_l = ",h_l(2) + b_l," > b_r = ",b_r
+                stop "Inundation of lower layer not handled, right dry."
             else 
                 h_r(2) = h_l(2)
                 hu_r(2) = -hu_l(2)
@@ -280,7 +280,8 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         ! Dry state, bottom layer to left
         else if(dry_state_l(2).and.(.not.dry_state_r(2))) then    
             if (h_r(2) + b_r > b_l) then
-                stop "Inundation not handled"
+                print *,"h_r(2) + b_r = ",h_r(2) + b_r," > b_l = ",b_l
+                stop "Inundation of lower layer not handled, left dry."
             else
                 h_l(2) = h_r(2)
                 hu_l(2) = -hu_r(2)
