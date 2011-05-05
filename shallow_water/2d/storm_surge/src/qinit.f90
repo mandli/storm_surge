@@ -87,7 +87,7 @@ subroutine qinit(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
                 gamma = aux(i,j,8) / aux(i,j,7)
     !             alpha = 0.5d0 * (gamma - 1.d0 + sqrt((gamma-1.d0)**2+4.d0*r*gamma))
                 alpha = 0.d0
-                xmid = 0.5d0*(-180.e3+-80.e3)
+                xmid = 0.5d0*(-180.e3-80.e3)
 !                 xmid = 300d3
                 if ((x > 275.d3).and.(x < 325.d3)) then
                     deta = epsilon * sin((x-xmid)*PI/(-80.e3-xmid))
