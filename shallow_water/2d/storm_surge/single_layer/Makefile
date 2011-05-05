@@ -41,7 +41,7 @@ endif
 # ---------------------------------
 CLAW_SOURCES = \
 	$(HURRICANE_SRC)/multilayer_module.f90 \
-    $(HURRICANE_SRC)/hurricane.f90 \
+        $(HURRICANE_SRC)/hurricane.f90 \
 	./qinit_geo.f90 \
 	$(HURRICANE_SRC)/setprob.f90 \
 	$(HURRICANE_SRC)/b4step2_geo.f \
@@ -49,7 +49,8 @@ CLAW_SOURCES = \
 	$(HURRICANE_SRC)/setaux_geo.f \
 	./flag2refine_geo.f \
 	./src2_geo.f90 \
-	./src1d_geo.f90
+	./src1d_geo.f90 \
+	$(HURRICANE_SRC)/tick.f
 
 # The source computations must be done locally as the equations solved by
 # geoclaw do not include density so we must devide through by the density of
@@ -87,7 +88,6 @@ CLAW_LIBSOURCES = \
 	$(GEOLIB)/allowflag_geo.f  \
 	$(GEOLIB)/dumpgauge_geo.f \
 	$(GEOLIB)/upbnd_geo.f  \
-	$(GEOLIB)/tick_geo.f \
 	$(GEOLIB)/setgrd_geo.f \
 	$(GEOLIB)/gfixup_geo.f \
 	$(GEOLIB)/ginit_geo.f \

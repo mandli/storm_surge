@@ -70,7 +70,7 @@ CLAW_LIBSOURCES = \
 	$(GEOLIB)/dtopo_mod.f90 \
 	$(GEOLIB)/readqinit_geo.f \
 	$(GEOLIB)/movetopo_geo.f \
-	$(GEOLIB)/cellgridintegrate_geo.f \
+        $(GEOLIB)/cellgridintegrate_geo.f \
 	$(GEOLIB)/topointegral_geo.f \
 	$(GEOLIB)/bilinearintegral_geo.f \
 	$(GEOLIB)/fgridinterp_geo.f \

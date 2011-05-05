@@ -153,7 +153,7 @@ def setrun(claw_pkg='geoclaw'):
     # The current t, dt, and cfl will be printed every time step
     # at AMR levels <= verbosity.  Set verbosity = 0 for no printing.
     #   (E.g. verbosity == 2 means print only on levels 1 and 2.)
-    clawdata.verbosity = 1
+    clawdata.verbosity = 2
     
     
 
@@ -374,11 +374,11 @@ def set_hurricane_data(ramp_up_time=RAMP_UP_TIME):
     
     # Path of hurricane, speed in m/s
     velocity = 5.0
-    angle = 0.0 * np.pi
+    angle = 0.50 * np.pi
     # Speeds of hurricane
     data.hurricane_velocity = (velocity * np.cos(angle),velocity * np.sin(angle))
     # Initial position of hurricane eye at t = 0
-    data.R_eye_init = (0.0,0.0) 
+    data.R_eye_init = (440e3,-100e3) 
 
     # Hurricane parameters
     # These match Hurricane Tracy
@@ -438,6 +438,6 @@ if __name__ == '__main__':
     
     # Write out topography and qinit data files if needed
     topo_file = './topo.data'
-    topo_data.write_topo_file(topo_file,bathy_type='shelf',
+    topo_data.write_topo_file(topo_file,bathy_type='shallow_shelf',
                                         plot=False,force=False)
     

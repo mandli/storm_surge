@@ -131,7 +131,7 @@ def setrun(claw_pkg='geoclaw'):
 
     elif clawdata.outstyle == 2:
         # Specify a list of output times.
-        t_start = 0.69300e5
+        t_start = 0.405273E+02
         dt = 0.4053e2
         # clawdata.tout = [0.0,3.0,3.1,3.2,3.3,3.4,3.5,3.6,3.7,3.8,3.9,4.0]
         # clawdata.tout = [x*60**2 for x in clawdata.tout]
@@ -331,7 +331,7 @@ def setgeo(rundata):
     # to specify regions of refinement append lines of the form
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
     # geodata.regions.append([1, 1, 0.e0, 1.e10, -100.,100., -100.,100.])
-    # geodata.regions.append([1, 2, 0.e0, 1.e10,    0.,100., -100.,100.])
+    #geodata.regions.append([5, 5, 0.e0, 1.e10,425e3,475e3,-325e3,325e3])
 
     # == setgauges.data values ==
     geodata.gauges = []
@@ -389,7 +389,7 @@ def set_hurricane_data(ramp_up_time=RAMP_UP_TIME):
     data.wind_tolerance = 1e-6
     
     # Path of hurricane, speed in m/s
-    velocity = 5.0
+    velocity = 0.0
     angle = 0.0 * np.pi
     # Speeds of hurricane
     data.hurricane_velocity = (velocity * np.cos(angle),velocity * np.sin(angle)) 
@@ -432,10 +432,6 @@ def set_multilayer_data():
     
     # Bathy settings
     data.bathy_location = 450e3
-    # data.bathy_left = -4000
-    # data.bathy_left = -200
-    # data.bathy_left = -300
-    # data.bathy_right = -200
     data.bathy_left = -4000
     data.bathy_right = -200
     

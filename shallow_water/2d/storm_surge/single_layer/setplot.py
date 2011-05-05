@@ -390,7 +390,7 @@ def setplot(plotdata):
     # ========================================================================
     # Wind field
     plotfigure = plotdata.new_plotfigure(name='wind',figno=3)
-    plotfigure.show = hurricane_data.wind_src and False
+    plotfigure.show = hurricane_data.wind_src and True
     
     
     plotaxes = plotfigure.new_plotaxes()
