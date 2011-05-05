@@ -54,14 +54,14 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
     double precision :: eta_l(2),eta_r(2),h_ave(2),momentum_transfer(2)
     double precision :: h_hat_l(2),h_hat_r(2),gamma_l,gamma_r
     double precision :: flux_transfer_l,flux_transfer_r,lambda(6)
+    double precision :: total_depth_l,total_depth_r,mult_depth_l
+    double precision :: mult_depth_r
 
     ! Solver variables
     double precision, dimension(6) :: delta,flux_r,flux_l,pivot
     double precision, dimension(6,6) :: eig_vec,A
     double precision :: beta(6),alpha(4)
     logical :: dry_state_l(2), dry_state_r(2)
-    
-    double precision :: tgamma_l,tgamma_r,ts(6),talpha(4)
     
     ! Single layer locals
     integer, parameter :: max_iterations = 1
@@ -325,37 +325,28 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             call linearized_eigen(h_l,h_r,hu_l,hu_r,hv_l,hv_r,u_l,u_r,v_l, &
                 v_r,n_index,t_index,lambda,eig_vec)
             s(i,:) = lambda
-        else if (eigen_method == 3) then            
-            gamma_l = h_hat_l(2) / h_hat_l(1)
-            gamma_r = h_hat_r(2) / h_hat_r(1)
-    
-            alpha(1) = 0.5d0*(gamma_l-1.d0+sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
-            alpha(2) = 0.5d0*(gamma_l-1.d0-sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
-            alpha(3) = 0.5d0*(gamma_r-1.d0-sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
-            alpha(4) = 0.5d0*(gamma_r-1.d0+sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
-    
-            s(i,1) = -sqrt(g*h_hat_l(1)*(1+alpha(1)))
-            s(i,2) = -sqrt(g*h_hat_l(1)*(1+alpha(2)))
-            s(i,3:4) = 0.5d0 * (u_l(:) + u_r(:))
-            s(i,5) = sqrt(g*h_hat_r(1)*(1+alpha(3)))
-            s(i,6) = sqrt(g*h_hat_r(1)*(1+alpha(4)))
-            
-            ! Compute eigenspace exactly based on eigenvalues provided
-            eig_vec(1,:) = [1.d0,1.d0,0.d0,0.d0,1.d0,1.d0]
-            
-            eig_vec(n_index,:) = [s(i,1),s(i,2),0.d0,0.d0,s(i,5),s(i,6)]
-            
-            eig_vec(t_index,:) = [v_l(1),v_l(1),1.d0,0.d0,v_r(1),v_r(1)]
+        else if (eigen_method == 3) then      
+            total_depth_l = sum(h_l)
+            total_depth_r = sum(h_r)
+            mult_depth_l = product(h_l)
+            mult_depth_r = product(h_r)
+                              
+            s(i,1) = - sqrt(g*total_depth_l) + 0.5d0 * mult_depth_l/ total_depth_l**(3/2) * one_minus_r
+            s(i,2) = - sqrt(g * mult_depth_l / total_depth_l * one_minus_r)
+            s(i,3:4) = 0.5d0 * (u_l + u_r)
+            s(i,5) = sqrt(g * mult_depth_r / total_depth_r * one_minus_r)
+            s(i,6) = sqrt(g*total_depth_r) - 0.5d0 * mult_depth_r / total_depth_r**(3/2) * one_minus_r
 
-            eig_vec(4,1:2) = alpha(1:2)
+            eig_vec(1,:) = [1.d0,1.d0,0.d0,0.d0,1.d0,1.d0]
+            eig_vec(n_index,:) = [s(i,1),s(i,2),0.d0,0.d0,s(i,5),s(i,6)]
+            eig_vec(t_index,:) = [v_l(1),v_l(1),1.d0,0.d0,v_r(1),v_r(1)]
+            eig_vec(4,1:2) = ((s(i,1:2)-u_l(1))**2 - g*h_l(1)) / (r*g*h_l(1))
             eig_vec(4,3:4) = 0.d0
-            eig_vec(4,5:6) = alpha(3:4)
-            
+            eig_vec(4,5:6) = ((s(i,5:6)-u_r(1))**2 - g*h_r(1)) / (r*g*h_r(1))
             eig_vec(n_index+3,:) = s(i,:) * eig_vec(4,:)
-            
-            eig_vec(t_index+3,1:2) = v_l(2) * alpha(1:2)
+            eig_vec(t_index+3,1:2) = v_l(2) * eig_vec(4,1:2)
             eig_vec(t_index+3,3:4) = [0.d0,1.d0]
-            eig_vec(t_index+3,5:6) = v_r(2) * alpha(3:4)
+            eig_vec(t_index+3,5:6) = v_r(2) * eig_vec(4,5:6)
         else if (eigen_method == 4) then
 
             ! Only one side is dry, use linearized eigen solver
@@ -422,6 +413,7 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             else if (dry_state_r(2)) then
                 print *,"right dry"
             endif
+            print *,h_r(1),h_r(1)
             print *,h_r(2),h_l(2)
             print *,hu_r(2),hu_l(2)
             print *,hv_r(2),hv_l(2)
