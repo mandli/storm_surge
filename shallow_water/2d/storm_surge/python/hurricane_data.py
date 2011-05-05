@@ -49,7 +49,7 @@ class HurricaneData(data.Data):
     def write(self,out_file='./hurricane.data',datasource="setrun.py"):
         """Write out the data file to the path given"""
 
-        print "Creating data file %s" % file
+        print "Creating data file %s" % out_file
         out_file = open(out_file,'w')
         
         data.data_write(out_file,self,'wind_src','(Wind source term used)')
