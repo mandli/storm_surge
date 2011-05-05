@@ -116,7 +116,7 @@ def setrun(claw_pkg='geoclaw'):
     # Note that the time integration stops after the final output time.
     # The solution at initial time t0 is always written in addition.
 
-    clawdata.outstyle = 1
+    clawdata.outstyle = 3
     # Number of hours to simulate
     num_hours = 40
     # Output interval per hour, 1 = every hour, 0.5 = every half hour, etc...
