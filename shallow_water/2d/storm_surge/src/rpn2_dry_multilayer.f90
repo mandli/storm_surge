@@ -293,7 +293,6 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
                 momentum_transfer(1) = g * rho(1) * h_ave(1) * (b_r + h_r(2) - b_l)
                 momentum_transfer(2) = 0.d0
             endif
-            
         ! ====================================================================
         ! Full two layer case
         else
@@ -302,6 +301,7 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             flux_transfer_r = g * rho(1) * h_r(1) * h_r(2)
             flux_transfer_l = g * rho(1) * h_l(1) * h_l(2)
         endif
+            
 
         ! Check Richardson number
         kappa_l = (u_l(1) - u_l(2))**2 / (g*one_minus_r*sum(h_l))
@@ -380,7 +380,8 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         endif
         
         ! ====================================================================
-        ! Compute jump in fluxes, this is generic due to terms set above
+        ! Compute jump in fluxes
+        
         do j=1,2
             layer_index = 3*(j-1)
             flux_r(layer_index+1) = rho(j) * hu_r(j)

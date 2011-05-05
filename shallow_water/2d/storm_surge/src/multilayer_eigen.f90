@@ -83,9 +83,9 @@ subroutine lapack_eigen(h_l,h_r,hu_l,hu_r,hv_l,hv_r,u_l,u_r,v_l,v_r, &
     
     ! Local
     integer, parameter :: lwork = 6*6
-    integer :: i,info
-    double precision :: h_ave(2),u_ave(2),v_ave(2),A(6,6)
-    double precision :: real_evalues(6),imag_evalues(6),empty,work(1,lwork)
+    integer :: i,j,m,info
+    double precision :: h_ave(2),u_ave(2),v_ave(2),A(6,6),A_copy(6,6)
+    double precision :: imag_evalues(6),empty,work(1,lwork)
     double precision :: g
     
     g = grav
@@ -113,11 +113,13 @@ subroutine lapack_eigen(h_l,h_r,hu_l,hu_r,hv_l,hv_r,u_l,u_r,v_l,v_r, &
     A(4,n_index+3) = 1.d0
     
     A(n_index+3,1) = g*h_ave(2)
-    A(n_index+3,4) = -u_ave(1)**2 + g*h_ave(1)
+    A(n_index+3,4) = -u_ave(2)**2 + g*h_ave(2)
     A(n_index+3,n_index+3) = 2.d0 * u_ave(2)
     
+    A_copy = A
+    
     ! Call LAPACK
-    call dgeev('N','V',6,A,6,real_evalues,imag_evalues,empty,1,eig_vec,6,work,lwork,info)
+    call dgeev('N','V',6,A,6,s,imag_evalues,empty,1,eig_vec,6,work,lwork,info)
     if (info < 0) then
         info = -info
         print "(a,i1,a)","The ",info,"th argument had an illegal value."
@@ -133,11 +135,10 @@ subroutine lapack_eigen(h_l,h_r,hu_l,hu_r,hv_l,hv_r,u_l,u_r,v_l,v_r, &
         if (eig_vec(1,i) /= 0.d0) then
             eig_vec(:,i) = eig_vec(:,i) / eig_vec(1,i)
         endif
-        if (imag_evalues(i) > 0.d0) then
+        if (abs(imag_evalues(i)) > 0.d0) then
             print "(a,i1,a,d16.8)","Imaginary eigenvalue(",i,") > 0.0",imag_evalues(i)
             stop
         endif
-        s(i) = real_evalues(i)
     enddo
 
 end subroutine lapack_eigen

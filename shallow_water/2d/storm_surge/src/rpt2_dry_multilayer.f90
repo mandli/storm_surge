@@ -52,6 +52,8 @@ subroutine rpt2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,aux1,aux2,aux3,imp,asdq,bmasdq
     double precision :: aux1_sl(2,3),aux2_sl(2,3),aux3_sl(2,3)
     double precision :: asdq_sl(meqn),bmasdq_sl(meqn),bpasdq_sl(meqn)
     
+    double precision :: ts(6),teig_vec(6,6)
+    
     integer :: layer_index
     logical :: dry_state_l(2),dry_state_r(2)
     double precision :: h(2),hu(2),hv(2),u(2),v(2),h_hat(2),gamma
@@ -162,7 +164,7 @@ subroutine rpt2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,aux1,aux2,aux3,imp,asdq,bmasdq
             call linearized_eigen(h_hat,h_hat,hv,hv,hu,hu,v,v,u,u,t_index, &
                 n_index,s,eig_vec)
         else if (eigen_method == 2) then
-            call linearized_eigen(h_hat,h_hat,hv,hv,hu,hu,v,v,u,u,t_index, &
+            call linearized_eigen(h,h,hv,hv,hu,hu,v,v,u,u,t_index, &
                 n_index,s,eig_vec)
         else if (eigen_method == 3) then
             gamma = h_hat(2) / h_hat(1)
@@ -183,14 +185,13 @@ subroutine rpt2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,aux1,aux2,aux3,imp,asdq,bmasdq
             eig_vec(t_index+3,:) = eig_vec(4,:) * s
             eig_vec(n_index+3,:) = [u(2),u(2),0.d0,1.d0,u(2),u(2)]
         else if (eigen_method == 4) then
-            call lapack_eigen(h,h,hu,hu,hv,hv,u,u,v,v,t_index,n_index, &
-                s,eig_vec)
+            call lapack_eigen(h,h,hv,hv,hu,hu,v,v,u,u,t_index,n_index,s, &
+                eig_vec)
         else
             print "(a,i2,a)","Eigenstructure method ",eigen_method, &
                   " requested not available."
             stop 
         endif
-        
 
         ! ====================================================================
         !  Solve projection onto eigenvectors - Use LAPACK's dgesv routine
