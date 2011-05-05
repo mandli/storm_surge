@@ -31,9 +31,9 @@ def run_simulation(file_suffix):
 
 
 # Tests
-tests = [{"velocity":5.0, "angle": 0.00 * np.pi, "eye":(0.0,0.0)},
-         {"velocity":5.0, "angle": 0.25 * np.pi, "eye":(200e3,0.0)},
-         {"velocity":5.0, "angle": 0.50 * np.pi, "eye":(400e3,0.0)},]
+tests = [{"name":"perpendicular","velocity":5.0, "angle": 0.00 * np.pi, "eye":(0.0,0.0)},
+         {"name":"45angle","velocity":5.0, "angle": 0.25 * np.pi, "eye":(200e3,0.0)},
+         {"name":"parallel","velocity":5.0, "angle": 0.50 * np.pi, "eye":(400e3,0.0)},]
          
 parallel = False
 
@@ -42,7 +42,7 @@ if len(sys.argv) == 2:
 print tests
 
 # Setup and run the tests
-for (i,test) in enumerate(tests):    
+for test in tests:    
     # Default data values
     # topo_data.write_topo_file('./topo.data',bathy_type='gulf_shelf',plot=False,force=False)
     rundata = setrun.setrun()
@@ -58,7 +58,7 @@ for (i,test) in enumerate(tests):
     factor = 3*2
     rundata.clawdata.mx = 70 * factor
     rundata.clawdata.my = 60 * factor
-    
+    rundata.clawdata.dt_initial = 0.6755e1
     rundata.clawdata.mxnest = -1
     
     # Write out data
@@ -67,11 +67,11 @@ for (i,test) in enumerate(tests):
     multilayer_data.write()
     
     # Run the simulation
-    prefix = "_sl_%s" % i
+    prefix = "_sl_%s" % test['name']
     run_simulation(prefix)
     
     # Tar up the results
-    cmd = "tar -cvzf ~/sl_%s_plots.tgz _plots_sl_%s" % (i,i)
+    cmd = "tar -cvzf ~/sl_%s_plots.tgz _plots_sl_%s" % (test['name'],test['name'])
     print cmd
     subprocess.Popen(cmd,shell=True).wait()
     
