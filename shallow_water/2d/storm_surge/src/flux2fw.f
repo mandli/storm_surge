@@ -188,18 +188,16 @@ c
       do i=1,mx+1
           dtdx1d(i-1) = 0.5d0 * (dtdx1d(i-1) + dtdx1d(i))
           
-          hr = q1d(i-1,4) / rho(2)
-          hl = q1d(i,4) / rho(2)
-          br = aux2(i-1,1)
-          bl = aux2(i,1)
+          dry_r = q1d(i-1,4) / rho(2) < drytolerance
+          dry_l = q1d(i,4) / rho(2)  < drytolerance
           
-          dry_r = hr / rho(2) < drytolerance
-          dry_l = hl / rho(2)  < drytolerance
-          
+C           if (dry_limit.and.
+C      &        dry_l.and.(.not.(hr < drytolerance).and.(.not.(hr > bl)))
+C      &        .or.
+C      &        dry_r.and.(.not.(hl < drytolerance).and.(.not.(hl > br)))) 
+C      &    then
           if (dry_limit.and.
-     &        dry_l.and.(.not.(hr < drytolerance).and.(.not.(hr > bl)))
-     &        .or.
-     &        dry_r.and.(.not.(hl < drytolerance).and.(.not.(hl > br)))) 
+     &        ((dry_l.and.(.not.dry_r)).or.(dry_r.and.(.not.dry_l)))) 
      &    then
               eqn_index = 3
           else
