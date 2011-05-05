@@ -832,7 +832,7 @@ def setplot(plotdata):
     plotaxes.afteraxes = top_surf_afteraxes
     plotitem = plotaxes.new_plotitem(plot_type="1d_from_2d_data")
     plotitem.map_2d_to_1d = upper_surface
-    plotitem.amr_plotstyle = ['-','+','x']
+    plotitem.amr_plotstyle = ['x','-','+']
     # plotitem.color = (0.2,0.8,1.0)
     plotitem.show = True
     
@@ -852,7 +852,7 @@ def setplot(plotdata):
     plotaxes.afteraxes = internal_surf_afteraxes
     plotitem = plotaxes.new_plotitem(plot_type='1d_from_2d_data')
     plotitem.map_2d_to_1d = lower_surface
-    plotitem.amr_plotstyle = ['-','+','x']
+    plotitem.amr_plotstyle = ['x','-','+']
     plotitem.color = 'k'
     plotitem.show = True  
     
@@ -880,13 +880,13 @@ def setplot(plotdata):
     
     plotitem = plotaxes.new_plotitem(plot_type="1d_from_2d_data")
     plotitem.map_2d_to_1d = top_speed
-    plotitem.amr_plotstyle = ['-','+','x']
+    plotitem.amr_plotstyle = ['o','+','x']
     # plotitem.color = (0.2,0.8,1.0)
     plotitem.show = True
     
     plotitem = plotaxes.new_plotitem(plot_type='1d_from_2d_data')
     plotitem.map_2d_to_1d = bottom_speed
-    plotitem.amr_plotstyle = ['-','+','x']
+    plotitem.amr_plotstyle = ['x','-','+']
     plotitem.color = 'k'
     plotitem.show = True  
         
