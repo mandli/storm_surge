@@ -53,7 +53,7 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
     double precision :: b_l,b_r,w_normal,w_transverse,kappa_l,kappa_r
     double precision :: eta_l(2),eta_r(2),h_ave(2),momentum_transfer(2)
     double precision :: h_hat_l(2),h_hat_r(2),gamma_l,gamma_r
-    double precision :: flux_transfer_l,flux_transfer_r
+    double precision :: flux_transfer_l,flux_transfer_r,lambda(6)
 
     ! Solver variables
     double precision, dimension(6) :: delta,flux_r,flux_l,pivot
@@ -263,28 +263,8 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         else if(dry_state_r(2).and.(.not.dry_state_l(2))) then
             if (h_l(2) + b_l > b_r) then
                 ! Bathy is shorter than water, time to wet
-                momentum_transfer(1) =  g * rho(1) * h_ave(1) * (h_r(2) - h_l(2) + b_r - b_l)
-                momentum_transfer(2) = -g * rho(1) * h_ave(1) * (h_r(2) - h_l(2)) + g * rho(2) * h_ave(2) * (b_r - b_l)
-                flux_transfer_r = g * rho(1) * h_r(1) * h_r(2)
-                flux_transfer_l = g * rho(1) * h_l(1) * h_l(2)
-            else
-                if (tcom >= 0.88623361E-01) then
-                    continue
-                endif
-                ! Bathy is taller than current water    
-                gamma_l = h_l(2) / h_l(1)
-                gamma_r = h_r(2) / h_r(1)
-                    
-                alpha(1) = 0.5d0*(gamma_l-1.d0+sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
-                alpha(2) = 0.5d0*(gamma_l-1.d0-sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
-                alpha(3) = 0.5d0*(gamma_r-1.d0-sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
-                alpha(4) = 0.5d0*(gamma_r-1.d0+sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
-
-                s(i,1) = -sqrt(g*h_l(1)*(1+alpha(1)))
-                s(i,2) = -sqrt(g*h_l(1)*(1+alpha(2)))
-                s(i,5) = sqrt(g*h_r(1)*(1+alpha(3)))
-                s(i,6) = sqrt(g*h_r(1)*(1+alpha(4)))
-
+                stop "Inundation not handled"
+            else 
                 h_r(2) = h_l(2)
                 hu_r(2) = -hu_l(2)
                 u_r(2) = -u_l(2)
@@ -299,46 +279,24 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         ! ====================================================================
         ! Dry state, bottom layer to left
         else if(dry_state_l(2).and.(.not.dry_state_r(2))) then    
-            gamma_l = h_l(2) / h_l(1)
-            gamma_r = h_r(2) / h_r(1)
-                        
-            alpha(1) = 0.5d0*(gamma_l-1.d0+sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
-            alpha(2) = 0.5d0*(gamma_l-1.d0-sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
-            alpha(3) = 0.5d0*(gamma_r-1.d0-sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
-            alpha(4) = 0.5d0*(gamma_r-1.d0+sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
-
-            s(i,1) = -sqrt(g*h_l(1)*(1+alpha(1)))
-            s(i,2) = -sqrt(g*h_l(1)*(1+alpha(2)))
-            s(i,5) = sqrt(g*h_r(1)*(1+alpha(3)))
-            s(i,6) = sqrt(g*h_r(1)*(1+alpha(4)))
+            if (h_r(2) + b_r > b_l) then
+                stop "Inundation not handled"
+            else
+                h_l(2) = h_r(2)
+                hu_l(2) = -hu_r(2)
+                u_l(2) = -u_r(2)
+                hv_l(2) = hv_r(2)
+                v_l(2) = v_r(2)
             
-            h_l(2) = h_r(2)
-            hu_l(2) = -hu_r(2)
-            u_l(2) = -u_r(2)
-            hv_l(2) = hv_r(2)
-            v_l(2) = v_r(2)
-            
-            flux_transfer_r = 0.d0
-            flux_transfer_l = 0.d0
-            momentum_transfer(1) = g * rho(1) * h_ave(1) * (b_r + h_r(2) - b_l)
-            momentum_transfer(2) = 0.d0
+                flux_transfer_r = 0.d0
+                flux_transfer_l = 0.d0
+                momentum_transfer(1) = g * rho(1) * h_ave(1) * (b_r + h_r(2) - b_l)
+                momentum_transfer(2) = 0.d0
+            endif
             
         ! ====================================================================
         ! Full two layer case
-        else    
-            gamma_l = h_l(2) / h_l(1)
-            gamma_r = h_r(2) / h_r(1)
-                        
-            alpha(1) = 0.5d0*(gamma_l-1.d0+sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
-            alpha(2) = 0.5d0*(gamma_l-1.d0-sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
-            alpha(3) = 0.5d0*(gamma_r-1.d0-sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
-            alpha(4) = 0.5d0*(gamma_r-1.d0+sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
-
-            s(i,1) = -sqrt(g*h_l(1)*(1+alpha(1)))
-            s(i,2) = -sqrt(g*h_l(1)*(1+alpha(2)))
-            s(i,5) = sqrt(g*h_r(1)*(1+alpha(3)))
-            s(i,6) = sqrt(g*h_r(1)*(1+alpha(4)))
-            
+        else
             momentum_transfer(1) =  g * rho(1) * h_ave(1) * (h_r(2) - h_l(2) + b_r - b_l)
             momentum_transfer(2) = -g * rho(1) * h_ave(1) * (h_r(2) - h_l(2)) + g * rho(2) * h_ave(2) * (b_r - b_l)
             flux_transfer_r = g * rho(1) * h_r(1) * h_r(2)
@@ -357,95 +315,31 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         endif
         
         ! ====================================================================
-        !  Calculate wave speeds
+        !  Calculate Eigenstructure
         ! ====================================================================
-        ! Figure out which speed to use for transverse direction
-        advected_speed(:) = 0.5d0 * (u_l(:) + u_r(:))
-!         do j=1,2
-!             if ((u_l(j) < 0.d0).and.(u_r(j) < 0.d0)) then
-!                 advected_speed(j) = u_l(j)
-!             else if ((u_l(j) > 0.d0).and.(u_r(j) > 0.d0)) then
-!                 advected_speed(j) = u_r(j)
-!             else
-! !                 print *,"Transonic Riemann problem detected!"
-! !                 print "(a,d16.8,a,d16.8,a)","(u_l,u_r) = (",u_l(j),",",u_r(j),")"
-!                 advected_speed(j) = 0.5d0 * (u_l(j) + u_r(j))
-!             endif
-!         enddo
-        if ((eigen_method > 0).and.(eigen_method <= 3)) then
-            if (eigen_method == 1) then
-                if ((dry_state_r(2).and.(.not.dry_state_l(2))).and.(h_l(2) + b_l > b_r))  then
-                                        
-                    gamma_l = h_l(2) / h_l(1)
-                    gamma_r = h_r(2) / h_r(1)
+        if (eigen_method == 1) then
+            call linearized_eigen(h_hat_l,h_hat_r,hu_l,hu_r,hv_l,hv_r,u_l, &
+                u_r,v_l,v_r,n_index,t_index,lambda,eig_vec)
+            s(i,:) = lambda
+        else if (eigen_method == 2) then
+            call linearized_eigen(h_l,h_r,hu_l,hu_r,hv_l,hv_r,u_l,u_r,v_l, &
+                v_r,n_index,t_index,lambda,eig_vec)
+            s(i,:) = lambda
+        else if (eigen_method == 3) then            
+            gamma_l = h_hat_l(2) / h_hat_l(1)
+            gamma_r = h_hat_r(2) / h_hat_r(1)
+    
+            alpha(1) = 0.5d0*(gamma_l-1.d0+sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
+            alpha(2) = 0.5d0*(gamma_l-1.d0-sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
+            alpha(3) = 0.5d0*(gamma_r-1.d0-sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
+            alpha(4) = 0.5d0*(gamma_r-1.d0+sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
+    
+            s(i,1) = -sqrt(g*h_hat_l(1)*(1+alpha(1)))
+            s(i,2) = -sqrt(g*h_hat_l(1)*(1+alpha(2)))
+            s(i,3:4) = 0.5d0 * (u_l(:) + u_r(:))
+            s(i,5) = sqrt(g*h_hat_r(1)*(1+alpha(3)))
+            s(i,6) = sqrt(g*h_hat_r(1)*(1+alpha(4)))
             
-                    alpha(1) = 0.5d0*(gamma_l-1.d0+sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
-                    alpha(2) = 0.5d0*(gamma_l-1.d0-sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
-            
-                    s(i,1) = -sqrt(g*h_l(1)*(1+alpha(1)))
-                    s(i,2) = -sqrt(g*h_l(1)*(1+alpha(2)))
-                    s(i,5) = u_l(2) + 2.d0 * sqrt(g * h_l(2))
-                    s(i,6) = u_r(1) + sqrt(g * h_r(1))
-                    
-                    alpha(3) = (s(i,5)**2 - g * h_r(1)) / (g*h_r(1))
-                    alpha(4) = (s(i,6)**2 - g * h_r(1)) / (g*h_r(1))
-                else if ((dry_state_l(2).and.(.not.dry_state_l(2))).and.(h_r(2) > b_l)) then
-                    stop
-                else
-                    gamma_l = h_hat_l(2) / h_hat_l(1)
-                    gamma_r = h_hat_r(2) / h_hat_r(1)
-            
-                    alpha(1) = 0.5d0*(gamma_l-1.d0+sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
-                    alpha(2) = 0.5d0*(gamma_l-1.d0-sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
-                    alpha(3) = 0.5d0*(gamma_r-1.d0-sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
-                    alpha(4) = 0.5d0*(gamma_r-1.d0+sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
-            
-                    s(i,1) = -sqrt(g*h_hat_l(1)*(1+alpha(1)))
-                    s(i,2) = -sqrt(g*h_hat_l(1)*(1+alpha(2)))
-                    s(i,5) = sqrt(g*h_hat_r(1)*(1+alpha(3)))
-                    s(i,6) = sqrt(g*h_hat_r(1)*(1+alpha(4)))
-                    
-                endif
-            else if (eigen_method == 2) then
-                
-                tgamma_l = h_hat_l(2) / h_hat_l(1)
-                tgamma_r = h_hat_r(2) / h_hat_r(1)
-                
-                talpha(1) = 0.5d0*(tgamma_l-1.d0+sqrt((tgamma_l-1.d0)**2+4.d0*r*tgamma_l))
-                talpha(2) = 0.5d0*(tgamma_l-1.d0-sqrt((tgamma_l-1.d0)**2+4.d0*r*tgamma_l))
-                talpha(3) = 0.5d0*(tgamma_r-1.d0-sqrt((tgamma_r-1.d0)**2+4.d0*r*tgamma_r))
-                talpha(4) = 0.5d0*(tgamma_r-1.d0+sqrt((tgamma_r-1.d0)**2+4.d0*r*tgamma_r))
-
-                ts(1) = -sqrt(g*h_hat_l(1)*(1+talpha(1)))
-                ts(2) = -sqrt(g*h_hat_l(1)*(1+talpha(2)))
-                ts(5) = sqrt(g*h_hat_r(1)*(1+talpha(3)))
-                ts(6) = sqrt(g*h_hat_r(1)*(1+talpha(4)))
-            
-!                 alpha(1) = 0.5d0*(gamma_l-1.d0+sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
-!                 alpha(2) = 0.5d0*(gamma_l-1.d0-sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
-!                 alpha(3) = 0.5d0*(gamma_r-1.d0-sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
-!                 alpha(4) = 0.5d0*(gamma_r-1.d0+sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
-! 
-!                 s(i,1) = -sqrt(g*h_l(1)*(1+alpha(1)))
-!                 s(i,2) = -sqrt(g*h_l(1)*(1+alpha(2)))
-!                 s(i,5) = sqrt(g*h_r(1)*(1+alpha(3)))
-!                 s(i,6) = sqrt(g*h_r(1)*(1+alpha(4)))
-                                    
-                if (tgamma_l - gamma_l > 1.d-5 .or. tgamma_r - gamma_r > 1.d-5) then
-    !                         print *,tgamma_l - gamma_l,tgamma_r - gamma_r
-                    continue
-                endif
-                
-            else if (eigen_method == 3) then
-                stop "Eigenstructure calculation not implemented!"
-            endif
-            
-            if (h_r(2) > 0.4.and.dry_state_r(2)) then
-                continue
-            endif
-            
-            s(i,3:4) = advected_speed
-
             ! Compute eigenspace exactly based on eigenvalues provided
             eig_vec(1,:) = [1.d0,1.d0,0.d0,0.d0,1.d0,1.d0]
             
@@ -462,19 +356,29 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             eig_vec(t_index+3,1:2) = v_l(2) * alpha(1:2)
             eig_vec(t_index+3,3:4) = [0.d0,1.d0]
             eig_vec(t_index+3,5:6) = v_r(2) * alpha(3:4)
-            
         else if (eigen_method == 4) then
-            ! Directly compute eigenstructure using LAPACK if need be
-            stop "Eigenstructure calculation not implemented!"            
-        else if (eigen_method == 5) then
-            ! Old eigenspeed and vector method with new alphas
-            stop "Eigenstructure calculation not implemented!"
+
+            ! Only one side is dry, use linearized eigen solver
+            if ((dry_state_r(2).and.(.not.dry_state_l(2))).or. &
+                (dry_state_l(2).and.(.not.dry_state_r(2)))) then
+                call linearized_eigen(h_hat_l,h_hat_r,hu_l,hu_r,hv_l,hv_r, &
+                    u_l,u_r,v_l,v_r,n_index,t_index,lambda,eig_vec)
+            ! Bottom layer completely dry
+            else if (dry_state_l(2).and.dry_state_r(2)) then
+                call single_layer_eigen(h_l,h_r,hu_l,hu_r,hv_l,hv_r,u_l,u_r, &
+                    v_l,v_r,n_index,t_index,s,eig_vec)
+            ! Both sides wet
+            else
+                call lapack_eigen(h_l,h_r,hu_l,hu_r,hv_l,hv_r,u_l,u_r,v_l, &
+                            v_r,n_index,t_index,lambda,eig_vec)
+            endif
+            s(i,:) = lambda
         else
             print "(a,i2,a)","Eigenstructure method ",eigen_method, &
                   " requested not available."
             stop 
         endif
-
+        
         ! ====================================================================
         ! Compute jump in fluxes, this is generic due to terms set above
         do j=1,2
