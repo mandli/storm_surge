@@ -150,7 +150,8 @@ def setplot(plotdata):
     def bathy_ref_lines(current_data):
         plt.hold(True)
         y = ylimits
-        for ref_line in [450e3]:
+        
+        for ref_line in [mutlilayer.x0,,multilayer.x1,multilayer.x2]:
             plt.plot([ref_line,ref_line],y,'y--',linewidth=1)
         plt.hold(False)
         

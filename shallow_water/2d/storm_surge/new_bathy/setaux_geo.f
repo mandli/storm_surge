@@ -22,8 +22,8 @@ c
 
       dimension aux(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc, maux)
 
-      double precision :: x0,x1,x2,shelf_depth,basin_depth,beach_slope
-      double precision :: shelf_slope, eta_int
+      double precision :: x0,x1,x2,shelf_depth,basin_depth,beach_slope,h
+      double precision :: shelf_slope,eta_int,A,B
       integer, parameter :: bathy_type = 2
 
       include "call.i"
@@ -46,10 +46,13 @@ c
           basin_depth = -3000d0
           shelf_depth = -100d0
           beach_slope = 0.05d0
+          h = 10
           
           ! Calculated values
-          shelf_slope = (x0 - x1) / (z0 - z1 + h)
-          eta_int = (eta(2) - 0.5d0 * h) / shelf_slope + x0
+          A = basin_depth - eta(2) + 0.5d0 * h
+          B = shelf_depth - eta(2) - 0.5d0 * h
+          eta_int = (A*x1 - B*x0) / (A-B)
+          shelf_slope = A / (x0 - eta_int)
       endif
 
       do j=1-mbc,my+mbc
@@ -93,16 +96,16 @@ c           # for lat-lon grid on sphere:
                         aux(i,j,1) = basin_depth
                     ! Shelf slope
                     else if (x0 < xcell .and. xcell < eta_int) then
-                        aux(i,j,1) = shelf_slope * (xcell - x0) + basin_depth
+                        aux(i,j,1) = shelf_slope*(xcell-x0)+basin_depth
                     ! Shelf slope
                     else if (eta_int < xcell .and. xcell < x1) then
-                        aux(i,j,1) = shelf_slope * (xcell-x1) - shelf_depth
+                        aux(i,j,1) = shelf_slope*(xcell-x1)+shelf_depth
                     ! Shelf
                     else if (x1 < xcell .and. xcell < x2) then
                         aux(i,j,1) = shelf_depth
                     ! Beach slope
                     else if (x3 < xcell) then
-                        aux(i,j,1) = beach_slope * (xcell-x2) - shelf_depth
+                        aux(i,j,1) = beach_slope*(xcell-x2)+shelf_depth
                     endif
                 else
                      aux(i,j,1) = bathy_left   
