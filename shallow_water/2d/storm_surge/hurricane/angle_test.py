@@ -50,11 +50,11 @@ for (i,test) in enumerate(tests):
     hurricane_data.R_eye_init = test["eye"]
     
     # Grid parameters
-    levels = 3
-    rundata.mx = 70 * levels * 2
-    rundata.my = 60 * levels * 2
+    factor = 3*2
+    rundata.clawdata.mx = 70 * factor
+    rundata.clawdata.my = 60 * factor
     
-    rundata.mxnest = 1
+    rundata.clawdata.mxnest = -1
     
     # Write out data
     rundata.write()
@@ -70,4 +70,4 @@ for (i,test) in enumerate(tests):
     print cmd
     subprocess.Popen(cmd,shell=True).wait()
     
-    
+   
