@@ -42,7 +42,7 @@ endif
 CLAW_SOURCES = \
 	$(MULTILAYER_SRC)/multilayer_module.f90 \
 	$(MULTILAYER_SRC)/hurricane.f90 \
-	$(MULTILAYER_SRC)/setaux_geo.f \
+	./setaux_geo.f \
 	$(MULTILAYER_SRC)/b4step2_geo.f \
 	$(MULTILAYER_SRC)/setprob.f90 \
 	$(MULTILAYER_SRC)/src2_geo.f90 \

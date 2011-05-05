@@ -57,10 +57,10 @@ CLAW_SOURCES = \
 	$(MULTILAYER_SRC)/tick.f \
 	$(MULTILAYER_SRC)/qad_geo.f \
 	$(MULTILAYER_SRC)/stepgrid_geo.f \
-	./filval.f \
-	./filpatch.f \
-	./update.f \
-	./upbnd.f
+	./filval_ml.f \
+	./filpatch_ml.f \
+	./update_ml.f \
+	./upbnd_ml.f
 
 DATA_FILES = hurricane.data topo.data multilayer.data
 	

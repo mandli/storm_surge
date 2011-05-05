@@ -35,7 +35,7 @@ bathys = {"gulf_shelf":[(0.0,-3228),(312e3,-2438),(467e3,-188),(479e3,0.0),(579e
           "step_shelf2":[(0.0,-4000.0),(450e3-0.001,-4000.0),(450e3,-200.0),(500e3,-200.0)],
           "continental_shelf":[(2000e3,-7000),(2800e3,-3000),(2900e3,-100),(3000e3,0.0)],
           "flat":[(0.0,-2000)]}
-bathy_profile = bathys["step_shelf2"]
+bathy_profile = bathys["continental_shelf"]
 
 ylimits = [0.0,0.0]
 for i in xrange(len(bathy_profile)):
@@ -54,7 +54,7 @@ for i in xrange(len(x)):
 # Profile plot
 # topo_file = '/Users/mandli/Documents/research/Papers/awr10/figures/ss_topo.png'
 topo_file = './ss_topo.png'
-if not os.path.exists(topo_file):
+if not os.path.exists(topo_file) or True:
     plt.figure(1)
     index = np.trunc(N/2.0)
     plt.hold(True)
@@ -68,7 +68,7 @@ if not os.path.exists(topo_file):
     labels = locs/1e3
     plt.xticks(locs,labels)
     plt.hold(False)
-    plt.savefig(topo_file)
+    # plt.savefig(topo_file)
     plt.show()
 
 # Domain plot
