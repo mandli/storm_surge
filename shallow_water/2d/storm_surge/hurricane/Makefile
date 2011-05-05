@@ -53,11 +53,12 @@ CLAW_SOURCES = \
 	$(MULTILAYER_SRC)/flag2refine_geo.f \
 	$(MULTILAYER_SRC)/rpn2_dry_multilayer.f90 \
 	$(MULTILAYER_SRC)/rpt2_dry_multilayer.f90 \
+	$(MULTILAYER_SRC)/multilayer_eigen.f90 \
 	$(MULTILAYER_SRC)/tick.f \
 	$(MULTILAYER_SRC)/qad_geo.f \
-	$(MULTILAYER_SRC)/stepgrid_noupdate.f \
+	$(MULTILAYER_SRC)/stepgrid_geo.f \
 	$(CLAW_LIB)/filval.f \
-	$(MULTILAYER_SRC)/filpatch_ml.f \
+	$(CLAW_LIB)/filpatch.f \
 	$(CLAW_LIB)/update.f \
 	$(CLAW_LIB)/upbnd.f
 
@@ -70,7 +71,7 @@ CLAW_LIBSOURCES = \
 	$(GEOLIB)/dtopo_mod.f90 \
 	$(GEOLIB)/readqinit_geo.f \
 	$(GEOLIB)/movetopo_geo.f \
-        $(GEOLIB)/cellgridintegrate_geo.f \
+    $(GEOLIB)/cellgridintegrate_geo.f \
 	$(GEOLIB)/topointegral_geo.f \
 	$(GEOLIB)/bilinearintegral_geo.f \
 	$(GEOLIB)/fgridinterp_geo.f \
