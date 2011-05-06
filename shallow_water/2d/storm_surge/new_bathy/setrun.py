@@ -79,10 +79,10 @@ def setrun(claw_pkg='geoclaw'):
         
 
     # Number of grid cells:
-    clawdata.mx = 70
-    # clawdata.mx = 560
-    clawdata.my = 60
-    # clawdata.my = 480
+    # clawdata.mx = 70
+    clawdata.mx = 560
+    # clawdata.my = 60
+    clawdata.my = 480
     # clawdata.mx = 100
     # clawdata.my = 100
 
@@ -237,7 +237,7 @@ def setrun(claw_pkg='geoclaw'):
 
 
     # max number of refinement levels:
-    mxnest = 5
+    mxnest = 1
 
     clawdata.mxnest = -mxnest   # negative ==> anisotropic refinement in x,y,t
 
@@ -389,7 +389,7 @@ def set_hurricane_data(ramp_up_time=RAMP_UP_TIME):
     data.wind_tolerance = 1e-6
     
     # Path of hurricane, speed in m/s
-    velocity = 0.0
+    velocity = 5.0
     angle = 0.0 * np.pi
     # Speeds of hurricane
     data.hurricane_velocity = (velocity * np.cos(angle),velocity * np.sin(angle)) 
@@ -416,7 +416,7 @@ def set_multilayer_data():
     data.rho[1] = data.rho[0] / 0.90
     
     # Algorithm Parameters
-    data.eigen_method = 4
+    data.eigen_method = 1
     data.richardson_tolerance = 0.95
     data.wave_tolerance = [0.1,0.5]
     data.dry_limit = True
