@@ -1144,6 +1144,8 @@ def setplot(plotdata):
     plotdata.latex_figsperline = 2           # layout of plots
     plotdata.latex_framesperline = 1         # layout of plots
     plotdata.latex_makepdf = False           # also run pdflatex?
+    # plotdata.format = 'ascii'
+    plotdata.format = 'netcdf'                          
 
     return plotdata
 

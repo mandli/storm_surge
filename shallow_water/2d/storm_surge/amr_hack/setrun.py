@@ -116,7 +116,7 @@ def setrun(claw_pkg='geoclaw'):
     # Note that the time integration stops after the final output time.
     # The solution at initial time t0 is always written in addition.
 
-    clawdata.outstyle = 3
+    clawdata.outstyle = 2
     # Number of hours to simulate
     num_hours = 40
     # Output interval per hour, 1 = every hour, 0.5 = every half hour, etc...
@@ -131,7 +131,7 @@ def setrun(claw_pkg='geoclaw'):
 
     elif clawdata.outstyle == 2:
         # Specify a list of output times.
-        t_start = 0.405273E+02
+        t_start = -9000.0
         dt = 0.4053e2
         # clawdata.tout = [0.0,3.0,3.1,3.2,3.3,3.4,3.5,3.6,3.7,3.8,3.9,4.0]
         # clawdata.tout = [x*60**2 for x in clawdata.tout]
@@ -266,8 +266,8 @@ def setrun(claw_pkg='geoclaw'):
 
     # Restart parameters
     clawdata.restart = False
-    clawdata.checkpt_iousr = 1000
-    clawdata.tchk = [0.0,0.666e5,0.69e5]
+    clawdata.checkpt_iousr = -2
+    clawdata.tchk = [0.0,-9000.0]
 
     # More AMR parameters can be set -- see the defaults in pyclaw/data.py
 

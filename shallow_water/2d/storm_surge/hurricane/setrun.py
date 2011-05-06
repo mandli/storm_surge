@@ -176,10 +176,10 @@ def setrun(claw_pkg='geoclaw'):
     
     # Desired Courant number if variable dt used, and max to allow without 
     # retaking step with a smaller dt:
-    clawdata.cfl_desired = 0.8
-    clawdata.cfl_max = 0.9
-    # clawdata.cfl_desired = 0.4
-    # clawdata.cfl_max = 0.5
+    # clawdata.cfl_desired = 0.8
+    # clawdata.cfl_max = 0.9
+    clawdata.cfl_desired = 0.4
+    clawdata.cfl_max = 0.5
     
     # Maximum number of time steps to allow between output times:
     clawdata.max_steps = 5000
@@ -192,10 +192,10 @@ def setrun(claw_pkg='geoclaw'):
     # ------------------
 
     # Order of accuracy:  1 => Godunov,  2 => Lax-Wendroff plus limiters
-    clawdata.order = 2
+    clawdata.order = 1
     
     # Transverse order for 2d or 3d (not used in 1d):
-    clawdata.order_trans = 2
+    clawdata.order_trans = 0
     
     # Number of waves in the Riemann solution:
     clawdata.mwaves = 6
@@ -416,7 +416,7 @@ def set_multilayer_data():
     data.rho[1] = data.rho[0] / 0.90
     
     # Algorithm Parameters
-    data.eigen_method = 4
+    data.eigen_method = 1
     data.richardson_tolerance = 0.95
     data.wave_tolerance = [0.1,0.5]
     data.dry_limit = True
@@ -433,7 +433,7 @@ def set_multilayer_data():
     # Bathy settings
     data.bathy_location = 450e3
     data.bathy_left = -4000
-    data.bathy_right = -200
+    data.bathy_right = -4000
     
     return data
     

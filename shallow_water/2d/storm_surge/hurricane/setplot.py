@@ -413,10 +413,14 @@ def setplot(plotdata):
     xlimits_zoomed = xlimits
     ylimits = [amrdata.ylower,amrdata.yupper]
     eta = [multilayer_data.eta[0],multilayer_data.eta[1]]
-    top_surface_limits = [eta[0]-0.1,eta[0]+0.1]
-    internal_surface_limits = [eta[1]-1.0,eta[1]+1.0]
-    top_speed_limits = [0.0,2.0]
-    internal_speed_limits = [0.0,0.01]
+    # top_surface_limits = [eta[0]-0.1,eta[0]+0.1]
+    top_surface_limits = None
+    # internal_surface_limits = [eta[1]-1.0,eta[1]+1.0]
+    internal_surface_limits = None
+    # top_speed_limits = [0.0,2.0]
+    top_speed_limits = None
+    # internal_speed_limits = [0.0,0.01]
+    internal_speed_limits = None
     
     surface_zoomed = [eta[0] - 0.5,eta[0]+0.5]
     internal_zoomed = [eta[1] - 5.0,eta[1] + 5.0]
@@ -533,8 +537,11 @@ def setplot(plotdata):
     plotaxes.ylimits = ylimits
     plotaxes.axescmd = 'subplot(2,2,1)'
     plotaxes.afteraxes = pcolor_afteraxes
-    add_x_velocity(plotaxes,1,bounds=[-top_speed_limits[1],top_speed_limits[1]])
-    # add_x_velocity(plotaxes,1)
+    if top_speed_limits is None:
+        add_x_velocity(plotaxes,1)
+    else:
+        add_x_velocity(plotaxes,1,bounds=[-top_speed_limits[1],top_speed_limits[1]])
+    
     add_land(plotaxes)
     
     plotaxes = plotfigure.new_plotaxes()
@@ -544,8 +551,10 @@ def setplot(plotdata):
     plotaxes.ylimits = ylimits
     plotaxes.axescmd = 'subplot(2,2,2)'
     plotaxes.afteraxes = pcolor_afteraxes
-    add_y_velocity(plotaxes,1,bounds=[-top_speed_limits[1],top_speed_limits[1]])
-    # add_y_velocity(plotaxes,1)
+    if top_speed_limits is None:
+        add_y_velocity(plotaxes,1)
+    else:
+        add_y_velocity(plotaxes,1,bounds=[-top_speed_limits[1],top_speed_limits[1]])
     add_land(plotaxes)
     
     # Bottom layer
@@ -556,8 +565,10 @@ def setplot(plotdata):
     plotaxes.ylimits = ylimits
     plotaxes.axescmd = 'subplot(2,2,3)'
     plotaxes.afteraxes = pcolor_afteraxes
-    add_x_velocity(plotaxes,2,bounds=[-internal_speed_limits[1],internal_speed_limits[1]])
-    # add_x_velocity(plotaxes,2)
+    if internal_speed_limits is None:
+        add_x_velocity(plotaxes,2)
+    else:
+        add_x_velocity(plotaxes,2,bounds=[-internal_speed_limits[1],internal_speed_limits[1]])
     add_land(plotaxes)
     
     plotaxes = plotfigure.new_plotaxes()
@@ -567,9 +578,10 @@ def setplot(plotdata):
     plotaxes.ylimits = ylimits
     plotaxes.axescmd = 'subplot(2,2,4)'
     plotaxes.afteraxes = pcolor_afteraxes
-    add_y_velocity(plotaxes,2,bounds=[-internal_speed_limits[1],internal_speed_limits[1]])
-    # add_y_velocity(plotaxes,2,bounds=[-0.00125,0.00125])
-    # add_y_velocity(plotaxes,2)
+    if internal_speed_limits is None:
+        add_y_velocity(plotaxes,2)
+    else:
+        add_y_velocity(plotaxes,2,bounds=[-internal_speed_limits[1],internal_speed_limits[1]])
     add_land(plotaxes)
     
     # ========================================================================
