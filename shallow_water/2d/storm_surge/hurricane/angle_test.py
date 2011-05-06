@@ -99,18 +99,18 @@ for test in tests:
 
     # Run command
     if parallel:
-        process_queue.append(subprocess.Popen(cmd),
+        process_queue.append(subprocess.Popen(cmd),shell=True
                                 stdout=log_file,stderr=log_file)
     else:
-        process_queue.append(subprocess.Popen(cmd),
+        process_queue.append(subprocess.Popen(cmd),shell=True
                                 stdout=log_file,stderr=log_file).wait()
     
-if parallel:
-    for process in process_queue:
-        try:
-            process.wait()
-        except(KeyboardInterrupt,SystemExit):
-            print "Interrupt called and caught."
+# if parallel:
+#     for process in process_queue:
+#         try:
+#             process.wait()
+#         except(KeyboardInterrupt,SystemExit):
+#             print "Interrupt called and caught."
         
     
 
