@@ -10,15 +10,15 @@ MULTILAYER_SRC = ../src
 CLAW_PKG = geoclaw
 CLAW_setrun_file = setrun.py
 CLAW_setplot_file = setplot.py
-CLAW_OUTDIR = _output
-CLAW_PLOTDIR = _plots
+CLAW_OUTDIR = $(DATA_PATH)/storm_surge/new_bathy/_output
+CLAW_PLOTDIR = $(DATA_PATH)/storm_surge/new_bathy/_plots
 
 # Clawpack libraries to be used:
 CLAW_LIB = $(CLAW)/amrclaw/2d/lib
 GEOLIB = $(CLAW)/geoclaw/2d/lib
 
 # Flagging
-FC ?= gfortran
+FC = gfortran44
 FFLAGS += -I$(GEOLIB)
 UNAME = $(shell uname)
 ifeq ($(UNAME), Darwin)
