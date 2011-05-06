@@ -4,6 +4,8 @@ c
        subroutine upbnd(listbc,val,nvar,mitot,mjtot,
      1                  maxsp,iused,mptr)
  
+      use geoclaw_module
+ 
       implicit double precision (a-h,o-z)
 
       include  "call.i"
@@ -89,10 +91,25 @@ c            # Note capa is stored in aux(icrse,jcrse,mcapa)
              sgnm = sgnm / alloc(iaddaux(icrse,jcrse))
          endif
 
-         do 20 ivar = 1,nvar
+c        # If coarse cell is dry then don't include updates from fine
+c        # grid fluxes that might give unphysical wetting because coarse
+c        # cell may be much higher than some fine cells:
+         if (val(icrse,jcrse,1) .gt. drytolerance) then
+           do 20 ivar = 1,nvar
             val(icrse,jcrse,ivar) = val(icrse,jcrse,ivar) +
      1      sgnm*alloc(kidlst+nvar*(lkid-1)+ivar-1)/area
- 20      continue
+ 20        continue
+         else
+c          write(6,*) '+++ throw out ',alloc(kidlst+nvar*(lkid-1))
+           continue
+         endif
+         
+c        # Reset small h to zeros once again:
+         if (val(icrse,jcrse,1) .lt. drytolerance) then
+            do ivar=1,nvar
+               val(icrse,jcrse,ivar) = 0.d0
+               enddo
+            endif
          iused(icrse,jcrse) = iused(icrse,jcrse) + norm
 
 c        ## debugging output
