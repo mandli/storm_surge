@@ -16,6 +16,8 @@ Runs tests for angles relative to a continental shelf
 
 import subprocess
 import sys
+import os
+import time
 
 import numpy as np
 
@@ -25,17 +27,14 @@ from pyclaw.plotters.plotclaw import plotclaw
 import setrun
 import topo_data
 
-def run_simulation(file_suffix):
-    runclaw(xclawcmd='xclaw',outdir='_output%s' % file_suffix)
-    plotclaw(outdir='_output%s' % file_suffix,plotdir='_plots%s' % file_suffix)
-
+# Parameters
+base_path = "/bulk/mandli/output/storm_surge/hurricane"
 
 # Tests
 tests = [{"name":"perpendicular","velocity":5.0, "angle": 0.00 * np.pi, "eye":(0.0,0.0)},
          {"name":"45angle","velocity":5.0, "angle": 0.25 * np.pi, "eye":(200e3,0.0)},
          {"name":"parallel","velocity":5.0, "angle": 0.50 * np.pi, "eye":(400e3,0.0)},]
          
-parallel = False
 
 if len(sys.argv) == 2: 
     tests = [tests[int(sys.argv[1])]]
@@ -65,13 +64,29 @@ for test in tests:
     rundata.write()
     hurricane_data.write()
     multilayer_data.write()
-    
+
+    # Create output directory
+    prefix = "ml_%s" % test['name']
+    tm = time.localtime(os.path.getmtime(outdir))
+    year = str(tm[0]).zfill(4)
+    month = str(tm[1]).zfill(2)
+    day = str(tm[2]).zfill(2)
+    hour = str(tm[3]).zfill(2)
+    minute = str(tm[4]).zfill(2)
+    second = str(tm[5]).zfill(2)
+    output_dirname = prefix + '_%s%s%s-%s%s%s' + "_output" \
+                  % (year,month,day,hour,minute,second)
+    plots_dirname = prefix + '_%s%s%s-%s%s%s' + "_plots" \
+                  % (year,month,day,hour,minute,second)
+    output_path = os.path.join(base_path,output_dirname)
+    plots_path = os.path.join(base_path,plots_dirname)
+
     # Run the simulation
-    prefix = "_sl_%s" % test['name']
-    run_simulation(prefix)
+    runclaw(xclawcmd='xclaw',outdir=output_path)
+    plotclaw(outdir=output_path,plots_path)
     
     # Tar up the results
-    cmd = "tar -cvzf ~/sl_%s_plots.tgz _plots_sl_%s" % (test['name'],test['name'])
+    cmd = "tar -cvzf %s.tgz %s" % (plots_path,plots_path)
     print cmd
     subprocess.Popen(cmd,shell=True).wait()
     
