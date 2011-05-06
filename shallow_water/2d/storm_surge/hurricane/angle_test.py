@@ -39,6 +39,7 @@ tests = [{"name":"perpendicular","velocity":5.0, "angle": 0.00 * np.pi, "eye":(0
 if len(sys.argv) == 2: 
     tests = [tests[int(sys.argv[1])]]
 print tests
+process_queue = []
 
 # Setup and run the tests
 for test in tests:    
@@ -82,12 +83,19 @@ for test in tests:
     plots_path = os.path.join(base_path,plots_dirname)
 
     # Run the simulation
-    runclaw(xclawcmd='xclaw',outdir=output_path)
-    plotclaw(outdir=output_path,plots_path)
-    
-    # Tar up the results
-    cmd = "tar -cvzf %s.tgz %s" % (plots_path,plots_path)
+    run_cmd = "runclaw xclaw %s False" % (output_path)
+    plot_cmd = "plotclaw %s %s" % (output_path,plots_path)
+    tar_cmd = "tar -cvzf %s.tgz %s" % (plots_path,plots_path)
+    cmd = ";".join((run_cmd,plot_cmd))
+    print run_cmd
+    print plot_cmd
+    print tar_cmd
     print cmd
-    subprocess.Popen(cmd,shell=True).wait()
     
-   
+    #if parallel:
+    #    process_queue.append(subprocess.Popen(cmd,shell=True))
+    #else:
+    # 	subprocess.Popen(cmd,shell=True).wait()
+    
+if parallel:
+      
