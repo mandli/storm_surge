@@ -416,7 +416,7 @@ def set_multilayer_data():
     data.rho[1] = data.rho[0] / 0.90
     
     # Algorithm Parameters
-    data.eigen_method = 3
+    data.eigen_method = 1
     data.richardson_tolerance = 0.95
     data.wave_tolerance = [0.1,0.5]
     data.dry_limit = True
