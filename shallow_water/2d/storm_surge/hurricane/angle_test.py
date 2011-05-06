@@ -34,6 +34,8 @@ else:
     base_path = os.getcwd()
 parallel = True
 process_queue = []
+runclaw_cmd = "python $CLAW/python/pyclaw/runclaw.py"
+plotclaw_cmd = "python $CLAW/python/pyclaw/plotters/plotclaw.py"
 
 # Tests
 tests = [{"name":"perpendicular","velocity":5.0, "angle": 0.00 * np.pi, "eye":(0.0,0.0)},
@@ -91,19 +93,19 @@ for test in tests:
     log_file = open(log_path,'w')
 
     # Run the simulation
-    run_cmd = "runclaw xclaw %s False" % (output_path)
-    plot_cmd = "plotclaw %s %s" % (output_path,plots_path)
+    run_cmd = "%s xclaw %s" % (runclaw_cmd,output_path)
+    plot_cmd = "%s %s %s" % (plotclaw_cmd,output_path,plots_path)
     tar_cmd = "tar -cvzf %s.tgz %s" % (plots_path,plots_path)
     cmd = ";".join((run_cmd,plot_cmd))
     print cmd
 
     # Run command
     if parallel:
-        process_queue.append(subprocess.Popen(cmd),shell=True
-                                stdout=log_file,stderr=log_file)
+        process_queue.append(subprocess.Popen(cmd,shell=True,
+                                stdout=log_file,stderr=log_file))
     else:
-        process_queue.append(subprocess.Popen(cmd),shell=True
-                                stdout=log_file,stderr=log_file).wait()
+        subprocess.Popen(cmd,shell=True,stdout=log_file,
+		stderr=log_file).wait()
     
 # if parallel:
 #     for process in process_queue:
