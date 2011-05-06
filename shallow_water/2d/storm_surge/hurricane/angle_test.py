@@ -28,18 +28,21 @@ import setrun
 import topo_data
 
 # Parameters
-base_path = "/bulk/mandli/output/storm_surge/hurricane"
+if os.environ.has_key('DATA_PATH'):
+    base_path = os.path.join(os.environ['DATA_PATH'],"storm_surge","hurricane")
+else:
+    base_path = os.getcwd()
+parallel = True
+process_queue = []
 
 # Tests
 tests = [{"name":"perpendicular","velocity":5.0, "angle": 0.00 * np.pi, "eye":(0.0,0.0)},
          {"name":"45angle","velocity":5.0, "angle": 0.25 * np.pi, "eye":(200e3,0.0)},
          {"name":"parallel","velocity":5.0, "angle": 0.50 * np.pi, "eye":(400e3,0.0)},]
          
-
 if len(sys.argv) == 2: 
     tests = [tests[int(sys.argv[1])]]
 print tests
-process_queue = []
 
 # Setup and run the tests
 for test in tests:    
@@ -48,19 +51,19 @@ for test in tests:
     rundata = setrun.setrun()
     hurricane_data = setrun.set_hurricane_data()
     multilayer_data = setrun.set_multilayer_data()
-    
+
     # Set data particular to this test
     hurricane_data.hurricane_velocity = (test["velocity"] 
         * np.cos(test["angle"]),test["velocity"] * np.sin(test["angle"]))
     hurricane_data.R_eye_init = test["eye"]
-    
+
     # Grid parameters
     factor = 3*2
     rundata.clawdata.mx = 70 * factor
     rundata.clawdata.my = 60 * factor
     rundata.clawdata.dt_initial = 0.6755e1
     rundata.clawdata.mxnest = -1
-    
+
     # Write out data
     rundata.write()
     hurricane_data.write()
@@ -68,34 +71,47 @@ for test in tests:
 
     # Create output directory
     prefix = "ml_%s" % test['name']
-    tm = time.localtime(os.path.getmtime(outdir))
+    # tm = time.localtime(os.path.getmtime(outdir))
+    tm = time.localtime()
     year = str(tm[0]).zfill(4)
     month = str(tm[1]).zfill(2)
     day = str(tm[2]).zfill(2)
     hour = str(tm[3]).zfill(2)
     minute = str(tm[4]).zfill(2)
     second = str(tm[5]).zfill(2)
-    output_dirname = prefix + '_%s%s%s-%s%s%s' + "_output" \
-                  % (year,month,day,hour,minute,second)
-    plots_dirname = prefix + '_%s%s%s-%s%s%s' + "_plots" \
-                  % (year,month,day,hour,minute,second)
+    date = '_%s%s%s-%s%s%s' % (year,month,day,hour,minute,second)
+    output_dirname = ''.join((prefix,date,"_output"))
+    plots_dirname = ''.join((prefix,date,"_plots"))
+    log_name = ''.join((prefix,date,"_log"))
+
     output_path = os.path.join(base_path,output_dirname)
     plots_path = os.path.join(base_path,plots_dirname)
+    log_path = os.path.join(base_path,log_name)
+
+    log_file = open(log_path,'w')
 
     # Run the simulation
     run_cmd = "runclaw xclaw %s False" % (output_path)
     plot_cmd = "plotclaw %s %s" % (output_path,plots_path)
     tar_cmd = "tar -cvzf %s.tgz %s" % (plots_path,plots_path)
     cmd = ";".join((run_cmd,plot_cmd))
-    print run_cmd
-    print plot_cmd
-    print tar_cmd
     print cmd
-    
-    #if parallel:
-    #    process_queue.append(subprocess.Popen(cmd,shell=True))
-    #else:
-    # 	subprocess.Popen(cmd,shell=True).wait()
+
+    # Run command
+    if parallel:
+        process_queue.append(subprocess.Popen(cmd),
+                                stdout=log_file,stderr=log_file)
+    else:
+        process_queue.append(subprocess.Popen(cmd),
+                                stdout=log_file,stderr=log_file).wait()
     
 if parallel:
+    for process in process_queue:
+        try:
+            process.wait()
+        except(KeyboardInterrupt,SystemExit):
+            print "Interrupt called and caught."
+        
+    
+
       
