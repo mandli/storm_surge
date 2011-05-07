@@ -18,7 +18,7 @@ CLAW_LIB = $(CLAW)/amrclaw/2d/lib
 GEOLIB = $(CLAW)/geoclaw/2d/lib
 
 # Flagging
-FC = gfortran44
+FC ?= gfortran
 FFLAGS += -I$(GEOLIB)
 UNAME = $(shell uname)
 ifeq ($(UNAME), Darwin)

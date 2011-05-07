@@ -46,7 +46,7 @@ c
           basin_depth = -3000d0
           shelf_depth = -100d0
           beach_slope = 0.05d0
-          h = 10
+          h = 100.d0
           
           ! Calculated values
           A = basin_depth - eta(2) + 0.5d0 * h

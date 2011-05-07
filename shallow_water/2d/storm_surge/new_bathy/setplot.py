@@ -151,7 +151,7 @@ def setplot(plotdata):
         plt.hold(True)
         y = ylimits
         
-        for ref_line in [mutlilayer.x0,,multilayer.x1,multilayer.x2]:
+        for ref_line in [350e3,450e3,480e3]:
             plt.plot([ref_line,ref_line],y,'y--',linewidth=1)
         plt.hold(False)
         

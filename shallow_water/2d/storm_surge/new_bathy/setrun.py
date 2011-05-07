@@ -79,10 +79,10 @@ def setrun(claw_pkg='geoclaw'):
         
 
     # Number of grid cells:
-    # clawdata.mx = 70
-    clawdata.mx = 560
-    # clawdata.my = 60
-    clawdata.my = 480
+    clawdata.mx = 70
+    # clawdata.mx = 560
+    clawdata.my = 60
+    # clawdata.my = 480
     # clawdata.mx = 100
     # clawdata.my = 100
 
@@ -237,7 +237,7 @@ def setrun(claw_pkg='geoclaw'):
 
 
     # max number of refinement levels:
-    mxnest = 1
+    mxnest = 5
 
     clawdata.mxnest = -mxnest   # negative ==> anisotropic refinement in x,y,t
 
