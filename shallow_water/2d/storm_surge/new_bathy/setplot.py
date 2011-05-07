@@ -32,6 +32,9 @@ def setplot(plotdata):
     amrdata = Data(os.path.join(plotdata.rundir,'amr2ez.data'))
     hurricane_data = Data(os.path.join(plotdata.rundir,'hurricane.data'))
     multilayer_data = Data(os.path.join(plotdata.rundir,'multilayer.data'))
+
+    ref_lines = [350e3,450e3,480e3]
+
     plotdata.clearfigures()
     plotdata.clear_frames = False
     plotdata.clear_figs = True
@@ -59,24 +62,62 @@ def setplot(plotdata):
         # plt.hold(False)
         # wind_contours(current_data)
         # bathy_ref_lines(current_data)
-        
-    def profile_afteraxes(current_data):
-        hour_figure_title(current_data)
-        loc,label = plt.xticks()
-        label = loc/1.e3
-        plt.xticks(loc,label)
-        plt.xlabel('km')
-        if current_data.plotaxes.title == 'Wind':
-            plt.ylabel('m/s')
-        else:
+    
+    def remove_labels_profile(cd,direction='x'):
+        plt.hold(True)
+        if direction == 'x':
+            plt.xlabel('')
+            locs,labels = plt.xticks()
+            # labels = np.flipud(locs)/1.e3
+            labels = ['' for i in xrange(len(locs))]
+            plt.xticks(locs,labels)
             plt.ylabel('m')
-            
-        t = current_data.t
-        # Hurricane eye
-        x = t * hurricane_data.hurricane_velocity[0] + hurricane_data.R_eye_init[0]
+        elif direction == 'y':
+            plt.ylabel('')
+            locs,labels = plt.yticks()
+            # labels = np.flipud(locs)/1.e3
+            labels = ['' for i in xrange(len(locs))]
+            plt.yticks(locs,labels)
+            plt.xlabel('m')
+        plt.hold(False)
+        
+    def labels_profile(cd,direction='x'):
+        if direction == 'x':
+            loc,label = plt.xticks()
+            label = loc/1.e3
+            plt.xticks(loc,label)
+            plt.xlabel('km')
+            if cd.plotaxes.title == 'Wind':
+                plt.ylabel('m/s')
+            else:
+                plt.ylabel('m')
+        elif direction == 'y':
+            loc,label = plt.yticks()
+            label = loc/1.e3
+            plt.yticks(loc,label)
+            plt.ylabel('km')
+            if cd.plotaxes.title == 'Wind':
+                plt.xlabel('m/s')
+            else:
+                plt.xlabel('m')
+        
+    def bathy_ref_lines_profile(cd,limits):
+        plt.hold(True)
+        for line in ref_lines:
+            plt.plot([line,line],limits,'k--')
+        plt.hold(False)
+        
+    def eye_location_profile(cd):
+        x = cd.t * hurricane_data.hurricane_velocity[0] + hurricane_data.R_eye_init[0]
         plt.hold(True)
         plt.plot(x,0.0,'r+')
         plt.hold(False)
+        
+    def profile_afteraxes(current_data):
+        hour_figure_title(current_data)
+        labels_profile(current_data)
+        bathy_ref_lines_profile(current_data,[-2000,0])
+        eye_location_profile(current_data)
         
     def hour_figure_title(current_data):
         t = current_data.t
@@ -151,7 +192,7 @@ def setplot(plotdata):
         plt.hold(True)
         y = ylimits
         
-        for ref_line in [350e3,450e3,480e3]:
+        for ref_line in ref_lines:
             plt.plot([ref_line,ref_line],y,'y--',linewidth=1)
         plt.hold(False)
         
@@ -759,20 +800,35 @@ def setplot(plotdata):
     plotaxes.title = "Profile of depth"
     plotaxes.afteraxes = profile_afteraxes
     
-    slice_index = 30
+    slice_value = 0.0
+    
+    def slice_index(cd):
+        if cd.grid.y.lower < slice_value < cd.grid.y.upper:
+            return int((slice_value - cd.grid.y.lower) / cd.dy - 0.5)
+        else:
+            return False
     
     # Internal surface
     def bathy_profile(current_data):
-        if current_data.level == 1:
-            return current_data.x[:,slice_index], b(current_data)[:,slice_index]
-        return None
+        index = slice_index(current_data)
+        if index:
+            return current_data.x[:,index], b(current_data)[:,index]
+        else:
+            return None
     
     def lower_surface(current_data):
-        return current_data.x[:,slice_index], eta2(current_data)[:,slice_index]
+        index = slice_index(current_data)
+        if index:
+            return current_data.x[:,index], eta2(current_data)[:,index]
+        else:
+            return None
         
-    
     def upper_surface(current_data):
-        return current_data.x[:,slice_index], eta1(current_data)[:,slice_index]
+        index = slice_index(current_data)
+        if index:
+            return current_data.x[:,index], eta1(current_data)[:,index]
+        else:
+            return None
         
     
     # Bathy
@@ -803,7 +859,7 @@ def setplot(plotdata):
     #  Combined Profile Plot
     # ========================================================================
     plotfigure = plotdata.new_plotfigure(name='combined_surface',figno=130)
-    plotfigure.show = False
+    plotfigure.show = True
     plotfigure.kwargs = {'figsize':(6,6)}
     
     # Top surface
@@ -811,17 +867,14 @@ def setplot(plotdata):
     plotaxes.axescmd = 'subplot(2,1,1)'
     plotaxes.title = 'Surfaces'
     plotaxes.xlimits = xlimits
-    # plotaxes.ylimits = surface_zoomed
+    plotaxes.ylimits = top_surface_limits
+    
     def top_afteraxes(cd):
-        plt.hold(True)
-        plt.xlabel('')
-        locs,labels = plt.xticks()
-        # labels = np.flipud(locs)/1.e3
-        labels = ['' for i in xrange(len(locs))]
-        plt.xticks(locs,labels)
-        plt.plot([450e3,450e3],[-1,1],'--k')
-        plt.ylabel('m')
-        plt.hold(False)
+        remove_labels_profile(cd)
+        hour_figure_title(cd)
+        eye_location_profile(cd)
+        bathy_ref_lines_profile(cd,top_surface_limits)
+        
     plotaxes.afteraxes = top_afteraxes
     plotitem = plotaxes.new_plotitem(plot_type="1d_from_2d_data")
     plotitem.map_2d_to_1d = upper_surface
@@ -834,15 +887,13 @@ def setplot(plotdata):
     plotaxes.axescmd = 'subplot(2,1,2)'
     plotaxes.title = ''
     plotaxes.xlimits = xlimits
-    # plotaxes.ylimits = internal_zoomed
+    plotaxes.ylimits = internal_surface_limits
     def internal_surf_afteraxes(cd):
-        plt.hold(True)
-        # km_labels(cd)
-        plt.title('')
-        plt.ylabel('m')
-        plt.subplots_adjust(hspace=0.05)
-        plt.plot([450e3,450e3],[-301,-299],'--k')
-        plt.hold(False)
+        labels_profile(cd)
+        hour_figure_title(cd)
+        eye_location_profile(cd)
+        bathy_ref_lines_profile(cd,internal_surface_limits)
+        
     plotaxes.afteraxes = internal_surf_afteraxes
     plotitem = plotaxes.new_plotitem(plot_type='1d_from_2d_data')
     plotitem.map_2d_to_1d = lower_surface

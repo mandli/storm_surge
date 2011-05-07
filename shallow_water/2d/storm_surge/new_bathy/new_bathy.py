@@ -17,7 +17,7 @@ basin_depth = -3000
 shelf_depth = -100
 beach_slope = 0.05
 eta = [0.0,-300]
-h = 10
+h = 100.0
 
 A = basin_depth - eta[1] + 0.5*h
 B = shelf_depth - eta[1] - 0.5*h
