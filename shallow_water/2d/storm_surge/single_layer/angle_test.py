@@ -15,6 +15,9 @@ Runs tests for angles relative to a continental shelf
 # ============================================================================
 
 import subprocess
+import sys
+import os
+import time
 
 import numpy as np
 
@@ -23,24 +26,37 @@ from pyclaw.plotters.plotclaw import plotclaw
 
 import setrun
 import topo_data
+import test_suites
 
-def run_simulation(file_suffix):
-    runclaw(xclawcmd='xclaw',outdir='_output%s' % file_suffix)
-    plotclaw(outdir='_output%s' % file_suffix,plotdir='_plots%s' % file_suffix)
+# Parameters
+if os.environ.has_key('DATA_PATH'):
+    base_path = os.path.join(os.environ['DATA_PATH'],"storm_surge","hurricane")
+else:
+    base_path = os.getcwd()
+base_path = os.path.expanduser(base_path)
 
+parallel = True
+process_queue = []
+runclaw_cmd = "python $CLAW/python/pyclaw/runclaw.py"
+plotclaw_cmd = "python $CLAW/python/pyclaw/plotters/plotclaw.py"
 
-# Tests
-tests = [{"velocity":5.0, "angle": 0.00 * np.pi, "eye":(0.0,0.0)},
-         {"velocity":5.0, "angle": 0.25 * np.pi, "eye":(200e3,0.0)},
-         {"velocity":5.0, "angle": 0.50 * np.pi, "eye":(400e3,0.0)},]
-         
-parallel = False
+parallel = True
+
+print sys.argv
+if len(sys.argv) > 1:
+    run_tests = []
+    for test in sys.argv[1:]:
+        run_tests.append(test_suites.tests[int(test)])
+else:
+    run_tests = test_suites.tests
+
+print run_tests
 
 # Setup and run the tests
-for (i,test) in enumerate(tests):    
+for (i,test) in enumerate(run_tests):    
     # Default data values
     # This is no longer necessary as it's in the setaux routine directly
-    topo_data.write_topo_file('./topo.data',bathy_type='gulf_shelf',plot=False,force=False)
+    # topo_data.write_topo_file('./topo.data',bathy_type='gulf_shelf',plot=False,force=False)
     rundata = setrun.setrun()
     hurricane_data = setrun.set_hurricane_data()
     multilayer_data = setrun.set_multilayer_data()
@@ -55,13 +71,41 @@ for (i,test) in enumerate(tests):
     hurricane_data.write()
     multilayer_data.write()
     
+    # Create output directories and paths
+    prefix = "sl_%s" % test['name']
+    tm = time.localtime()
+    year = str(tm[0]).zfill(4)
+    month = str(tm[1]).zfill(2)
+    day = str(tm[2]).zfill(2)
+    hour = str(tm[3]).zfill(2)
+    minute = str(tm[4]).zfill(2)
+    second = str(tm[5]).zfill(2)
+    date = '_%s%s%s-%s%s%s' % (year,month,day,hour,minute,second)
+    output_dirname = ''.join((prefix,date,"_output"))
+    plots_dirname = ''.join((prefix,date,"_plots"))
+    log_name = ''.join((prefix,date,"_log"))
+
+    output_path = os.path.join(base_path,output_dirname)
+    plots_path = os.path.join(base_path,plots_dirname)
+    log_path = os.path.join(base_path,log_name)
+    
+    print os.path.abspath(os.path.join(base_path,log_name))
+    print base_path
+    print output_path
+    print plots_path
+    print log_path
+
+    log_file = open(log_path,'w')
+    
     # Run the simulation
-    prefix = "_sl_%s" % i
-    run_simulation(prefix)
-    
-    # Tar up the results
-    cmd = "tar -cvzf ~/sl_%s_plots.tgz _plots_sl_%s" % (i,i)
+    run_cmd = "%s xclaw %s" % (runclaw_cmd,output_path)
+    plot_cmd = "%s %s %s" % (plotclaw_cmd,output_path,plots_path)
+    tar_cmd = "tar -cvzf %s.tgz %s" % (plots_path,plots_path)
+    cmd = ";".join((run_cmd,plot_cmd))
     print cmd
-    subprocess.Popen(cmd,shell=True).wait()
-    
+    if parallel:
+        process_queue.append(subprocess.Popen(cmd,shell=True,
+            stdout=log_file,stderr=log_file))
+    else:
+        subprocess.Popen(cmd,shell=True,stdout=log_file,stderr=log_file).wait()    
     
