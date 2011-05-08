@@ -26,6 +26,7 @@ from pyclaw.plotters.plotclaw import plotclaw
 
 import setrun
 import topo_data
+import test_suites
 
 # Parameters
 if os.environ.has_key('DATA_PATH'):
@@ -36,18 +37,21 @@ parallel = True
 process_queue = []
 runclaw_cmd = "python $CLAW/python/pyclaw/runclaw.py"
 plotclaw_cmd = "python $CLAW/python/pyclaw/plotters/plotclaw.py"
-
-# Tests
-tests = [{"name":"perpendicular","velocity":5.0, "angle": 0.00 * np.pi, "eye":(0.0,0.0)},
-         {"name":"45angle","velocity":5.0, "angle": 0.25 * np.pi, "eye":(200e3,0.0)},
-         {"name":"parallel","velocity":5.0, "angle": 0.50 * np.pi, "eye":(400e3,0.0)},]
          
-if len(sys.argv) == 2: 
-    tests = [tests[int(sys.argv[1])]]
-print tests
+print sys.argv
+if len(sys.argv) > 1:
+    run_tests = []
+    for test in sys.argv[1:]:
+        run_tests.append(test_suites.tests[int(test)])
+else:
+    run_tests = test_suites.tests
+
+print run_tests
+
+print run_tests
 
 # Setup and run the tests
-for test in tests:    
+for (i,test) in enumerate(run_tests):  
     # Default data values
     # topo_data.write_topo_file('./topo.data',bathy_type='gulf_shelf',plot=False,force=False)
     rundata = setrun.setrun()
@@ -73,7 +77,6 @@ for test in tests:
 
     # Create output directory
     prefix = "ml_%s" % test['name']
-    # tm = time.localtime(os.path.getmtime(outdir))
     tm = time.localtime()
     year = str(tm[0]).zfill(4)
     month = str(tm[1]).zfill(2)
@@ -97,9 +100,6 @@ for test in tests:
     plot_cmd = "%s %s %s" % (plotclaw_cmd,output_path,plots_path)
     tar_cmd = "tar -cvzf %s.tgz %s" % (plots_path,plots_path)
     cmd = ";".join((run_cmd,plot_cmd))
-    print cmd
-
-    # Run command
     if parallel:
         process_queue.append(subprocess.Popen(cmd,shell=True,
                                 stdout=log_file,stderr=log_file))
