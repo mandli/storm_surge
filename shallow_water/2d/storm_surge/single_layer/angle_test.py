@@ -88,13 +88,6 @@ for (i,test) in enumerate(run_tests):
     output_path = os.path.join(base_path,output_dirname)
     plots_path = os.path.join(base_path,plots_dirname)
     log_path = os.path.join(base_path,log_name)
-    
-    print os.path.abspath(os.path.join(base_path,log_name))
-    print base_path
-    print output_path
-    print plots_path
-    print log_path
-
     log_file = open(log_path,'w')
     
     # Run the simulation

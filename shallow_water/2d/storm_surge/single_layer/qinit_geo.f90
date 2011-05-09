@@ -1,6 +1,6 @@
 subroutine qinit(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
     
-    use multilayer_module
+    use multilayer_module, only: eta
     use geoclaw_module
     use hurricane_module
 
@@ -22,18 +22,9 @@ subroutine qinit(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
         x = xlower + (i-0.5d0)*dx
         do j=1-mbc,my+mbc
             y = ylower + (j-0.5d0)*dy
-            q(i,j,1)=dmax1(0.d0,sealevel-aux(i,j,1))
+            q(i,j,1)=dmax1(0.d0,eta(1)-aux(i,j,1))
             q(i,j,2)=0.d0
             q(i,j,3)=0.d0
-            
-            if (init_type == 3) then
-                deta = epsilon * exp(-((x-init_location(1))/sigma)**2) * exp(-((y-init_location(2))/sigma)**2)
-                q(i,j,1) = q(i,j,1) + deta
-            else if (init_type == 7) then
-                if (aux(i+1,j,1) > -300.d0 .and. .not.(aux(i,j,1) > -300.d0)) then
-                    q(i,j,1) = q(i,j,1) + epsilon
-                endif
-            endif
         enddo
     enddo
     
