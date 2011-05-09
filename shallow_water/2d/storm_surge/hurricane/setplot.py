@@ -29,9 +29,9 @@ def setplot(plotdata):
     from pyclaw.plotters import colormaps, geoplot
     from pyclaw.data import Data
 
-    amrdata = Data(os.path.join(plotdata.rundir,'amr2ez.data'))
-    hurricane_data = Data(os.path.join(plotdata.rundir,'hurricane.data'))
-    multilayer_data = Data(os.path.join(plotdata.rundir,'multilayer.data'))
+    amrdata = Data(os.path.join(plotdata.outdir,'amr2ez.data'))
+    hurricane_data = Data(os.path.join(plotdata.outdir,'hurricane.data'))
+    multilayer_data = Data(os.path.join(plotdata.outdir,'multilayer.data'))
     plotdata.clearfigures()
     plotdata.clear_frames = False
     plotdata.clear_figs = True
