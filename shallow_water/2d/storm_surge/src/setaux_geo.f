@@ -52,20 +52,41 @@ c           # for lat-lon grid on sphere:
             else
                aux(i,j,2) = 1.d0
                aux(i,j,3) = 1.d0
-	            endif
+                    endif
 
-            if (mtopofiles.gt.0) then
+            if (mtopofiles.gt.0 .and. bathy_type == 0) then
                topoint=0.d0
                call cellgridintegrate(topoint,xim,xcell,xip,yjm,ycell,
-     &	        yjp,xlowtopo,ylowtopo,xhitopo,yhitopo,dxtopo,dytopo,
-     &	        mxtopo,mytopo,mtopo,i0topo,mtopoorder,
-     &	        mtopofiles,mtoposize,topowork)
+     &          yjp,xlowtopo,ylowtopo,xhitopo,yhitopo,dxtopo,dytopo,
+     &          mxtopo,mytopo,mtopo,i0topo,mtopoorder,
+     &          mtopofiles,mtoposize,topowork)
                aux(i,j,1) = topoint/(dx*dy*aux(i,j,2))
             else
-                if (xcell < bathy_location) then
-                    aux(i,j,1) = bathy_left
+                if (bathy_type == 1) then
+                    if (xcell < bathy_location) then
+                        aux(i,j,1) = bathy_left
+                    else
+                        aux(i,j,1) = bathy_right
+                    endif
+                else if (bathy_type == 2) then
+                    ! Bottom of basin
+                    if (xcell < x0) then 
+                        aux(i,j,1) = basin_depth
+                    ! Shelf slope
+                    else if (x0 < xcell .and. xcell < eta_int) then
+                        aux(i,j,1) = shelf_slope*(xcell-x0)+basin_depth
+                    ! Shelf slope
+                    else if (eta_int < xcell .and. xcell < x1) then
+                        aux(i,j,1) = shelf_slope*(xcell-x1)+shelf_depth
+                    ! Shelf
+                    else if (x1 < xcell .and. xcell < x2) then
+                        aux(i,j,1) = shelf_depth
+                    ! Beach slope
+                    else if (x2 < xcell) then
+                        aux(i,j,1) = beach_slope*(xcell-x2)+shelf_depth
+                    endif
                 else
-                    aux(i,j,1) = bathy_right
+                     aux(i,j,1) = bathy_left   
                 endif
             endif
             enddo
@@ -111,5 +132,3 @@ c     # output aux array for debugging:
 
       return
       end
-
-

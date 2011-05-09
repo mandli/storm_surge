@@ -32,6 +32,14 @@ def setplot(plotdata):
     amrdata = Data(os.path.join(plotdata.outdir,'amr2ez.data'))
     hurricane_data = Data(os.path.join(plotdata.outdir,'hurricane.data'))
     multilayer_data = Data(os.path.join(plotdata.outdir,'multilayer.data'))
+    
+    if multilayer_data.bathy_type == 1:
+        ref_lines = [multilayer_data.bathy_location]
+    elif multilayer_data.bathy_type == 2:
+        ref_lines = [multilayer_data.x0,multilayer_data.x1,multilayer_data.x2]
+    else:
+        ref_lines = []
+    
     plotdata.clearfigures()
     plotdata.clear_frames = False
     plotdata.clear_figs = True
@@ -150,7 +158,7 @@ def setplot(plotdata):
     def bathy_ref_lines(current_data):
         plt.hold(True)
         y = ylimits
-        for ref_line in [450e3]:
+        for ref_line in ref_lines:
             plt.plot([ref_line,ref_line],y,'y--',linewidth=1)
         plt.hold(False)
         

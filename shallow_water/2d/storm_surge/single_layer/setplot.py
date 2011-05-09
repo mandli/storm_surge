@@ -31,6 +31,15 @@ def setplot(plotdata):
 
     amrdata = Data(os.path.join(plotdata.outdir,'amr2ez.data'))
     hurricane_data = Data(os.path.join(plotdata.outdir,'hurricane.data'))
+    multilayer_data = Data(os.path.join(plotdata.outdir,'multilayer.data'))
+    
+    if multilayer_data.bathy_type == 1:
+        ref_lines = [multilayer_data.bathy_location]
+    elif multilayer_data.bathy_type == 2:
+        ref_lines = [multilayer_data.x0,multilayer_data.x1,multilayer_data.x2]
+    else:
+        ref_lines = []
+    
     plotdata.clearfigures()
     plotdata.clear_frames = False
     plotdata.clear_figs = True
@@ -131,8 +140,7 @@ def setplot(plotdata):
     def bathy_ref_lines(current_data):
         plt.hold(True)
         y = [amrdata.ylower,amrdata.yupper]
-        # for ref_line in [352e3,410e3,477e3]:
-        for ref_line in [450e3]:
+        for ref_line in ref_lines:
             plt.plot([ref_line,ref_line],y,'y--')
         plt.hold(False)
         
@@ -165,27 +173,41 @@ def setplot(plotdata):
     # ========================================================================
     def b(cd):
         return cd.q[:,:,3] - cd.q[:,:,0]
-        
-    def eta(cd):
-        return cd.q[:,:,3]
     
-    def water_u(current_data):
+    def extract_eta(h,eta,DRY_TOL=10**-3):
+        index = np.nonzero((np.abs(h) < DRY_TOL) + (h == np.nan))
+        eta[index[0],index[1]] = np.nan
+        return eta
+    
+    def extract_velocity(h,hu,DRY_TOL=10**-8):
+        # u = np.ones(hu.shape) * np.nan
+        u = np.zeros(hu.shape)
+        index = np.nonzero((np.abs(h) > DRY_TOL) * (h != np.nan))
+        u[index[0],index[1]] = hu[index[0],index[1]] / h[index[0],index[1]]
+        return u
+    
+    def eta(cd):
+        return extract_eta(cd.q[:,:,0],cd.q[:,:,3])
+        
+    def water_u(cd):
         # index = np.nonzero(current_data.q[:,:,0] > 1e-6)
         # u = np.zeros(current_data.q[:,:,1].shape)
         # u[index] = current_data.q[index,1] / current_data.q[index,0]
         # return u
-        return np.where(abs(current_data.q[:,:,0]) > 10**-16,
-            current_data.q[:,:,1] / current_data.q[:,:,0],
-            0.0)
+        return extract_velocity(cd.q[:,:,0],cd.q[:,:,1])
+        # return np.where(abs(current_data.q[:,:,0]) > 10**-16,
+        #     current_data.q[:,:,1] / current_data.q[:,:,0],
+        #     0.0)
         
-    def water_v(current_data):
+    def water_v(cd):
         # index = np.nonzero(current_data.q[:,:,0] > 1e-6)
         # v = np.zeros(current_data.q[:,:,2].shape)
         # v[index] = current_data.q[index,2] / current_data.q[index,0]
         # return u
-        return np.where(abs(current_data.q[:,:,0]) > 10**-16,
-            current_data.q[:,:,2] / current_data.q[:,:,0],
-            0.0)
+        return extract_velocity(cd.q[:,:,0],cd.q[:,:,2])
+        # return np.where(abs(current_data.q[:,:,0]) > 10**-16,
+        #     current_data.q[:,:,2] / current_data.q[:,:,0],
+        #     0.0)
         
     def water_speed(current_data):
         u = water_u(current_data)
@@ -264,7 +286,7 @@ def setplot(plotdata):
     def pcolor_afteraxes(current_data):
         eye_location(current_data)
         hour_figure_title(current_data)
-        # bathy_ref_lines(current_data)
+        bathy_ref_lines(current_data)
         m_to_km_labels()
     plotaxes.afteraxes = pcolor_afteraxes
 

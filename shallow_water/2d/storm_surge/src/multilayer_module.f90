@@ -115,10 +115,15 @@ contains
             read(13,*) h
             
             ! Calculated values
-            A = basin_depth - eta(2) + 0.5d0 * h
-            B = shelf_depth - eta(2) - 0.5d0 * h
-            eta_int = (A*x1 - B*x0) / (A-B)
-            shelf_slope = A / (x0 - eta_int)
+            if (layers > 1) then
+                A = basin_depth - eta(2) + 0.5d0 * h
+                B = shelf_depth - eta(2) - 0.5d0 * h
+                eta_int = (A*x1 - B*x0) / (A-B)
+                shelf_slope = A / (x0 - eta_int)
+            else
+                eta_int = 0.5d0 * (x0 + x1)
+                shelf_slope = (basin_depth - shelf_depth) / (x0 - x1)
+            endif
         endif
         
         close(13)

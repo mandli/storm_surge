@@ -23,6 +23,7 @@ subroutine qinit(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
         do j=1-mbc,my+mbc
             y = ylower + (j-0.5d0)*dy
             q(i,j,1)=dmax1(0.d0,eta(1)-aux(i,j,1))
+            print *,q(i,j,1),eta(1),aux(i,j,1)
             q(i,j,2)=0.d0
             q(i,j,3)=0.d0
         enddo
