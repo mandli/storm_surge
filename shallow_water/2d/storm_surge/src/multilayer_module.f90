@@ -32,7 +32,13 @@ module multilayer_module
     integer :: init_type,wave_family
     
     ! Simple bathy states
+    integer :: bathy_type = 2
     double precision :: bathy_location, bathy_left, bathy_right
+    
+    ! Complex bathy layout
+    double precision :: x0,x1,x2,shelf_depth,basin_depth,beach_slope,h
+    ! Calculated parameters
+    double precision :: shelf_slope,eta_int,A,B
     
 contains
 
@@ -91,9 +97,29 @@ contains
         read(13,*) sigma
         
         ! Bathymetry
-        read(13,*) bathy_location
-        read(13,*) bathy_left
-        read(13,*) bathy_right
+        read(13,*) bathy_type
+        if (bathy_type == 0) then
+            ! Probably should check here that mtopo is nonzero
+            continue
+        else if (bathy_type == 1) then
+            read(13,*) bathy_location
+            read(13,*) bathy_left
+            read(13,*) bathy_right
+        else if (bathy_type == 2) then
+            read(13,*) x0
+            read(13,*) x1
+            read(13,*) x2
+            read(13,*) basin_depth
+            read(13,*) shelf_depth
+            read(13,*) beach_slope
+            read(13,*) h
+            
+            ! Calculated values
+            A = basin_depth - eta(2) + 0.5d0 * h
+            B = shelf_depth - eta(2) - 0.5d0 * h
+            eta_int = (A*x1 - B*x0) / (A-B)
+            shelf_slope = A / (x0 - eta_int)
+        endif
         
         close(13)
 

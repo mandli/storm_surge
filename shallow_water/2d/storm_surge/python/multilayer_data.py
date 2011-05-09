@@ -32,9 +32,18 @@ class MultilayerData(data.Data):
         self.add_attribute('sigma',25e3)
         
         # Bathymetry
+        self.add_attribute('bathy_type',0)
         self.add_attribute('bathy_location',-50e3)
         self.add_attribute('bathy_left',-4000.0)
         self.add_attribute('bathy_right',-200.0)
+        
+        self.add_attribute('x0',350e3)
+        self.add_attribute('x1',450e3)
+        self.add_attribute('x2',480e3)
+        self.add_attribute('basin_depth',-3000.0)
+        self.add_attribute('shelf_depth',-100.0)
+        self.add_attribute('beach_slope',0.05)
+        self.add_attribute('h',100)
     
     def write(self,out_file='./multilayer.data',datasource="setrun.py"):
         print "Creating data file %s" % out_file
@@ -56,8 +65,24 @@ class MultilayerData(data.Data):
         data.data_write(out_file,self,'epsilon','(Perturbation strength)')
         data.data_write(out_file,self,'sigma','(Gaussian width for init_type=2,3)')
         data.data_write(out_file,self,None)
-        data.data_write(out_file,self,'bathy_location','(Bathymetry jump location)')
-        data.data_write(out_file,self,'bathy_left','(Depth to left of bathy_location)')
-        data.data_write(out_file,self,'bathy_right','(Depth to right of bathy_location)')
+        data.data_write(out_file,self,'bathy_type','(Type of bathymetry prescribed)')
+        if self.bathy_type == 0:
+            pass
+        elif self.bathy_type == 1:
+            data.data_write(out_file,self,'bathy_location','(Bathymetry jump location)')
+            data.data_write(out_file,self,'bathy_left','(Depth to left of bathy_location)')
+            data.data_write(out_file,self,'bathy_right','(Depth to right of bathy_location)')
+        elif self.bathy_type == 2:
+            data.data_write(out_file,self,'x0','(Location of basin end)')
+            data.data_write(out_file,self,'x1','(Location of shelf slope end)')
+            data.data_write(out_file,self,'x2','(Location of beach slope)')
+            data.data_write(out_file,self,'basin_depth','(Depth of basin)')
+            data.data_write(out_file,self,'shelf_depth','(Depth of shelf)')
+            data.data_write(out_file,self,'beach_slope','(Slope of beach)')
+            data.data_write(out_file,self,'h','(Height of mid-slope jump near eta(2))')
+        else:
+            print "Invalid bathy_type %s requested, aborting." % self.bathy_type
+            out_file.close()
+            sys.exit(1)
         
         out_file.close()

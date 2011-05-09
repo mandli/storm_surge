@@ -302,7 +302,7 @@ def setgeo(rundata):
     # for topography, append lines of the form
     #   [topotype, minlevel, maxlevel, t1, t2, fname]
     # geodata.topofiles.append([2, 1, 1, 0., 1.e10, 'bowl.topotype2'])
-    geodata.topofiles.append([1, 1, 5, 0., 1e10, 'topo.data'])
+    # geodata.topofiles.append([1, 1, 5, 0., 1e10, 'topo.data'])
     
     # == setdtopo.data values ==
     geodata.dtopofiles = []
@@ -374,11 +374,11 @@ def set_hurricane_data(ramp_up_time=RAMP_UP_TIME):
     
     # Path of hurricane, speed in m/s
     velocity = 5.0
-    angle = 0.50 * np.pi
+    angle = 0.0
     # Speeds of hurricane
     data.hurricane_velocity = (velocity * np.cos(angle),velocity * np.sin(angle))
     # Initial position of hurricane eye at t = 0
-    data.R_eye_init = (440e3,-100e3) 
+    data.R_eye_init = (0.0,0.0) 
 
     # Hurricane parameters
     # These match Hurricane Tracy
@@ -412,9 +412,21 @@ def set_multilayer_data():
     data.sigma = 25e3
     
     # Bathy settings
+    data.bathy_type = 2
+    
+    # Bathy settings for type == 1
     data.bathy_location = 450e3
     data.bathy_left = -4000
     data.bathy_right = -200
+    
+    # Bathy settings for type == 2        
+    data.x0 = 350e3
+    data.x1 = 450e3
+    data.x2 = 480e3
+    data.basin_depth = -3000.0
+    data.shelf_depth = -100.0
+    data.beach_slope = 0.05
+    data.h = 0.0
     
     return data
 

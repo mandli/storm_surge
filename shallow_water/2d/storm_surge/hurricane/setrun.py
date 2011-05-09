@@ -416,7 +416,7 @@ def set_multilayer_data():
     data.rho[1] = data.rho[0] / 0.90
     
     # Algorithm Parameters
-    data.eigen_method = 1
+    data.eigen_method = 4
     data.richardson_tolerance = 0.95
     data.wave_tolerance = [0.1,0.5]
     data.dry_limit = True
@@ -431,9 +431,21 @@ def set_multilayer_data():
     data.sigma = 25e3
     
     # Bathy settings
+    data.bathy_type = 2
+    
+    # Bathy settings for type == 1
     data.bathy_location = 450e3
     data.bathy_left = -4000
-    data.bathy_right = -4000
+    data.bathy_right = -200
+    
+    # Bathy settings for type == 2        
+    data.x0 = 350e3
+    data.x1 = 450e3
+    data.x2 = 480e3
+    data.basin_depth = -3000.0
+    data.shelf_depth = -100.0
+    data.beach_slope = 0.05
+    data.h = 0.0
     
     return data
     
