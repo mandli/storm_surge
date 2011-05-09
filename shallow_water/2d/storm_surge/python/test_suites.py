@@ -19,10 +19,10 @@ import numpy as np
 
 # Tests
 tests = [{"name":"perpendicular","velocity":5.0, "angle": 0.00 * np.pi, "eye":(0.0,0.0)},
-         {"name":"p45angle","velocity":5.0, "angle": 0.25 * np.pi, "eye":(200e3,0.0)},
-         {"name":"n45angle","velocity":5.0, "angle": -0.25 * np.pi, "eye":(200e3,0.0)},
-         {"name":"parallel_down","velocity":5.0, "angle": -0.50 * np.pi, "eye":(400e3,100e3)},
-         {"name":"parallel_up","velocity":5.0, "angle": 0.50 * np.pi, "eye":(400e3,-100e3)},
+         {"name":"p45angle","velocity":5.0, "angle": 0.25 * np.pi, "eye":(200e3,100e3)},
+         {"name":"n45angle","velocity":5.0, "angle": -0.25 * np.pi, "eye":(200e3,-100e3)},
+         {"name":"parallel_down","velocity":5.0, "angle": -0.50 * np.pi, "eye":(425e3,100e3)},
+         {"name":"parallel_up","velocity":5.0, "angle": 0.50 * np.pi, "eye":(425e3,-100e3)},
          {"name":"static","velocity":5.0,"angle":0.0, "eye":(0.0,0.0)}]
 
 def print_tests():
