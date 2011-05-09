@@ -874,7 +874,7 @@ def setplot(plotdata):
     #  Bathy Profile
     # ========================================================================
     plotfigure = plotdata.new_plotfigure(name='bathy_profile',figno=20)
-    plotfigure.show = True
+    plotfigure.show = False
     
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.xlimits = xlimits
