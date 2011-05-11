@@ -6,7 +6,7 @@
 ! problems at the interface between coarse and fine grids.
 subroutine src1d(meqn,mbc,mx1d,q1d,maux,aux1d,t,dt)
 
-    use multilayer_module
+    use multilayer_module, only: rho,eta,layers
     use hurricane_module
     use geoclaw_module
 

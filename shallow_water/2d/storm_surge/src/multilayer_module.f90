@@ -36,9 +36,9 @@ module multilayer_module
     double precision :: bathy_location, bathy_left, bathy_right
     
     ! Complex bathy layout
-    double precision :: x0,x1,x2,shelf_depth,basin_depth,beach_slope,h
+    double precision :: x0,x1,x2,shelf_depth,basin_depth,beach_slope
     ! Calculated parameters
-    double precision :: shelf_slope,eta_int,A,B
+    double precision :: shelf_slope,eta_int
     
 contains
 
@@ -48,6 +48,8 @@ contains
         character(len=*), optional, intent(in) :: data_file
         
         integer :: ios
+        
+        double precision :: A,B,step_height
         
         ! Open file
         if (present(data_file)) then
@@ -112,12 +114,12 @@ contains
             read(13,*) basin_depth
             read(13,*) shelf_depth
             read(13,*) beach_slope
-            read(13,*) h
+            read(13,*) step_height
             
             ! Calculated values
             if (layers > 1) then
-                A = basin_depth - eta(2) + 0.5d0 * h
-                B = shelf_depth - eta(2) - 0.5d0 * h
+                A = basin_depth - eta(2) + 0.5d0 * step_height
+                B = shelf_depth - eta(2) - 0.5d0 * step_height
                 eta_int = (A*x1 - B*x0) / (A-B)
                 shelf_slope = A / (x0 - eta_int)
             else

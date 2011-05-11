@@ -1,6 +1,6 @@
 subroutine src2(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
 
-    use multilayer_module
+    use multilayer_module, only: rho,eta,layers
     use hurricane_module
     use geoclaw_module
 
