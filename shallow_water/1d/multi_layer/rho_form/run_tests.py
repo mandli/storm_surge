@@ -59,13 +59,21 @@ test_suites = [{'name':'rp_waves_3','setplot':'setplot',
                  'multilayer_data':{'init_type':0,'eta_1':0.0,'eta_2':-0.25,
                     'wind_type':3,'A':5.0,"rho_air":1.15,"rho_1":1025,
                     "rho_2":1045,"N":2.0,'omega':2.0,"t_length":10.0,
-                    'bathy_left':-1.0,'bathy_right':-1.0}
+                    'bathy_left':-1.0,'bathy_right':-1.0,'eigen_method':3}
                 },
                 {'name':'shelf','setplot':'setplot_shelf',
                  'run_data':{'mx':2000,'nout':300,'outstyle':1,'tfinal':7200.0,
                     'xlower':-400000.0,'mthbc_xupper':3},
                  'multilayer_data':{'rho_air':1.0,'rho_1':1025.0,'rho_2':1028.0,
                     'eigen_method':4,'init_type':4,'init_location':300e3,
+                    'eta_2':-300,'epsilon':0.4,'bathy_location':-30e3,
+                    'bathy_left':-4000,'bathy_right':-200,'wind_type':0}
+                },
+                {'name':'shelf','setplot':'setplot_shelf',
+                 'run_data':{'mx':2000,'nout':300,'outstyle':1,'tfinal':7200.0,
+                    'xlower':-400000.0,'mthbc_xupper':3},
+                 'multilayer_data':{'rho_air':1.0,'rho_1':1025.0,'rho_2':1028.0,
+                    'eigen_method':1,'init_type':4,'init_location':300e3,
                     'eta_2':-300,'epsilon':0.4,'bathy_location':-30e3,
                     'bathy_left':-4000,'bathy_right':-200,'wind_type':0}
                 }]
@@ -133,7 +141,7 @@ def print_tests():
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
-        if sys.argv[1].lowercase() == 'all':
+        if sys.argv[1].lower() == 'all':
             tests = test_suites
         else:
             tests = []

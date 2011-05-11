@@ -147,14 +147,14 @@ def setplot(plotdata):
     
     # Bottom layer
     plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
-    plotitem.plot_var = u_1
+    plotitem.plot_var = u_2
     plotitem.color = 'b'
     plotitem.show = True
 
     # Top layer
     plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
     plotitem.color = (0.2,0.8,1.0)
-    plotitem.plot_var = u_2
+    plotitem.plot_var = u_1
     plotitem.show = True
     
     # Wind plot
