@@ -249,7 +249,7 @@ def setrun(claw_pkg='Classic'):
     #   src_split == 0  => no source term (src routine never called)
     #   src_split == 1  => Godunov (1st order) splitting used, 
     #   src_split == 2  => Strang (2nd order) splitting used,  not recommended.
-    clawdata.src_split = 0
+    clawdata.src_split = 1
     
     
     # --------------------

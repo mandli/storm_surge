@@ -52,17 +52,17 @@ run_data = setrun()
 # ============================================================================
 #  Oscillatory wind, blow up
 # ============================================================================
-# print "Removing previous output and plot directories"
-# for var in ['A','N','omega']:
-#     for dir in ['_output','_plots']:
-#         [shutil.rmtree("%s_%s_%s" % (dir,var,x),True) for x in xrange(1,6)]
+print "Removing previous output and plot directories"
+for var in ['A','N','omega']:
+    for dir in ['_output','_plots']:
+        [shutil.rmtree("%s_%s_%s" % (dir,var,x),True) for x in xrange(1,6)]
 
-# prob_data = MultilayerData(run_data)
-# prob_data.init_type = 0
-# prob_data.wind_type = 3
-# prob_data.A = 5.0
-# prob_data.N = 2.0
-# prob_data.omega = 2.0
+prob_data = MultilayerData(run_data)
+prob_data.init_type = 0
+prob_data.wind_type = 3
+prob_data.A = 5.0
+prob_data.N = 2.0
+prob_data.omega = 2.0
 
 # for A in xrange(1,6):
 #     prob_data.A = A
@@ -116,19 +116,19 @@ run_data = setrun()
 # ============================================================================
 #  Dry state problem
 # ============================================================================
-run_data.clawdata.xlower = -1.0
-run_data.clawdata.xupper = 1.0
-run_data.clawdata.mthbc_xlower = 1
-run_data.clawdata.mthbc_xupper = 1
-
-prob_data = MultilayerData(run_data)
-prob_data.init_type = 4
-prob_data.wave_family = 1
-prob_data.bathy_type = 2
-prob_data.wind_type = 0
-prob_data.depth = -1.0
-
-prob_data.init_location = 0.0
+# run_data.clawdata.xlower = -1.0
+# run_data.clawdata.xupper = 1.0
+# run_data.clawdata.mthbc_xlower = 1
+# run_data.clawdata.mthbc_xupper = 1
+# 
+# prob_data = MultilayerData(run_data)
+# prob_data.init_type = 4
+# prob_data.wave_family = 1
+# prob_data.bathy_type = 2
+# prob_data.wind_type = 0
+# prob_data.depth = -1.0
+# 
+# prob_data.init_location = 0.0
 # ============================================================================
 #  Run simulation
 # ============================================================================

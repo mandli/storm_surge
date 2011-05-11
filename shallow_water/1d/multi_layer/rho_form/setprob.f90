@@ -145,7 +145,7 @@ contains
                 R_eye = t * hurricane_velocity + R_eye_init
         
                 ! Parameter constant
-                C = 1.d1 * 1.d3**(B/2.d0) * sqrt(A*B*(Pn-Pc)/(rho_air*1.d3))
+                C = 1.d1 * 1.d3**(B/2.d0) * sqrt(A*B*(Pn-Pc)/(rho_air))
         
                 ! Set wind field
                 do i=1-mbc,mx+mbc

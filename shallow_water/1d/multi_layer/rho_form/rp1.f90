@@ -32,7 +32,6 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
     double precision :: real_evalues(4),imag_evalues(4)
     double precision :: empty,work(1,lwork)
     
-    logical, parameter :: FWAVES = .false.
     double precision, parameter :: RICH_TOLERANCE = 0.95d0
 
     ! Common block
@@ -222,66 +221,62 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         
         ! ====================================================================
         ! Calculate flux vector to be projected onto e-space
-        if (FWAVES) then
-            h_ave(:) = 0.5d0 * (h_r(:) + h_l(:))
+        h_ave(:) = 0.5d0 * (h_r(:) + h_l(:))
+        
+        ! No dry state
+        if ((.not.dry_state_r(2)).and.(.not.dry_state_l(2))) then
+            do j=1,2
+                flux_r(2*j-1) = rho(j) * hu_r(j)
+                flux_l(2*j-1) = rho(j) * hu_l(j)
+                flux_r(2*j) = rho(j) * h_r(j) * u_r(j)**2 + 0.5d0 * g * rho(j) * h_r(j)**2
+                flux_l(2*j) = rho(j) * h_l(j) * u_l(j)**2 + 0.5d0 * g * rho(j) * h_l(j)**2
+            enddo
+            flux_r(4) = flux_r(4) + g * h_r(1) * h_r(2) * rho(1)
+            flux_l(4) = flux_l(4) + g * h_l(1) * h_l(2) * rho(1)
             
-            ! No dry state
-            if ((.not.dry_state_r(2)).and.(.not.dry_state_l(2))) then
-                do j=1,2
-                    flux_r(2*j-1) = rho(j) * hu_r(j)
-                    flux_l(2*j-1) = rho(j) * hu_l(j)
-                    flux_r(2*j) = rho(j) * h_r(j) * u_r(j)**2 + 0.5d0 * g * rho(j) * h_r(j)**2
-                    flux_l(2*j) = rho(j) * h_l(j) * u_l(j)**2 + 0.5d0 * g * rho(j) * h_l(j)**2
-                enddo
-                flux_r(4) = flux_r(4) + g * h_r(1) * h_r(2) * rho(1)
-                flux_l(4) = flux_l(4) + g * h_l(1) * h_l(2) * rho(1)
-                
-                delta = flux_r - flux_l
+            delta = flux_r - flux_l
+        
+            ! Note that h_ave include rho values in it
+            momentum_transfer = g * rho(1) * h_ave(1) * (h_r(2) - h_l(2))
+        
+            delta(2) = delta(2) + momentum_transfer + g * rho(1) * h_ave(1) * (b_r - b_l)
+            delta(4) = delta(4) - momentum_transfer + g * rho(2) * h_ave(2) * (b_r - b_l)
+        ! Right dry state
+        else if (dry_state_r(2).and.(.not.dry_state_l(2))) then
+            delta(1) = rho(1) * (hu_r(1) - hu_l(1))
             
-                ! Note that h_ave include rho values in it
-                momentum_transfer = g * rho(1) * h_ave(1) * (h_r(2) - h_l(2))
+            eta_r(2) = b_r
+            eta_l(2) = h_l(2) + b_l
             
-                delta(2) = delta(2) + momentum_transfer + g * rho(1) * h_ave(1) * (b_r - b_l)
-                delta(4) = delta(4) - momentum_transfer + g * rho(2) * h_ave(2) * (b_r - b_l)
-            ! Right dry state
-            else if (dry_state_r(2).and.(.not.dry_state_l(2))) then
-                delta(1) = rho(1) * (hu_r(1) - hu_l(1))
-                
-                eta_r(2) = b_r
-                eta_l(2) = h_l(2) + b_l
-                
-                flux_r(2) = rho(1) * h_r(1) * u_r(1)**2 + 0.5d0 * g * rho(1) * h_r(1)**2
-                flux_l(2) = rho(1) * h_l(1) * u_l(1)**2 + 0.5d0 * g * rho(1) * h_l(1)**2
-                delta(2) = flux_r(2) - flux_l(2) + g * rho(1) * h_ave(1) * (eta_r(2) - eta_l(2))
-                
-                h_r(2) = h_l(2)
-                hu_r(2) = -hu_l(2)
-                u_r(2) = -u_l(2)
+            flux_r(2) = rho(1) * h_r(1) * u_r(1)**2 + 0.5d0 * g * rho(1) * h_r(1)**2
+            flux_l(2) = rho(1) * h_l(1) * u_l(1)**2 + 0.5d0 * g * rho(1) * h_l(1)**2
+            delta(2) = flux_r(2) - flux_l(2) + g * rho(1) * h_ave(1) * (eta_r(2) - eta_l(2))
+            
+            h_r(2) = h_l(2)
+            hu_r(2) = -hu_l(2)
+            u_r(2) = -u_l(2)
 
-                delta(3) = rho(2) * (hu_r(2) - hu_l(2))                                
-                flux_r(4) = rho(2) * h_r(2) * u_r(2)**2 + 0.5d0 * g * rho(2) * h_r(2)**2
-                flux_l(4) = rho(2) * h_l(2) * u_l(2)**2 + 0.5d0 * g * rho(2) * h_l(2)**2
-                delta(4) = flux_r(4) - flux_l(4)
-                
-            ! Left dry state
-            else if (dry_state_l(2).and.(.not.dry_state_r(2))) then
-                stop "Not implemented yet..."
-            ! Dry state
-            else
-                delta(1) = rho(1) * (hu_r(1) - hu_l(1))
-                flux_r(2) = rho(1) * (h_r(1) * u_r(1)**2 + 0.5d0 * g * h_r(1)**2)
-                flux_l(2) = rho(1) * (h_l(1) * u_l(1)**2 + 0.5d0 * g * h_l(1)**2)
-                delta(2) = flux_r(2) - flux_l(2) + g * rho(1) * h_ave(1) * (b_r - b_l)
-                delta(3:4) = 0.d0
-            endif
+            delta(3) = rho(2) * (hu_r(2) - hu_l(2))                                
+            flux_r(4) = rho(2) * h_r(2) * u_r(2)**2 + 0.5d0 * g * rho(2) * h_r(2)**2
+            flux_l(4) = rho(2) * h_l(2) * u_l(2)**2 + 0.5d0 * g * rho(2) * h_l(2)**2
+            delta(4) = flux_r(4) - flux_l(4)
             
-            ! Wind forcing
-            wind_speed = 0.5d0 * (w_l + w_r)
-            tau = wind_drag(wind_speed) * rho_air * wind_speed
-            delta(4) = delta(4) - dx * tau * wind_speed
+        ! Left dry state
+        else if (dry_state_l(2).and.(.not.dry_state_r(2))) then
+            stop "Not implemented yet..."
+        ! Dry state
         else
-            delta = ql(i,:) - qr(i-1,:)
+            delta(1) = rho(1) * (hu_r(1) - hu_l(1))
+            flux_r(2) = rho(1) * (h_r(1) * u_r(1)**2 + 0.5d0 * g * h_r(1)**2)
+            flux_l(2) = rho(1) * (h_l(1) * u_l(1)**2 + 0.5d0 * g * h_l(1)**2)
+            delta(2) = flux_r(2) - flux_l(2) + g * rho(1) * h_ave(1) * (b_r - b_l)
+            delta(3:4) = 0.d0
         endif
+        
+        ! Wind forcing
+        wind_speed = 0.5d0 * (w_l + w_r)
+        tau = wind_drag(wind_speed) * rho_air * wind_speed
+        delta(2) = delta(2) - tau * wind_speed
 
 
         ! ====================================================================
@@ -334,23 +329,13 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         end forall
 
         ! Calculate amdq and apdq
-        if (FWAVES) then
-            do mw=1,mwaves
-                if (s(i,mw) > 0.d0) then
-                    apdq(i,:) = apdq(i,:) + fwave(i,:,mw)
-                else                                     
-                    amdq(i,:) = amdq(i,:) + fwave(i,:,mw)
-                endif
-            enddo
-        else
-            do mw=1,mwaves
-                if (s(i,mw) > 0.d0) then
-                    apdq(i,:) = apdq(i,:) + fwave(i,:,mw) * s(i,mw)
-                else                                      
-                    amdq(i,:) = amdq(i,:) + fwave(i,:,mw) * s(i,mw)
-                endif
-            enddo
-        endif
+        do mw=1,mwaves
+            if (s(i,mw) > 0.d0) then
+                apdq(i,:) = apdq(i,:) + fwave(i,:,mw)
+            else                                     
+                amdq(i,:) = amdq(i,:) + fwave(i,:,mw)
+            endif
+        enddo
     enddo
 
 end subroutine rp1

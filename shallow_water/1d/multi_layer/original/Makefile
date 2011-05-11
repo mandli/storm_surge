@@ -20,14 +20,14 @@ LFLAGS = -framework veclib
 # List of sources for this program:
 # ---------------------------------
 CLAW_SOURCES = \
+	setprob.f90\
 	driver.f \
 	qinit.f90 \
 	rp1.f90 \
 	out1.f \
 	b4step1.f90 \
 	bc1.f \
-	setaux.f90 \
-	setprob.f90
+	setaux.f90
 	
 CLAW_LIB = $(CLAW)/clawpack/1d/lib
 	

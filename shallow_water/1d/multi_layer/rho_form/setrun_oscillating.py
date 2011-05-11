@@ -201,7 +201,7 @@ def set_multilayer(run_data):
     prob_data = MultilayerData(run_data)
     
     # Physics
-    prob_data.rho_air = 1.15e-3
+    prob_data.rho_air = 1.0
     prob_data.rho_1 = 0.98
     prob_data.rho_2 = 1.0
     
@@ -228,7 +228,7 @@ def set_multilayer(run_data):
     prob_data.A = 5.0
     prob_data.omega = 2.0
     prob_data.N = 2.0
-    prob_data.t_length = run_data.clawdata.tfinal-run_data.clawdata.t0
+    prob_data.t_length = rundata.clawdata.tfinal-rundata.clawdata.t0
     prob_data.B = 1.5
     prob_data.Pn = 1005.0
     prob_data.Pc = 950.0

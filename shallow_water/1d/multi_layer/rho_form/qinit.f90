@@ -28,6 +28,7 @@ subroutine qinit(maxmx,meqn,mbc,mx,xlower,dx,q,maux,aux)
         q(i,2) = 0.d0
         q(i,4) = 0.d0
         
+        ! Riemann problem in one wave family
         if (init_type == 1) then
             ! Calculate wave family for perturbation
             gamma = aux(i,4) / aux(i,3)
@@ -55,16 +56,19 @@ subroutine qinit(maxmx,meqn,mbc,mx,xlower,dx,q,maux,aux)
                 q(i,1:2) = q(i,1:2) + rho(1) * epsilon * eigen_vector(1:2)
                 q(i,3:4) = q(i,3:4) + rho(2) * epsilon * eigen_vector(3:4)
             endif
+        ! Gaussian hump of water, shallow water style
         else if (init_type == 2) then
             gamma = aux(i,4) / aux(i,3)
             alpha = 0.5d0 * (gamma - 1.d0 + sqrt((gamma-1.d0)**2+4.d0*r*gamma))
             deta = epsilon * exp(-((x-init_location)/sigma)**2)
             q(i,1) = q(i,1) + rho(1) * deta
             q(i,3) = q(i,3) + rho(2) * alpha * deta
+        ! Gaussian on internal layer only
         else if (init_type == 3) then
             deta = epsilon * exp(-((x-init_location)/sigma)**2)
             q(i,1) = q(i,1) - rho(1) * deta
             q(i,3) = q(i,3) + rho(2) * deta
+        ! Shelf initial condition from AN paper
         else if (init_type == 4) then
             gamma = aux(i,4) / aux(i,3)
 !             alpha = 0.5d0 * (gamma - 1.d0 + sqrt((gamma-1.d0)**2+4.d0*r*gamma))

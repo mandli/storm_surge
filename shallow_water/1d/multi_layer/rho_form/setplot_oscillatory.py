@@ -37,13 +37,13 @@ def setplot(plotdata):
     def bathy(current_data):
         return np.loadtxt(os.path.join(plotdata.outdir,'fort.aux'),converters={0:(lambda x:float(re.compile("[Dd]").sub("e",x)))})
     
-    def eta_1(current_data):
-        h_1 = current_data.q[:,0]
-        return h_1 + bathy(current_data)
-        
     def eta_2(current_data):
         h_2 = current_data.q[:,2]
-        return h_2 + eta_1(current_data)
+        return h_2 + bathy(current_data)
+        
+    def eta_1(current_data):
+        h_1 = current_data.q[:,0]
+        return h_1 + eta_2(current_data)
         
     def u_1(current_data):
         h_1 = current_data.q[:,0]
@@ -63,8 +63,8 @@ def setplot(plotdata):
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(1,2,1)'
     plotaxes.title = 'Multilayer Surfaces'
-    plotaxes.xlimits = 'auto'
-    plotaxes.ylimits = 'auto'
+    plotaxes.xlimits = [0.0,1.0]
+    plotaxes.ylimits = [-1.0,0.2]
      
     # Bottom layer
     plotitem = plotaxes.new_plotitem(plot_type='1d_fill_between')
@@ -105,8 +105,8 @@ def setplot(plotdata):
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(1,2,2)'
     plotaxes.title = "Layer Velocities"
-    plotaxes.xlimits = 'auto'
-    plotaxes.ylimits = 'auto'
+    plotaxes.xlimits = [0.0,1.0]
+    plotaxes.ylimits = [-0.2,0.2]
     
     # Bottom layer
     plotitem = plotaxes.new_plotitem(plot_type='1d_plot')

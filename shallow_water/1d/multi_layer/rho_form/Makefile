@@ -32,7 +32,7 @@ CLAW_LIB = $(CLAW)/clawpack/1d/lib
 CLAW_LIBSOURCES = \
   $(CLAW_LIB)/claw1ez.f \
   $(CLAW_LIB)/claw1.f \
-  $(CLAW_LIB)/step1.f \
+  $(CLAW_LIB)/step1fw.f \
   $(CLAW_LIB)/copyq1.f \
   $(CLAW_LIB)/limiter.f \
   $(CLAW_LIB)/philim.f \
