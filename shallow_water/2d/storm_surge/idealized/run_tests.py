@@ -30,7 +30,7 @@ import setrun
 
 # Parameters
 if os.environ.has_key('DATA_PATH'):
-    base_path = os.path.join(os.environ['DATA_PATH'],"multi_layer_1d")
+    base_path = os.path.join(os.environ['DATA_PATH'],"multi_layer_2d")
 else:
     base_path = os.getcwd()
 base_path = os.path.expanduser(base_path)
@@ -43,111 +43,32 @@ process_queue = []
 runclaw_cmd = "python $CLAW/python/pyclaw/runclaw.py"
 plotclaw_cmd = "python $CLAW/python/pyclaw/plotters/plotclaw.py"
          
-test_suites = [{'name':'rp_waves_3','setplot':'setplot',
-                'run_data':{'xlower':0.0,'xupper':1.0,'mx':500,'outstyle':1,
-                    'tfinal':1.0},
-                'multilayer_data':{'eigen_method':1,'init_type':1,
-                    "init_location":0.45,"wave_family":3,'eta_2':-0.6,
-                    'bathy_left':-1.0,'bathy_right':-0.2,'wind_type':0}
-                },
-                {'name':'rp_waves_4','setplot':'setplot',
-                'run_data':{'xlower':0.0,'xupper':1.0,'mx':500,'outstyle':1,
-                    'tfinal':0.1},
-                'multilayer_data':{'eigen_method':1,'init_type':1,
-                    "init_location":0.45,"wave_family":4,'eta_2':-0.6,
-                    'bathy_left':-1.0,'bathy_right':-0.2,'wind_type':0}
-                },
-                {'name':'oscillatory_wind','setplot':'setplot_oscillatory',
-                 'run_data':{'mx':100,'outstyle':1,'nout':160,'tfinal':10.0,
-                    'mthbc_xlower':3,'mthbc_xupper':3},
-                 'multilayer_data':{'init_type':0,'eta_1':0.0,'eta_2':-0.25,
-                    'wind_type':3,'A':5.0,"rho_air":1.15,"rho_1":1025,
-                    "rho_2":1045,"N":2.0,'omega':2.0,"t_length":10.0,
-                    'bathy_left':-1.0,'bathy_right':-1.0,'eigen_method':3}
-                },
-                {'name':'mx2000_shelf','setplot':'setplot_shelf',
-                 'run_data':{'mx':2000,'nout':300,'outstyle':1,'tfinal':7200.0,
-                    'xlower':-400000.0,'mthbc_xupper':3},
-                 'multilayer_data':{'rho_air':1.0,'rho_1':1025.0,'rho_2':1028.0,
-                    'eigen_method':4,'init_type':4,'init_location':300e3,
-                    'eta_2':-300,'epsilon':0.4,'bathy_location':-30e3,
-                    'bathy_left':-4000,'bathy_right':-200,'wind_type':0}
-                },
-                {'name':'mx2000_shelf','setplot':'setplot_shelf',
-                 'run_data':{'mx':2000,'nout':300,'outstyle':1,'tfinal':7200.0,
-                    'xlower':-400000.0,'mthbc_xupper':3},
-                 'multilayer_data':{'rho_air':1.0,'rho_1':1025.0,'rho_2':1028.0,
-                    'eigen_method':1,'init_type':4,'init_location':300e3,
-                    'eta_2':-300,'epsilon':0.4,'bathy_location':-30e3,
-                    'bathy_left':-4000,'bathy_right':-200,'wind_type':0}
-                },
-                {'name':'mx100_shelf','setplot':'setplot_shelf',
-                 'run_data':{'mx':100,'nout':300,'outstyle':1,'tfinal':7200.0,
-                    'xlower':-400000.0,'mthbc_xupper':3},
-                 'multilayer_data':{'rho_air':1.0,'rho_1':1025.0,'rho_2':1028.0,
-                    'eigen_method':1,'init_type':4,'init_location':300e3,
-                    'eta_2':-300,'epsilon':0.4,'bathy_location':-30e3,
-                    'bathy_left':-4000,'bathy_right':-200,'wind_type':0}
-                },
-                {'name':'mx200_shelf','setplot':'setplot_shelf',
-                 'run_data':{'mx':200,'nout':300,'outstyle':1,'tfinal':7200.0,
-                    'xlower':-400000.0,'mthbc_xupper':3},
-                 'multilayer_data':{'rho_air':1.0,'rho_1':1025.0,'rho_2':1028.0,
-                    'eigen_method':1,'init_type':4,'init_location':300e3,
-                    'eta_2':-300,'epsilon':0.4,'bathy_location':-30e3,
-                    'bathy_left':-4000,'bathy_right':-200,'wind_type':0}
-                },
-                {'name':'mx400_shelf','setplot':'setplot_shelf',
-                 'run_data':{'mx':400,'nout':300,'outstyle':1,'tfinal':7200.0,
-                    'xlower':-400000.0,'mthbc_xupper':3},
-                 'multilayer_data':{'rho_air':1.0,'rho_1':1025.0,'rho_2':1028.0,
-                    'eigen_method':1,'init_type':4,'init_location':300e3,
-                    'eta_2':-300,'epsilon':0.4,'bathy_location':-30e3,
-                    'bathy_left':-4000,'bathy_right':-200,'wind_type':0}
-                },
-                {'name':'mx800_shelf','setplot':'setplot_shelf',
-                 'run_data':{'mx':800,'nout':300,'outstyle':1,'tfinal':7200.0,
-                    'xlower':-400000.0,'mthbc_xupper':3},
-                 'multilayer_data':{'rho_air':1.0,'rho_1':1025.0,'rho_2':1028.0,
-                    'eigen_method':1,'init_type':4,'init_location':300e3,
-                    'eta_2':-300,'epsilon':0.4,'bathy_location':-30e3,
-                    'bathy_left':-4000,'bathy_right':-200,'wind_type':0}
-                },
-                {'name':'mx1200_shelf','setplot':'setplot_shelf',
-                 'run_data':{'mx':1200,'nout':300,'outstyle':1,'tfinal':7200.0,
-                    'xlower':-400000.0,'mthbc_xupper':3},
-                 'multilayer_data':{'rho_air':1.0,'rho_1':1025.0,'rho_2':1028.0,
-                    'eigen_method':1,'init_type':4,'init_location':300e3,
-                    'eta_2':-300,'epsilon':0.4,'bathy_location':-30e3,
-                    'bathy_left':-4000,'bathy_right':-200,'wind_type':0}
-                },
-                {'name':'mx1600_shelf','setplot':'setplot_shelf',
-                 'run_data':{'mx':1600,'nout':300,'outstyle':1,'tfinal':7200.0,
-                    'xlower':-400000.0,'mthbc_xupper':3},
-                 'multilayer_data':{'rho_air':1.0,'rho_1':1025.0,'rho_2':1028.0,
-                    'eigen_method':1,'init_type':4,'init_location':300e3,
-                    'eta_2':-300,'epsilon':0.4,'bathy_location':-30e3,
-                    'bathy_left':-4000,'bathy_right':-200,'wind_type':0}
-                },
-                {'name':'mx4000_shelf','setplot':'setplot_shelf',
-                 'run_data':{'mx':4000,'nout':300,'outstyle':1,'tfinal':7200.0,
-                    'xlower':-400000.0,'mthbc_xupper':3},
-                 'multilayer_data':{'rho_air':1.0,'rho_1':1025.0,'rho_2':1028.0,
-                    'eigen_method':1,'init_type':4,'init_location':300e3,
-                    'eta_2':-300,'epsilon':0.4,'bathy_location':-30e3,
-                    'bathy_left':-4000,'bathy_right':-200,'wind_type':0}
-                }]
+test_suites = [{'name':'mx100_3_idealized','setplot':"setplot",
+                'run_data':{'mx':100,'my':100},
+                'multilayer_data':{'eigen_method':4,'wave_family':3},
+                'hurricane_data':{}
+               },
+               {'name':'mx100_4_idealized','setplot':"setplot",
+                'run_data':{'mx':100,'my':100},
+                'multilayer_data':{'eigen_method':4,'wave_family':4},
+                'hurricane_data':{}
+               }]
 
 def run_tests(tests):
     
     for (i,test) in enumerate(tests):
         # Base parameters
         rundata = setrun.setrun()
-        ml_data = setrun.set_multilayer(rundata)
+        h_data = setrun.set_hurricane_data()
+        ml_data = setrun.set_multilayer_data()
         
         # Set rundata parameters
         for (key,value) in test['run_data'].iteritems():
             setattr(rundata.clawdata,key,value)
+        
+        # Set hurricane data
+        for (key,value) in test['hurricane_data'].iteritems():
+            setattr(h_data,key,value)
         
         # Set multilayer data
         for (key,value) in test['multilayer_data'].iteritems():
