@@ -1,4 +1,0 @@
-**Multi-Layer Shallow Water Equations**
-
-This directory contains a new linearized, two-layer shallow water equations
-solver that can handle dry states.
