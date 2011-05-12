@@ -796,7 +796,7 @@ def setplot(plotdata):
     # Top surface
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.xlimits = xlimits
-    plotaxes.ylimits = [-2000,20]
+    plotaxes.ylimits = 'auto'
     plotaxes.title = "Profile of depth"
     plotaxes.afteraxes = profile_afteraxes
     
@@ -808,7 +808,6 @@ def setplot(plotdata):
         else:
             return False
     
-    # Internal surface
     def bathy_profile(current_data):
         index = slice_index(current_data)
         if index:

@@ -50,6 +50,18 @@ def setplot(plotdata):
     def profile_afteraxes(current_data):
         pass
         
+    def bathy_ref_lines(current_data,direction="x"):
+        plt.hold(True)
+        if direction == 'x':
+            y = ylimits
+            for ref_line in ref_lines:
+                plt.plot([ref_line,ref_line],y,'y--',linewidth=1)
+        elif direction == 'y':
+            x = xlimits
+            for ref_line in ref_lines:
+                plt.plot(x,[ref_line,ref_line],'y--',linewidth=1)
+        plt.hold(False)
+        
     # ========================================================================
     #  Data extraction routines
     #     0    1     2     3    4     5      6     7      8      9

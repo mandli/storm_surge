@@ -155,11 +155,16 @@ def setplot(plotdata):
         hour_figure_title(current_data)
         m_to_km_labels()
         
-    def bathy_ref_lines(current_data):
+    def bathy_ref_lines(current_data,direction="x"):
         plt.hold(True)
-        y = ylimits
-        for ref_line in ref_lines:
-            plt.plot([ref_line,ref_line],y,'y--',linewidth=1)
+        if direction == 'x':
+            y = ylimits
+            for ref_line in ref_lines:
+                plt.plot([ref_line,ref_line],y,'y--',linewidth=1)
+        elif direction == 'y':
+            x = xlimits
+            for ref_line in ref_lines:
+                plt.plot(x,[ref_line,ref_line],'y--',linewidth=1)
         plt.hold(False)
         
     def hurricane_wind(current_data):
