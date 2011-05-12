@@ -45,6 +45,16 @@ plotclaw_cmd = "python $CLAW/python/pyclaw/plotters/plotclaw.py"
          
 test_suites = [{'name':'mx100_3_idealized','setplot':"setplot",
                 'run_data':{'mx':100,'my':100},
+                'multilayer_data':{'eigen_method':1,'wave_family':3},
+                'hurricane_data':{}
+               },
+               {'name':'mx100_4_idealized','setplot':"setplot",
+                'run_data':{'mx':100,'my':100},
+                'multilayer_data':{'eigen_method':1,'wave_family':4},
+                'hurricane_data':{}
+               },
+               {'name':'mx100_3_idealized','setplot':"setplot",
+                'run_data':{'mx':100,'my':100},
                 'multilayer_data':{'eigen_method':4,'wave_family':3},
                 'hurricane_data':{}
                },
@@ -79,7 +89,7 @@ def run_tests(tests):
         ml_data.write()
         
         # Create output directory
-        prefix = "ml_1d_e%s_%s" % (ml_data.eigen_method,test['name'])
+        prefix = "ml_2d_e%s_%s" % (ml_data.eigen_method,test['name'])
         tm = time.localtime()
         year = str(tm[0]).zfill(4)
         month = str(tm[1]).zfill(2)
