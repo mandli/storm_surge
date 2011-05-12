@@ -13,6 +13,7 @@ else:
     out_dir = "_output"
 
 # Plot settings
+claw_data = Data(os.path.join(out_dir,'claw.data'))
 prob_data = Data(os.path.join(out_dir,'problem.data'))
 pd = ClawPlotData()
 pd.outdir = out_dir
@@ -27,7 +28,7 @@ def read_data():
         if not os.path.exists(fname):
             break
     # num_frames = 301
-    mx = 2000
+    mx = claw_data.mx
     eta = np.ndarray((mx,num_frames,2))
     t = np.ndarray((num_frames))
     

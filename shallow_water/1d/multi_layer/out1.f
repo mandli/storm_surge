@@ -84,7 +84,7 @@ c
           if (abs(hu_1) < 1d-99) hu_1 = 0.d0
           if (abs(h_2) < 1d-99) h_2 = 0.d0
           if (abs(hu_2) < 1d-99) hu_2 = 0.d0
-          write(50,1005) h_1,hu_1,h_2,hu_2,aux(i,2)
+          write(50,1005) h_1,hu_1,h_2,hu_2,aux(i,2),aux(i,5)
  1005     format(4e16.8)
 c
  10       continue
@@ -112,7 +112,7 @@ c
          close(unit=70)
          endif
 
-      write(60,1000) t,meqn+1,ngrids,maux,1
+      write(60,1000) t,meqn+2,ngrids,maux,1
 
  1000 format(e26.16,'    time', /,
      &       i5,'                 meqn'/,

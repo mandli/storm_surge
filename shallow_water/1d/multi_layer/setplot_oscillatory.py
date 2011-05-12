@@ -60,77 +60,52 @@ def setplot(plotdata):
     # ========================================================================
     plotfigure = plotdata.new_plotfigure(name='full',figno=0)
     
-    plotaxes = plotfigure.new_plotaxes()
-    plotaxes.axescmd = 'subplot(1,2,1)'
-    plotaxes.title = 'Multilayer Surfaces'
-    plotaxes.xlimits = [0.0,1.0]
-    plotaxes.ylimits = [-1.0,0.2]
-     
-    # Bottom layer
-    plotitem = plotaxes.new_plotitem(plot_type='1d_fill_between')
-    plotitem.plot_var = eta_1
-    plotitem.plot_var2 = bathy
-    plotitem.color = 'b'
-    plotitem.show = True
-    
-    # Top Layer
-    plotitem = plotaxes.new_plotitem(plot_type='1d_fill_between')
-    plotitem.plot_var = eta_2
-    plotitem.plot_var2 = eta_1
-    plotitem.color = (0.2,0.8,1.0)
-    plotitem.show = True
-    
-    # Plot bathy
-    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
-    plotitem.plot_var = bathy
-    plotitem.color = 'k'
-    # plotitem.plotstyle = '-'
-    plotitem.show = True
-    
-    # Plot line in between layers
-    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
-    plotitem.plot_var = eta_1
-    plotitem.color = 'k'
-    # plotitem.plotstyle = 'o'
-    plotitem.show = True
-    
-    # # Plot line on top layer
-    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
-    plotitem.plot_var = eta_2
-    plotitem.color = 'k'
-    # plotitem.plotstyle = 'x'
-    plotitem.show = True
-    
-    # Layer Velocities
-    plotaxes = plotfigure.new_plotaxes()
-    plotaxes.axescmd = 'subplot(1,2,2)'
-    plotaxes.title = "Layer Velocities"
-    plotaxes.xlimits = [0.0,1.0]
-    plotaxes.ylimits = [-0.2,0.2]
-    
-    # Bottom layer
-    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
-    plotitem.plot_var = u_1
-    plotitem.color = 'b'
-    plotitem.show = True
+    def twin_axes(cd):
+        fig = mpl.gcf()
+        fig.clf()
+        
+        x = cd.grid.dimensions[0].center
+        
+        # Draw fill plot
+        ax1 = fig.add_subplot(121)
+        ax1.set_title('Multilayer Surfaces t = %s' % cd.t)
+        ax1.set_xlim((0.0,1.0))
+        ax1.set_ylim((-1.0,0.2))
+        ax1.set_xlabel('x')
+        ax1.set_ylabel('Depth')
+        
+        # Bottom layer
+        ax1.fill_between(x,bathy(cd),eta_1(cd),color='b')
+        # Top Layer
+        ax1.fill_between(x,eta_1(cd),eta_2(cd),color=(0.2,0.8,1.0))
+        # Plot bathy
+        ax1.plot(x,bathy(cd),'k')
+        # Plot internal layer
+        ax1.plot(x,eta_2(cd),'k')
+        # Plot surface
+        ax1.plot(x,eta_1(cd),'k')
+        
+        # Draw velocity and kappa plot
+        ax1 = fig.add_subplot(122)     # the velocity scale
+        ax2 = ax1.twinx()              # the kappa scale
+        
+        ax1.set_xlim((cd.xlower,cd.xupper))
+        ax1.set_ylim((-0.15,0.15))
+        ax2.set_ylim((0.0,1.2))
+        
+        # Bottom layer velocity
+        ax1.plot(x,u_2(cd),color='b')
+        # Top Layer velocity
+        ax1.plot(x,u_1(cd),color=(0.2,0.8,1.0))
+        # Kappa
+        ax2.plot(x,cd.q[:,5],color='r')
 
-    # Top layer
-    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
-    plotitem.color = (0.2,0.8,1.0)
-    plotitem.plot_var = u_2
-    plotitem.show = True
+        ax1.set_title('Layer Velocities and Kappa')
+        ax1.set_ylabel('Velocities (m/s)')
+        ax2.set_ylabel('Kappa (1/Ri)')
     
-    # # Wind plot
-    # plotaxes = plotfigure.new_plotaxes()
-    # plotaxes.axescmd = 'subplot(1,2,2)'
-    # plotaxes.title = "Wind Velocity"
-    # plotaxes.xlimits = 'auto'
-    # plotaxes.ylimits = [-5.0,5.0]
-    # 
-    # plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
-    # plotitem.plot_var = 4
-    # plotitem.color = 'r'
-    # plotitem.show = True
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.afteraxes = twin_axes
     
 
     # ========================================================================
@@ -183,6 +158,22 @@ def setplot(plotdata):
     plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
     plotitem.plot_var = 4
     plotitem.color = 'r'
+    plotitem.show = True
+    
+    # ========================================================================
+    #  Plot Kappa
+    # ========================================================================
+    plotfigure = plotdata.new_plotfigure(name="kappa",figno=13)
+    plotfigure.show = True
+    
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.title = "Discrete Richardson Number"
+    plotaxes.xlimits = [0,1]
+    plotaxes.ylimits = [0.0,1.2]
+    
+    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
+    plotitem.plot_var = 5
+    plotitem.color = 'b'
     plotitem.show = True
     
     # Parameters used only when creating html and/or latex hardcopy

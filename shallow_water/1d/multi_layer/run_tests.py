@@ -54,7 +54,7 @@ test_suites = [{'name':'rp_waves_3','setplot':'setplot',
                 'run_data':{'xlower':0.0,'xupper':1.0,'mx':500,'outstyle':1,
                     'tfinal':0.1},
                 'multilayer_data':{'eigen_method':1,'init_type':1,
-                    "init_location":0.45,"wave_family":3,'eta_2':-0.6,
+                    "init_location":0.45,"wave_family":4,'eta_2':-0.6,
                     'bathy_left':-1.0,'bathy_right':-0.2,'wind_type':0}
                 },
                 {'name':'oscillatory_wind','setplot':'setplot_oscillatory',
@@ -64,6 +64,14 @@ test_suites = [{'name':'rp_waves_3','setplot':'setplot',
                     'wind_type':3,'A':5.0,"rho_air":1.15,"rho_1":1025,
                     "rho_2":1045,"N":2.0,'omega':2.0,"t_length":10.0,
                     'bathy_left':-1.0,'bathy_right':-1.0,'eigen_method':3}
+                },
+                {'name':'oscillatory_wind','setplot':'setplot_oscillatory',
+                 'run_data':{'mx':100,'outstyle':1,'nout':160,'tfinal':10.0,
+                    'mthbc_xlower':3,'mthbc_xupper':3},
+                 'multilayer_data':{'init_type':0,'eta_1':0.0,'eta_2':-0.25,
+                    'wind_type':3,'A':5.0,"rho_air":1.15,"rho_1":1025,
+                    "rho_2":1045,"N":2.0,'omega':2.0,"t_length":10.0,
+                    'bathy_left':-1.0,'bathy_right':-1.0,'eigen_method':4}
                 },
                 {'name':'mx2000_shelf','setplot':'setplot_shelf',
                  'run_data':{'mx':2000,'nout':300,'outstyle':1,'tfinal':7200.0,
@@ -80,63 +88,21 @@ test_suites = [{'name':'rp_waves_3','setplot':'setplot',
                     'eigen_method':1,'init_type':4,'init_location':300e3,
                     'eta_2':-300,'epsilon':0.4,'bathy_location':-30e3,
                     'bathy_left':-4000,'bathy_right':-200,'wind_type':0}
-                },
-                {'name':'mx100_shelf','setplot':'setplot_shelf',
+                }]
+                
+convergence_test_base = {'name':'mx100_shelf','setplot':'setplot_shelf',
                  'run_data':{'mx':100,'nout':300,'outstyle':1,'tfinal':7200.0,
                     'xlower':-400000.0,'mthbc_xupper':3},
                  'multilayer_data':{'rho_air':1.0,'rho_1':1025.0,'rho_2':1028.0,
                     'eigen_method':1,'init_type':4,'init_location':300e3,
                     'eta_2':-300,'epsilon':0.4,'bathy_location':-30e3,
-                    'bathy_left':-4000,'bathy_right':-200,'wind_type':0}
-                },
-                {'name':'mx200_shelf','setplot':'setplot_shelf',
-                 'run_data':{'mx':200,'nout':300,'outstyle':1,'tfinal':7200.0,
-                    'xlower':-400000.0,'mthbc_xupper':3},
-                 'multilayer_data':{'rho_air':1.0,'rho_1':1025.0,'rho_2':1028.0,
-                    'eigen_method':1,'init_type':4,'init_location':300e3,
-                    'eta_2':-300,'epsilon':0.4,'bathy_location':-30e3,
-                    'bathy_left':-4000,'bathy_right':-200,'wind_type':0}
-                },
-                {'name':'mx400_shelf','setplot':'setplot_shelf',
-                 'run_data':{'mx':400,'nout':300,'outstyle':1,'tfinal':7200.0,
-                    'xlower':-400000.0,'mthbc_xupper':3},
-                 'multilayer_data':{'rho_air':1.0,'rho_1':1025.0,'rho_2':1028.0,
-                    'eigen_method':1,'init_type':4,'init_location':300e3,
-                    'eta_2':-300,'epsilon':0.4,'bathy_location':-30e3,
-                    'bathy_left':-4000,'bathy_right':-200,'wind_type':0}
-                },
-                {'name':'mx800_shelf','setplot':'setplot_shelf',
-                 'run_data':{'mx':800,'nout':300,'outstyle':1,'tfinal':7200.0,
-                    'xlower':-400000.0,'mthbc_xupper':3},
-                 'multilayer_data':{'rho_air':1.0,'rho_1':1025.0,'rho_2':1028.0,
-                    'eigen_method':1,'init_type':4,'init_location':300e3,
-                    'eta_2':-300,'epsilon':0.4,'bathy_location':-30e3,
-                    'bathy_left':-4000,'bathy_right':-200,'wind_type':0}
-                },
-                {'name':'mx1200_shelf','setplot':'setplot_shelf',
-                 'run_data':{'mx':1200,'nout':300,'outstyle':1,'tfinal':7200.0,
-                    'xlower':-400000.0,'mthbc_xupper':3},
-                 'multilayer_data':{'rho_air':1.0,'rho_1':1025.0,'rho_2':1028.0,
-                    'eigen_method':1,'init_type':4,'init_location':300e3,
-                    'eta_2':-300,'epsilon':0.4,'bathy_location':-30e3,
-                    'bathy_left':-4000,'bathy_right':-200,'wind_type':0}
-                },
-                {'name':'mx1600_shelf','setplot':'setplot_shelf',
-                 'run_data':{'mx':1600,'nout':300,'outstyle':1,'tfinal':7200.0,
-                    'xlower':-400000.0,'mthbc_xupper':3},
-                 'multilayer_data':{'rho_air':1.0,'rho_1':1025.0,'rho_2':1028.0,
-                    'eigen_method':1,'init_type':4,'init_location':300e3,
-                    'eta_2':-300,'epsilon':0.4,'bathy_location':-30e3,
-                    'bathy_left':-4000,'bathy_right':-200,'wind_type':0}
-                },
-                {'name':'mx4000_shelf','setplot':'setplot_shelf',
-                 'run_data':{'mx':4000,'nout':300,'outstyle':1,'tfinal':7200.0,
-                    'xlower':-400000.0,'mthbc_xupper':3},
-                 'multilayer_data':{'rho_air':1.0,'rho_1':1025.0,'rho_2':1028.0,
-                    'eigen_method':1,'init_type':4,'init_location':300e3,
-                    'eta_2':-300,'epsilon':0.4,'bathy_location':-30e3,
-                    'bathy_left':-4000,'bathy_right':-200,'wind_type':0}
-                }]
+                    'bathy_left':-4000,'bathy_right':-200,'wind_type':0}}
+
+for mx in [100,200,400,800,1200,1600,4000]:
+    new_test = convergence_test_base
+    new_test['name'] = "mx%s_shelf" % mx
+    new_test['run_data']['mx'] = mx
+    test_suites.append(new_test)
 
 def run_tests(tests):
     

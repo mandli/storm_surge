@@ -11,7 +11,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
     integer, intent(in) :: maxmx,meqn,mwaves,mbc,mx
     
     double precision, intent(in), dimension(1-mbc:maxmx+mbc, meqn) :: ql,qr
-    double precision, intent(in), dimension(1-mbc:maxmx+mbc, *) :: auxl,auxr
+    double precision, intent(inout), dimension(1-mbc:maxmx+mbc, *) :: auxl,auxr
     
     ! Output arguments
     double precision, intent(out) :: s(1-mbc:maxmx+mbc, mwaves)
@@ -88,6 +88,9 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         else if ((kappa_r > RICH_TOLERANCE).and.(.not.dry_state_r(2))) then
             print "(a,i4,a,d16.8)","Hyperbolicity may have failed, kappa(",i,") = ",kappa_r
         endif
+        
+        auxl(i,5) = kappa_l
+        auxr(i-1,5) = kappa_r
         
         ! ====================================================================
         ! Calculate eigen-space values

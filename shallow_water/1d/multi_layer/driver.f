@@ -12,13 +12,13 @@ c     # set parameters for maximum array sizes used in declarations
 c     # these must be increased for larger problems.
 c
 c
-      parameter (maxmx = 2000)
-      parameter (mwork = 76152)
+      parameter (maxmx = 4000)
+      parameter (mwork = 152152)
 
       parameter (mbc = 2)
       parameter (meqn = 4)
       parameter (mwaves = 4)
-      parameter (maux = 4)
+      parameter (maux = 5)
 c       # NOTE: if maux>0 you must declare aux properly below!
 c
       dimension q(1-mbc:maxmx+mbc, meqn)
