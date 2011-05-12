@@ -23,16 +23,16 @@ FFLAGS += -I$(GEOLIB) -I/opt/local/include
 UNAME = $(shell uname)
 ifeq ($(UNAME), Darwin)
 	ifndef LFLAGS
-		LFLAGS = -framework veclib -L/opt/local/lib -lnetcdf -lnetcdff
+		LFLAGS = -framework veclib
 	else
-		LFLAGS += -framework veclib -L/opt/local/lib -lnetcdf -lnetcdff
+		LFLAGS += -framework veclib
 	endif
 endif
 ifeq ($(UNAME), Linux)
 	ifndef LFLAGS
-		LFLAGS = -llapack -L/opt/local/lib -lnetcdf -lnetcdff
+		LFLAGS = -llapack
 	else
-		LFLAGS += -llapack -L/opt/local/lib -lnetcdf -lnetcdff
+		LFLAGS += -llapack
 	endif
 endif
 
@@ -48,7 +48,7 @@ CLAW_SOURCES = \
 	$(MULTILAYER_SRC)/src2_geo.f90 \
 	$(MULTILAYER_SRC)/src1d_geo.f90 \
 	$(MULTILAYER_SRC)/qinit.f90 \
-	$(MULTILAYER_SRC)/valout_nc_geo.f \
+	$(MULTILAYER_SRC)/valout_geo.f \
 	$(MULTILAYER_SRC)/flux2fw.f \
 	$(MULTILAYER_SRC)/flag2refine_geo.f \
 	$(MULTILAYER_SRC)/rpn2_dry_multilayer.f90 \
