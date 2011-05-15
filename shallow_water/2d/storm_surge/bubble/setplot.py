@@ -292,8 +292,8 @@ def setplot(plotdata):
     xlimits_zoomed = xlimits
     ylimits = [amrdata.ylower,amrdata.yupper]
     eta = [multilayer_data.eta[0],multilayer_data.eta[1]]
-    top_surface_limits = [eta[0]-0.5,eta[0]+0.5]
-    internal_surface_limits = [eta[1]-0.2,eta[1]+0.2]
+    top_surface_limits = [eta[0]-0.2,eta[0]+0.2]
+    internal_surface_limits = [eta[1]-0.1,eta[1]+0.1]
     top_speed_limits = [0.0,0.15]
     internal_speed_limits = [0.0,0.15]
     

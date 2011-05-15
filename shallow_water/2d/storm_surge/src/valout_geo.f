@@ -10,6 +10,8 @@ c
 
       dimension eta(layers+1),h(layers),hu(layers),hv(layers)
 
+      double precision :: kappa_x,kappa_y
+
       include  "call.i"
 
       iadd(i,j,ivar) = loc + i - 1 + mitot*((ivar-1)*mjtot+j-1)
@@ -103,6 +105,14 @@ c  old        ycorn = rnode(cornylo,mptr) - .5d0*hyposs(level)
             if (abs(wind_y) < 1d-90) then
                 wind_y = 0.d0
             endif
+            kappa_x = alloc(iaddaux(i,j,7))
+            kappa_y = alloc(iaddaux(i,j,8))
+            if (abs(kappa_x) < 1d-90) then
+                kappa_x = 0.d0
+            endif
+            if (abs(kappa_y) < 1d-90) then
+                kappa_y = 0.d0
+            endif
 C             pressure = alloc(iaddaux(i,j,6))
 C             if (abs(pressure) < 1d-90) then
 C                 pressure = 0.d0
@@ -121,7 +131,7 @@ C                 vorticity = 0.d0
 C             endif
 
               write(matunit1,109) (h(k),hu(k),hv(k), k=1,layers),
-     &              (eta(k),k=1,layers), wind_x, wind_y
+     &              (eta(k),k=1,layers),wind_x,wind_y,kappa_x,kappa_y
 C               write(matunit1,109) h(1),hu(1),hv(1),h(2),hu(2),hv(2),
 C      &            eta(1),eta(2),wind_x,wind_y
 C             write(matunit1,109) (h(k),hu(k),hv(k),eta(k), k=1,layers),
@@ -152,7 +162,7 @@ C      &         vorticity
 
 c     # nvar+6 variable printed since surface, wind, pressure, pressure_x and pressure_y also printed
 
-      write(matunit2,1000) time,4*layers+2,ngrids,naux,2
+      write(matunit2,1000) time,4*layers+4,ngrids,naux,2
  1000 format(e18.8,'    time', /,
      &       i5,'                 meqn'/,
      &       i5,'                 ngrids'/,

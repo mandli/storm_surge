@@ -24,8 +24,13 @@ c     Also calls movetopo if topography might be moving.
       dimension q(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc, meqn)
       dimension aux(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc, maux)
       dimension vel(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc, 2)
-
-
+      
+      integer :: layer,layer_index
+      double precision :: h(2),u(2),v(2),g
+      logical :: dry_state(2)
+      
+      g = grav
+      
 c=====================Parameters===========================================
 
 
@@ -66,6 +71,38 @@ c     # set hu = hv = 0 in all these cells
      & aux(:,:,4:5))
       call hurricane_pressure(maxmx,maxmy,mbc,mx,my,xlower,ylower,dx,
      & dy,t,aux(:,:,6))
+     
+      ! Check Richardson number
+      do i=1,mx
+          do j=1,mx
+              dry_state = .false.
+              do layer=1,2
+                  m = 3*(layer-1)
+                  h(layer) = q(i,j,m+1)
+                  if (h(layer) > drytolerance) then
+                      u(layer) = q(i,j,m+2) / q(i,j,m+1)
+                      v(layer) = q(i,j,m+3)/q(i,j,m+1)
+                  else
+                      dry_state(layer) = .true.
+                      u(layer) = 0.d0
+                      v(layer) = 0.d0
+                  endif
+              enddo
+              
+              aux(i,j,7) = (u(1) - u(2))**2 / (g*one_minus_r*sum(h))
+              if ((aux(i,j,7) > richardson_tolerance)
+     &          .and.(.not.dry_state(2))) then
+                  print 100,i,j,aux(i,j,7)
+              endif
+              aux(i,j,8) = (v(1) - v(2))**2 / (g*one_minus_r*sum(h))
+              if ((aux(i,j,8) > richardson_tolerance)
+     &          .and.(.not.dry_state(2))) then
+                  print 100,i,j,aux(i,j,8)
+              endif
+          enddo
+      enddo
+      
+100   format ("Hyperbolicity failed, kappa(",i4,",",i4,") = ",d16.8)
 
     
 C     ! These need to be modified to use other aux array locations, 7,8 are 

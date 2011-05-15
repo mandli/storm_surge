@@ -55,7 +55,7 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
     double precision :: h_hat_l(2),h_hat_r(2),gamma_l,gamma_r
     double precision :: flux_transfer_l,flux_transfer_r,lambda(6)
     double precision :: total_depth_l,total_depth_r,mult_depth_l
-    double precision :: mult_depth_r
+    double precision :: mult_depth_r,temp_depth(2)
 
     ! Solver variables
     double precision, dimension(6) :: delta,flux_r,flux_l,pivot
@@ -302,18 +302,6 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             flux_transfer_r = g * rho(1) * h_r(1) * h_r(2)
             flux_transfer_l = g * rho(1) * h_l(1) * h_l(2)
         endif
-            
-
-        ! Check Richardson number
-        kappa_l = (u_l(1) - u_l(2))**2 / (g*one_minus_r*sum(h_l))
-        kappa_r = (u_r(1) - u_r(2))**2 / (g*one_minus_r*sum(h_r))
-        if ((kappa_l > richardson_tolerance).and.(.not.dry_state_l(2))) then
-            print "(a,i4,a,d16.8)","Hyperbolicity may have failed, kappa(",i,") = ",kappa_l
-            print "(a,i4)","  Direction = ",ixy," Location = ",icom,jcom
-        else if ((kappa_r > richardson_tolerance).and.(.not.dry_state_r(2))) then
-            print "(a,i4,a,d16.8)","Hyperbolicity may have failed, kappa(",i,") = ",kappa_r
-            print "(a,i4)","  Direction = ",ixy," Location = ",icom,jcom
-        endif
         
         ! ====================================================================
         !  Calculate Eigenstructure
@@ -323,8 +311,18 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
                 u_r,v_l,v_r,n_index,t_index,lambda,eig_vec)
             s(i,:) = lambda
         else if (eigen_method == 2) then
-            call linearized_eigen(h_l,h_r,hu_l,hu_r,hv_l,hv_r,u_l,u_r,v_l, &
-                v_r,n_index,t_index,lambda,eig_vec)
+            if (dry_state_r(2).and.(.not.dry_state_l(2))) then
+                temp_depth = [h_r(1),0.d0]
+                call linearized_eigen(h_l,temp_depth,hu_l,hu_r,hv_l,hv_r, &
+                    u_l,u_r,v_l,v_r,n_index,t_index,lambda,eig_vec)
+            else if (dry_state_l(2).and.(.not.dry_state_r(2))) then
+                temp_depth = [h_l(1),0.d0]
+                call linearized_eigen(temp_depth,h_r,hu_l,hu_r,hv_l,hv_r, &
+                    u_l,u_r,v_l,v_r,n_index,t_index,lambda,eig_vec)
+            else
+                call linearized_eigen(h_l,h_r,hu_l,hu_r,hv_l,hv_r,u_l,u_r, &
+                    v_l,v_r,n_index,t_index,lambda,eig_vec)
+            endif
             s(i,:) = lambda
         else if (eigen_method == 3) then      
             total_depth_l = sum(h_l)
@@ -373,7 +371,6 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         
         ! ====================================================================
         ! Compute jump in fluxes
-        
         do j=1,2
             layer_index = 3*(j-1)
             flux_r(layer_index+1) = rho(j) * hu_r(j)
