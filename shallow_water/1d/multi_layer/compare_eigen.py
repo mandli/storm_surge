@@ -53,9 +53,9 @@ def reformat_title(title):
 
 
 # Parameters
-name = 'idealized_4'
-mx = 500
-index_frame = 50
+name = 'shelf'
+mx = 2000
+index_frame = 91
 plot_styles = ['bx','b+','b.','k-']
 plot_labels = ['Static Linearized','Dynamic Linearized','Velocity Expansion','LAPACK']
 plot_titles = ["Top Layer Depths","Top Layer Velocities","Bottom Layer Depths","Bottom Layer Velocities"]

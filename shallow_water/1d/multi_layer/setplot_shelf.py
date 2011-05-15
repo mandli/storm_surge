@@ -112,8 +112,10 @@ def setplot(plotdata):
     ylimits_depth = [-4000.0,100.0]
     xlimits_zoomed = [-30e3-1e3,-30e3+1e3]
     ylimits_surface_zoomed = [prob_data.eta_1 - 0.5,prob_data.eta_1 + 0.5]
-    ylimits_internal_zoomed = [prob_data.eta_2 - 5.0,prob_data.eta_2 + 5.0] 
-    ylimits_velocities = None #[-1.0,1.0]
+    ylimits_internal_zoomed = [prob_data.eta_2 - 2.5,prob_data.eta_2 + 2.5] 
+    # ylimits_velocities = [-1.0,1.0]
+    ylimits_velocities = [-0.04,0.04]
+    ylimits_kappa = [0.0,1.2]
         
     # Create data object
     plotdata.clearfigures()  # clear any old figures,axes,items data
@@ -162,7 +164,7 @@ def setplot(plotdata):
     #  Figure for energy
     # ========================================================================
     plotfigure = plotdata.new_plotfigure(name='energy', figno=1)
-    plotfigure.show = True
+    plotfigure.show = False
 
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes()
@@ -222,6 +224,7 @@ def setplot(plotdata):
     
     # Top surface
     plotfigure = plotdata.new_plotfigure(name='full_zoom',figno=100)
+    plotfigure.show = False
     
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.title = 'Top Surface'
@@ -236,6 +239,7 @@ def setplot(plotdata):
 
     # Internal surface
     plotfigure = plotdata.new_plotfigure(name='internal_zoom',figno=101)
+    plotfigure.show = False
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.title = 'Internal Surface'
     plotaxes.xlimits = xlimits_zoomed
@@ -248,14 +252,18 @@ def setplot(plotdata):
     #  Velocities
     # ========================================================================
     plotfigure = plotdata.new_plotfigure(name="Velocities",figno=200)
+    plotfigure.show = False
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.title = "Layer Velocities"
-    plotaxes.xlimits = xlimits_zoomed
+    plotaxes.xlimits = xlimits
     plotaxes.ylimits = ylimits_velocities
     def velocity_afteraxes(cd):
-         add_bathy_dashes(cd)
-         add_horizontal_dashes(cd)
-         km_labels(cd)
+        add_bathy_dashes(cd)
+        add_horizontal_dashes(cd)
+        # km_labels(cd)
+        mpl.title("Layer Velocities t = %4.1f s" % cd.t)
+        mpl.xticks([-300e3,-200e3,-100e3,-30e3],[300,200,100,30],fontsize=15)
+        mpl.xlabel('km')
     plotaxes.afteraxes = velocity_afteraxes
     
     # Bottom layer
@@ -273,6 +281,49 @@ def setplot(plotdata):
     plotitem.show = True
     
     # ========================================================================
+    #  Velocities with Kappa
+    # ========================================================================
+    plotfigure = plotdata.new_plotfigure(name='vel_kappa',figno=14)
+    plotfigure.show = True
+    plotfigure.kwargs = {'figsize':(7,6)}
+    
+    def twin_axes(cd):
+        fig = mpl.gcf()
+        fig.clf()
+        
+        x = cd.grid.dimensions[0].center
+        
+        # Draw velocity and kappa plot
+        ax1 = fig.add_subplot(111)     # the velocity scale
+        ax2 = ax1.twinx()              # the kappa scale
+        
+        # Bottom layer velocity
+        bottom_layer = ax1.plot(x,u_2(cd),'k-',label="Bottom Layer Velocity")
+        # Top Layer velocity
+        top_layer = ax1.plot(x,u_1(cd),'b-',label="Top Layer velocity")#,color=(0.2,0.8,1.0))
+        
+        # Kappa
+        kappa_line = ax2.plot(x,cd.q[:,5],color='r',label="Kappa")
+        ax2.plot(x,np.ones(x.shape),'r--')
+
+        ax1.set_xlabel('km')
+        mpl.xticks([-300e3,-200e3,-100e3,-30e3],[300,200,100,30],fontsize=15)
+
+        ax1.plot([prob_data.bathy_location,prob_data.bathy_location],ylimits_velocities,'k--')
+        ax1.legend((bottom_layer,top_layer,kappa_line),('Bottom Layer','Top Layer',"Kappa"),loc=3)
+        ax1.set_title("Layer Velocities and Kappa t = %4.1f s" % cd.t)
+        ax1.set_ylabel('Velocities (m/s)')
+        ax2.set_ylabel('Kappa (1/Ri)')
+        ax1.set_xlim(xlimits)
+        ax1.set_ylim(ylimits_velocities)
+        ax2.set_ylim(ylimits_kappa)
+        
+        # mpl.subplots_adjust(hspace=0.1)
+    
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.afteraxes = twin_axes
+    
+    # ========================================================================
     #  Combined Top and Internal Surface
     # ========================================================================
     plotfigure = plotdata.new_plotfigure(name='combined_surface',figno=13)
@@ -283,7 +334,7 @@ def setplot(plotdata):
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(2,1,1)'
     plotaxes.title = 'Surfaces'
-    plotaxes.xlimits = xlimits_zoomed
+    plotaxes.xlimits = xlimits
     plotaxes.ylimits = ylimits_surface_zoomed
     def top_afteraxes(cd):
         mpl.xlabel('')
@@ -293,6 +344,7 @@ def setplot(plotdata):
         mpl.xticks(locs,labels)
         add_bathy_dashes(cd)
         mpl.ylabel('m')
+        mpl.title("Surfaces t = %4.1f s" % cd.t)
     plotaxes.afteraxes = top_afteraxes
     plotaxes = fill_items(plotaxes)
     
@@ -300,13 +352,15 @@ def setplot(plotdata):
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(2,1,2)'
     plotaxes.title = ''
-    plotaxes.xlimits = xlimits_zoomed
+    plotaxes.xlimits = xlimits
     plotaxes.ylimits = ylimits_internal_zoomed
     def internal_surf_afteraxes(cd):
         km_labels(cd)
         mpl.title('')
         mpl.ylabel('m')
         mpl.subplots_adjust(hspace=0.05)
+        mpl.xticks([-300e3,-200e3,-100e3,-30e3],[300,200,100,30],fontsize=15)
+        mpl.xlabel('km')
     plotaxes.afteraxes = internal_surf_afteraxes
     plotaxes = fill_items(plotaxes)
     

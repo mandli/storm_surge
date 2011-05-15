@@ -81,7 +81,7 @@ base_oscillatory_wind = {'name':'oscillatory_wind','setplot':'setplot_oscillator
                         }
                         
 base_shelf_test = {'name':'shelf','setplot':'setplot_shelf',
-                   'run_data':{'mx':100,'nout':300,'outstyle':1,'tfinal':7200.0,
+                   'run_data':{'mx':2000,'nout':300,'outstyle':1,'tfinal':7200.0,
                       'xlower':-400000.0,'mthbc_xupper':3},
                    'multilayer_data':{'rho_air':1.0,'rho_1':1025.0,'rho_2':1028.0,
                       'eigen_method':1,'init_type':4,'init_location':300e3,
@@ -110,23 +110,19 @@ test_suites = []
 #     test_suites.append(test)
 
 # Eigen method tests for oscillatory wind
-for method in [1,2,3,4]:
-    test = copy.deepcopy(base_oscillatory_wind)
-    test['multilayer_data']['eigen_method'] = method
-    test_suites.append(test)
-
-# # Convergence test for shelf
-# for mx in [100,200,400,800,1200,1600,2000,4000]:
-#     test = copy.deepcopy(base_shelf_test)
-#     test['run_data']['mx'] = mx
-#     test_suites.append(test)
-
-# # Eigen method test for shelf
 # for method in [1,2,3,4]:
-#     test = copy.deepcopy(base_shelf_test)
+#     test = copy.deepcopy(base_oscillatory_wind)
 #     test['multilayer_data']['eigen_method'] = method
 #     test_suites.append(test)
 
+# Convergence test for shelf
+for method in [1,2,3,4]:
+    for mx in [100,200,400,800,1200,1600,2000,4000]:
+        test = copy.deepcopy(base_shelf_test)
+        test['run_data']['mx'] = mx
+        test['multilayer_data']['eigen_method'] = method
+        test_suites.append(test)
+        
 def run_tests(tests):
     
     for (i,test) in enumerate(tests):
@@ -178,19 +174,20 @@ def run_tests(tests):
         # cmd = run_cmd
         print cmd
         # print "Number of processes currently:",len(process_queue)
-        if parallel and len(process_queue) < max_processes - 1:
+        if parallel:
+            while len(process_queue) == max_processes:
+                for process in process_queue:
+                    if process.poll() == 0:
+                        process_queue.remove(process)
             process_queue.append(subprocess.Popen(cmd,shell=True,
                 stdout=log_file,stderr=log_file))
+            
         else:
             # subprocess.Popen(cmd,shell=True).wait()
             subprocess.Popen(cmd,shell=True,stdout=log_file,
                 stderr=log_file).wait()
                 
         # Remove any proccess that have completed
-        for process in process_queue:
-            if process.poll() == 0:
-                # print "Removing process..."
-                process_queue.remove(process)
         # print "Number of processes currently:",len(process_queue)
                 
 
