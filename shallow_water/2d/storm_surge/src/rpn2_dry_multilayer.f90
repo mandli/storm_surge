@@ -54,8 +54,7 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
     double precision :: eta_l(2),eta_r(2),h_ave(2),momentum_transfer(2)
     double precision :: h_hat_l(2),h_hat_r(2),gamma_l,gamma_r
     double precision :: flux_transfer_l,flux_transfer_r,lambda(6)
-    double precision :: total_depth_l,total_depth_r,mult_depth_l
-    double precision :: mult_depth_r,temp_depth(2)
+    double precision :: temp_depth(2)
 
     ! Solver variables
     double precision, dimension(6) :: delta,flux_r,flux_l,pivot
@@ -306,10 +305,12 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         ! ====================================================================
         !  Calculate Eigenstructure
         ! ====================================================================
+        ! Static linearized eigensolver
         if (eigen_method == 1) then
             call linearized_eigen(h_hat_l,h_hat_r,hu_l,hu_r,hv_l,hv_r,u_l, &
                 u_r,v_l,v_r,n_index,t_index,lambda,eig_vec)
             s(i,:) = lambda
+        ! Dynamic linearized eigensolver
         else if (eigen_method == 2) then
             if (dry_state_r(2).and.(.not.dry_state_l(2))) then
                 temp_depth = [h_r(1),0.d0]
@@ -324,37 +325,35 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
                     v_l,v_r,n_index,t_index,lambda,eig_vec)
             endif
             s(i,:) = lambda
-        else if (eigen_method == 3) then      
-            total_depth_l = sum(h_l)
-            total_depth_r = sum(h_r)
-            mult_depth_l = product(h_l)
-            mult_depth_r = product(h_r)
-                              
-            s(i,1) = - sqrt(g*total_depth_l) + 0.5d0 * mult_depth_l/ total_depth_l**(3/2) * one_minus_r
-            s(i,2) = - sqrt(g * mult_depth_l / total_depth_l * one_minus_r)
-            s(i,3:4) = 0.5d0 * (u_l + u_r)
-            s(i,5) = sqrt(g * mult_depth_r / total_depth_r * one_minus_r)
-            s(i,6) = sqrt(g*total_depth_r) - 0.5d0 * mult_depth_r / total_depth_r**(3/2) * one_minus_r
-
-            eig_vec(1,:) = [1.d0,1.d0,0.d0,0.d0,1.d0,1.d0]
-            eig_vec(n_index,:) = [s(i,1),s(i,2),0.d0,0.d0,s(i,5),s(i,6)]
-            eig_vec(t_index,:) = [v_l(1),v_l(1),1.d0,0.d0,v_r(1),v_r(1)]
-            eig_vec(4,1:2) = ((s(i,1:2)-u_l(1))**2 - g*h_l(1)) / (r*g*h_l(1))
-            eig_vec(4,3:4) = 0.d0
-            eig_vec(4,5:6) = ((s(i,5:6)-u_r(1))**2 - g*h_r(1)) / (r*g*h_r(1))
-            eig_vec(n_index+3,:) = s(i,:) * eig_vec(4,:)
-            eig_vec(t_index+3,1:2) = v_l(2) * eig_vec(4,1:2)
-            eig_vec(t_index+3,3:4) = [0.d0,1.d0]
-            eig_vec(t_index+3,5:6) = v_r(2) * eig_vec(4,5:6)
+        ! Eigensolver based on velocity difference expansion
+        else if (eigen_method == 3) then
+            if (dry_state_r(2).and.(.not.dry_state_l(2))) then
+                temp_depth = [h_r(1),0.d0]
+                call vel_diff_eigen(h_l,temp_depth,hu_l,hu_r,hv_l,hv_r, &
+                    u_l,u_r,v_l,v_r,n_index,t_index,lambda,eig_vec)
+            else if (dry_state_l(2).and.(.not.dry_state_r(2))) then
+                temp_depth = [h_l(1),0.d0]
+                call vel_diff_eigen(temp_depth,h_r,hu_l,hu_r,hv_l,hv_r, &
+                    u_l,u_r,v_l,v_r,n_index,t_index,lambda,eig_vec)
+            else
+                call vel_diff_eigen(h_l,h_r,hu_l,hu_r,hv_l,hv_r,u_l,u_r, &
+                    v_l,v_r,n_index,t_index,lambda,eig_vec)
+            endif
+            s(i,:) = lambda
+        ! LAPACK
         else if (eigen_method == 4) then
-
             ! Only one side is dry, use linearized eigen solver
-            if ((dry_state_r(2).and.(.not.dry_state_l(2))).or. &
-                (dry_state_l(2).and.(.not.dry_state_r(2)))) then
-                call linearized_eigen(h_hat_l,h_hat_r,hu_l,hu_r,hv_l,hv_r, &
+            if (dry_state_r(2).and.(.not.dry_state_l(2))) then
+                temp_depth = [h_r(1),0.d0]
+                call linearized_eigen(h_l,temp_depth,hu_l,hu_r,hv_l,hv_r, &
+                    u_l,u_r,v_l,v_r,n_index,t_index,lambda,eig_vec)
+            else if (dry_state_l(2).and.(.not.dry_state_r(2))) then
+                temp_depth = [h_l(1),0.d0]
+                call linearized_eigen(temp_depth,h_r,hu_l,hu_r,hv_l,hv_r, &
                     u_l,u_r,v_l,v_r,n_index,t_index,lambda,eig_vec)
             ! Bottom layer completely dry
             else if (dry_state_l(2).and.dry_state_r(2)) then
+                stop "This should not happen!"
                 call single_layer_eigen(h_l,h_r,hu_l,hu_r,hv_l,hv_r,u_l,u_r, &
                     v_l,v_r,n_index,t_index,s,eig_vec)
             ! Both sides wet

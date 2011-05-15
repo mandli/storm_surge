@@ -167,23 +167,8 @@ subroutine rpt2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,aux1,aux2,aux3,imp,asdq,bmasdq
             call linearized_eigen(h,h,hv,hv,hu,hu,v,v,u,u,t_index, &
                 n_index,s,eig_vec)
         else if (eigen_method == 3) then
-            gamma = h_hat(2) / h_hat(1)
-
-            alpha(1) = 0.5d0*(gamma-1.d0+sqrt((gamma-1.d0)**2+4.d0*r*gamma))
-            alpha(2) = 0.5d0*(gamma-1.d0-sqrt((gamma-1.d0)**2+4.d0*r*gamma))
-            alpha(3) = 0.5d0*(gamma-1.d0-sqrt((gamma-1.d0)**2+4.d0*r*gamma))
-            alpha(4) = 0.5d0*(gamma-1.d0+sqrt((gamma-1.d0)**2+4.d0*r*gamma))
-
-            s(1:2) = -sqrt(g * h_hat(1) * (1.d0 + alpha(1:2)))
-            s(3:4) = v
-            s(5:6) = sqrt(g * h_hat(1) * (1.d0 + alpha(3:4)))
-
-            eig_vec(1,:) = [1.d0,1.d0,0.d0,0.d0,1.d0,1.d0]
-            eig_vec(t_index,:) = [s(1),s(2),0.d0,0.d0,s(5),s(6)]
-            eig_vec(n_index,:) = [u(1),u(1),1.d0,0.d0,u(1),u(1)]
-            eig_vec(4,:) = [alpha(1),alpha(2),0.d0,0.d0,alpha(3),alpha(4)]
-            eig_vec(t_index+3,:) = eig_vec(4,:) * s
-            eig_vec(n_index+3,:) = [u(2),u(2),0.d0,1.d0,u(2),u(2)]
+            call vel_diff_eigen(h,h,hv,hv,hu,hu,v,v,u,u,t_index, &
+                n_index,s,eig_vec)
         else if (eigen_method == 4) then
             call lapack_eigen(h,h,hv,hv,hu,hu,v,v,u,u,t_index,n_index,s, &
                 eig_vec)

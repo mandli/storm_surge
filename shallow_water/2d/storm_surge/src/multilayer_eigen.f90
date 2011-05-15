@@ -65,6 +65,50 @@ subroutine linearized_eigen(h_l,h_r,hu_l,hu_r,hv_l,hv_r,u_l,u_r,v_l,v_r, &
 
 end subroutine linearized_eigen
 
+subroutine vel_diff_eigen(h_l,h_r,hu_l,hu_r,hv_l,hv_r,u_l,u_r,v_l,v_r, &
+                            n_index,t_index,s,eig_vec)
+
+    use multilayer_module, only: one_minus_r,r
+    use geoclaw_module, only: grav
+
+    implicit none
+    
+    ! Input
+    double precision, dimension(2), intent(in) :: h_l,h_r,hu_l,hu_r,hv_l,hv_r
+    double precision, dimension(2), intent(in) :: u_l,u_r,v_l,v_r
+    integer, intent(in) :: n_index,t_index
+    
+    ! Output
+    double precision, intent(inout) :: s(6),eig_vec(6,6)
+        
+    ! Local
+    double precision :: total_depth_l,total_depth_r,mult_depth_l,mult_depth_r
+    
+    total_depth_l = sum(h_l)
+    total_depth_r = sum(h_r)
+    mult_depth_l = product(h_l)
+    mult_depth_r = product(h_r)
+                      
+    s(1) = - sqrt(grav*total_depth_l) + 0.5d0 * mult_depth_l/ total_depth_l**(3/2) * one_minus_r
+    s(2) = - sqrt(grav * mult_depth_l / total_depth_l * one_minus_r)
+    s(3:4) = 0.5d0 * (u_l + u_r)
+    s(5) = sqrt(grav * mult_depth_r / total_depth_r * one_minus_r)
+    s(6) = sqrt(grav*total_depth_r) - 0.5d0 * mult_depth_r / total_depth_r**(3/2) * one_minus_r
+
+    eig_vec(1,:) = [1.d0,1.d0,0.d0,0.d0,1.d0,1.d0]
+    eig_vec(n_index,:) = [s(1),s(2),0.d0,0.d0,s(5),s(6)]
+    eig_vec(t_index,:) = [v_l(1),v_l(1),1.d0,0.d0,v_r(1),v_r(1)]
+    eig_vec(4,1:2) = ((s(1:2)-u_l(1))**2 - grav*h_l(1)) / (r*grav*h_l(1))
+    eig_vec(4,3:4) = 0.d0
+    eig_vec(4,5:6) = ((s(5:6)-u_r(1))**2 - grav*h_r(1)) / (r*grav*h_r(1))
+    eig_vec(n_index+3,:) = s(:) * eig_vec(4,:)
+    eig_vec(t_index+3,1:2) = v_l(2) * eig_vec(4,1:2)
+    eig_vec(t_index+3,3:4) = [0.d0,1.d0]
+    eig_vec(t_index+3,5:6) = v_r(2) * eig_vec(4,5:6)
+    
+end subroutine vel_diff_eigen
+
+
 subroutine lapack_eigen(h_l,h_r,hu_l,hu_r,hv_l,hv_r,u_l,u_r,v_l,v_r, &
                             n_index,t_index,s,eig_vec)
 
