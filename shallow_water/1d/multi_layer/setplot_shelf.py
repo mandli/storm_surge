@@ -20,11 +20,6 @@ from pyclaw.data import Data
 
 # matplotlib.rcParams['figure.figsize'] = [6.0,10.0]
 
-# Load claw data 
-claw_data = Data('./claw.data')
-prob_data = Data('./problem.data')
-g = 9.81
-
 def setplot(plotdata):
     
     """ 
@@ -33,6 +28,9 @@ def setplot(plotdata):
     Output: a modified version of plotdata.
     
     """
+    claw_data = Data(os.path.join(plotdata.outdir,'claw.data'))
+    prob_data = Data(os.path.join(plotdata.outdir,'problem.data'))
+    g = 9.81
         
     # ========================================================================
     #  Plot variable functions
@@ -112,10 +110,10 @@ def setplot(plotdata):
     # Limit Settings
     xlimits = [claw_data.xlower,claw_data.xupper]
     ylimits_depth = [-4000.0,100.0]
-    xlimits_zoomed = xlimits
+    xlimits_zoomed = [-30e3-1e3,-30e3+1e3]
     ylimits_surface_zoomed = [prob_data.eta_1 - 0.5,prob_data.eta_1 + 0.5]
     ylimits_internal_zoomed = [prob_data.eta_2 - 5.0,prob_data.eta_2 + 5.0] 
-    ylimits_velocities = [-1.0,1.0]
+    ylimits_velocities = None #[-1.0,1.0]
         
     # Create data object
     plotdata.clearfigures()  # clear any old figures,axes,items data

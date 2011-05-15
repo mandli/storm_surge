@@ -15,7 +15,7 @@ subroutine qinit(maxmx,meqn,mbc,mx,xlower,dx,q,maux,aux)
     integer :: i
     double precision :: x,xmid,eigen_vector(4),gamma,lambda,alpha,h_1,h_2,deta
 
-    if (.not.((0 <= init_type).and.(init_type <= 3))) then
+    if (.not.((0 <= init_type).and.(init_type <= 5))) then
         print "(a,i2)","Invalid initialization type requested, init_type = ",init_type
     endif
     
@@ -78,6 +78,25 @@ subroutine qinit(maxmx,meqn,mbc,mx,xlower,dx,q,maux,aux)
                 deta = epsilon * sin((x-xmid)*PI/(-80.e3-xmid))
                 q(i,3) = q(i,3) + rho(2) * alpha * deta
                 q(i,1) = q(i,1) + rho(1) * deta * (1.d0 - alpha)
+            endif
+        ! Inundation test
+        else if (init_type == 5) then
+!             deta = 1.d0
+            q(i,2) = 0.d0
+            q(i,4) = 0.d0
+!             if (x < init_location) then
+!                 q(i,3) = q(i,3) + rho(2) * deta
+!                 q(i,1) = q(i,1) - rho(1) * deta
+!             endif
+            deta = 0.01d0
+            if (x < init_location) then
+                q(i,3) = rho(2) * deta
+                q(i,1) = rho(1) * (1.d0 - deta)
+            else
+                q(i,3) = rho(2) * 0.0d0
+                q(i,1) = rho(1) * (1.d0 - 0.00d0)
+!                 q(i,3) = rho(2) * 0.01d0
+!                 q(i,1) = rho(1) * (1.d0 - 0.01d0)
             endif
         endif
     enddo

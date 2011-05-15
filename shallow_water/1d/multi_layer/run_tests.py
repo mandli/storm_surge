@@ -19,6 +19,7 @@ Can run a particular test by giving the number of the test at the comand line
 import subprocess
 import sys
 import os
+import copy
 import time
 
 import numpy as np
@@ -42,67 +43,89 @@ else:
 process_queue = []
 runclaw_cmd = "python $CLAW/python/pyclaw/runclaw.py"
 plotclaw_cmd = "python $CLAW/python/pyclaw/plotters/plotclaw.py"
-         
-test_suites = [{'name':'rp_waves_3','setplot':'setplot',
-                'run_data':{'xlower':0.0,'xupper':1.0,'mx':500,'outstyle':1,
-                    'tfinal':1.0},
-                'multilayer_data':{'eigen_method':1,'init_type':1,
-                    "init_location":0.45,"wave_family":3,'eta_2':-0.6,
-                    'bathy_left':-1.0,'bathy_right':-0.2,'wind_type':0}
-                },
-                {'name':'rp_waves_4','setplot':'setplot',
-                'run_data':{'xlower':0.0,'xupper':1.0,'mx':500,'outstyle':1,
-                    'tfinal':0.1},
-                'multilayer_data':{'eigen_method':1,'init_type':1,
-                    "init_location":0.45,"wave_family":4,'eta_2':-0.6,
-                    'bathy_left':-1.0,'bathy_right':-0.2,'wind_type':0}
-                },
-                {'name':'oscillatory_wind','setplot':'setplot_oscillatory',
-                 'run_data':{'mx':100,'outstyle':1,'nout':160,'tfinal':10.0,
-                    'mthbc_xlower':3,'mthbc_xupper':3},
-                 'multilayer_data':{'init_type':0,'eta_1':0.0,'eta_2':-0.25,
-                    'wind_type':3,'A':5.0,"rho_air":1.15,"rho_1":1025,
-                    "rho_2":1045,"N":2.0,'omega':2.0,"t_length":10.0,
-                    'bathy_left':-1.0,'bathy_right':-1.0,'eigen_method':3}
-                },
-                {'name':'oscillatory_wind','setplot':'setplot_oscillatory',
-                 'run_data':{'mx':100,'outstyle':1,'nout':160,'tfinal':10.0,
-                    'mthbc_xlower':3,'mthbc_xupper':3},
-                 'multilayer_data':{'init_type':0,'eta_1':0.0,'eta_2':-0.25,
-                    'wind_type':3,'A':5.0,"rho_air":1.15,"rho_1":1025,
-                    "rho_2":1045,"N":2.0,'omega':2.0,"t_length":10.0,
-                    'bathy_left':-1.0,'bathy_right':-1.0,'eigen_method':4}
-                },
-                {'name':'mx2000_shelf','setplot':'setplot_shelf',
-                 'run_data':{'mx':2000,'nout':300,'outstyle':1,'tfinal':7200.0,
-                    'xlower':-400000.0,'mthbc_xupper':3},
-                 'multilayer_data':{'rho_air':1.0,'rho_1':1025.0,'rho_2':1028.0,
-                    'eigen_method':4,'init_type':4,'init_location':300e3,
-                    'eta_2':-300,'epsilon':0.4,'bathy_location':-30e3,
-                    'bathy_left':-4000,'bathy_right':-200,'wind_type':0}
-                },
-                {'name':'mx2000_shelf','setplot':'setplot_shelf',
-                 'run_data':{'mx':2000,'nout':300,'outstyle':1,'tfinal':7200.0,
-                    'xlower':-400000.0,'mthbc_xupper':3},
-                 'multilayer_data':{'rho_air':1.0,'rho_1':1025.0,'rho_2':1028.0,
-                    'eigen_method':1,'init_type':4,'init_location':300e3,
-                    'eta_2':-300,'epsilon':0.4,'bathy_location':-30e3,
-                    'bathy_left':-4000,'bathy_right':-200,'wind_type':0}
-                }]
-                
-convergence_test_base = {'name':'mx100_shelf','setplot':'setplot_shelf',
-                 'run_data':{'mx':100,'nout':300,'outstyle':1,'tfinal':7200.0,
-                    'xlower':-400000.0,'mthbc_xupper':3},
-                 'multilayer_data':{'rho_air':1.0,'rho_1':1025.0,'rho_2':1028.0,
-                    'eigen_method':1,'init_type':4,'init_location':300e3,
-                    'eta_2':-300,'epsilon':0.4,'bathy_location':-30e3,
-                    'bathy_left':-4000,'bathy_right':-200,'wind_type':0}}
 
-for mx in [100,200,400,800,1200,1600,4000]:
-    new_test = convergence_test_base
-    new_test['name'] = "mx%s_shelf" % mx
-    new_test['run_data']['mx'] = mx
-    test_suites.append(new_test)
+base_idealized_3 = {'name':'idealized_3','setplot':'setplot',
+                    'run_data':{'xlower':0.0,'xupper':1.0,'mx':500,'outstyle':1,
+                        'nout':50,'tfinal':0.5},
+                    'multilayer_data':{'eigen_method':1,'init_type':1,
+                        "init_location":0.45,"wave_family":3,'eta_2':-0.6,
+                        'bathy_left':-1.0,'bathy_right':-0.2,'wind_type':0,
+                        'epsilon':0.1,'rho_1':0.95}
+                    }
+
+base_idealized_4 = {'name':'idealized_4','setplot':'setplot',
+                    'run_data':{'xlower':0.0,'xupper':1.0,'mx':500,'outstyle':1,
+                        'nout':50,'tfinal':0.5},
+                    'multilayer_data':{'eigen_method':1,'init_type':1,
+                        "init_location":0.45,"wave_family":4,'eta_2':-0.6,
+                        'bathy_left':-1.0,'bathy_right':-0.2,'wind_type':0,
+                        'epsilon':0.04,'rho_1':0.95}
+                    }
+                    
+base_idealized_4_breakdown = {'name':'idealized_4_breakdown','setplot':'setplot',
+                    'run_data':{'xlower':0.0,'xupper':1.0,'mx':500,'outstyle':1,
+                        'nout':50,'tfinal':0.1},
+                    'multilayer_data':{'eigen_method':1,'init_type':1,
+                        "init_location":0.45,"wave_family":4,'eta_2':-0.6,
+                        'bathy_left':-1.0,'bathy_right':-0.2,'wind_type':0,
+                        'epsilon':0.1,'rho_1':0.95}
+                    }
+
+base_oscillatory_wind = {'name':'oscillatory_wind','setplot':'setplot_oscillatory',
+                         'run_data':{'mx':100,'outstyle':1,'nout':160,'tfinal':10.0,
+                            'mthbc_xlower':3,'mthbc_xupper':3},
+                         'multilayer_data':{'init_type':0,'eta_1':0.0,'eta_2':-0.25,
+                            'wind_type':3,'A':5.0,"rho_air":1.15,"rho_1":1025,
+                            "rho_2":1045,"N":2.0,'omega':2.0,"t_length":10.0,
+                            'bathy_left':-1.0,'bathy_right':-1.0,'eigen_method':3}
+                        }
+                        
+base_shelf_test = {'name':'shelf','setplot':'setplot_shelf',
+                   'run_data':{'mx':100,'nout':300,'outstyle':1,'tfinal':7200.0,
+                      'xlower':-400000.0,'mthbc_xupper':3},
+                   'multilayer_data':{'rho_air':1.0,'rho_1':1025.0,'rho_2':1028.0,
+                      'eigen_method':1,'init_type':4,'init_location':300e3,
+                      'eta_2':-300,'epsilon':0.4,'bathy_location':-30e3,
+                      'bathy_left':-4000,'bathy_right':-200,'wind_type':0}
+                  }
+
+test_suites = []
+
+# Eigen method tests for idealized_3
+# for method in [1,2,3,4]:
+#     test = copy.deepcopy(base_idealized_3)
+#     test['multilayer_data']['eigen_method'] = method
+#     test_suites.append(test)
+    
+# Eigen method tests for idealized_4_breakdown
+# for method in [1,2,3,4]:
+#     test = copy.deepcopy(base_idealized_4_breakdown)
+#     test['multilayer_data']['eigen_method'] = method
+#     test_suites.append(test)
+
+# Eigen method tests for idealized_4
+# for method in [1,2,3,4]:
+#     test = copy.deepcopy(base_idealized_4)
+#     test['multilayer_data']['eigen_method'] = method
+#     test_suites.append(test)
+
+# Eigen method tests for oscillatory wind
+for method in [1,2,3,4]:
+    test = copy.deepcopy(base_oscillatory_wind)
+    test['multilayer_data']['eigen_method'] = method
+    test_suites.append(test)
+
+# # Convergence test for shelf
+# for mx in [100,200,400,800,1200,1600,2000,4000]:
+#     test = copy.deepcopy(base_shelf_test)
+#     test['run_data']['mx'] = mx
+#     test_suites.append(test)
+
+# # Eigen method test for shelf
+# for method in [1,2,3,4]:
+#     test = copy.deepcopy(base_shelf_test)
+#     test['multilayer_data']['eigen_method'] = method
+#     test_suites.append(test)
 
 def run_tests(tests):
     
@@ -124,7 +147,7 @@ def run_tests(tests):
         ml_data.write()
         
         # Create output directory
-        prefix = "ml_1d_e%s_%s" % (ml_data.eigen_method,test['name'])
+        prefix = "ml_1d_e%s_m%s_%s" % (ml_data.eigen_method,rundata.clawdata.mx,test['name'])
         tm = time.localtime()
         year = str(tm[0]).zfill(4)
         month = str(tm[1]).zfill(2)
@@ -138,10 +161,13 @@ def run_tests(tests):
         plots_dirname = ''.join((prefix,date,"_plots"))
         log_name = ''.join((prefix,date,"_log"))
 
-        output_path = os.path.join(base_path,output_dirname)
-        plots_path = os.path.join(base_path,plots_dirname)
-        log_path = os.path.join(base_path,log_name)
+        if not os.path.exists(os.path.join(base_path,test['name'])):
+            os.mkdir(os.path.join(base_path,test['name']))
 
+        output_path = os.path.join(base_path,test['name'],output_dirname)
+        plots_path = os.path.join(base_path,test['name'],plots_dirname)
+        log_path = os.path.join(base_path,test['name'],log_name)
+        
         log_file = open(log_path,'w')
 
         # Run the simulation
@@ -149,21 +175,23 @@ def run_tests(tests):
         plot_cmd = "%s %s %s %s" % (plotclaw_cmd,output_path,plots_path,test['setplot'])
         tar_cmd = "tar -cvzf %s.tgz %s" % (plots_path,plots_path)
         cmd = ";".join((run_cmd,plot_cmd))
+        # cmd = run_cmd
         print cmd
-        print "Number of processes currently:",len(process_queue)
+        # print "Number of processes currently:",len(process_queue)
         if parallel and len(process_queue) < max_processes - 1:
             process_queue.append(subprocess.Popen(cmd,shell=True,
                 stdout=log_file,stderr=log_file))
         else:
+            # subprocess.Popen(cmd,shell=True).wait()
             subprocess.Popen(cmd,shell=True,stdout=log_file,
                 stderr=log_file).wait()
                 
         # Remove any proccess that have completed
         for process in process_queue:
             if process.poll() == 0:
-                print "Removing process..."
+                # print "Removing process..."
                 process_queue.remove(process)
-        print "Number of processes currently:",len(process_queue)
+        # print "Number of processes currently:",len(process_queue)
                 
 
 def print_tests():

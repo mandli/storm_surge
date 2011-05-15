@@ -16,6 +16,7 @@ import matplotlib
 import matplotlib.pyplot as mpl
 
 from pyclaw.plotters import geoplot, colormaps
+from pyclaw.data import Data
 
 matplotlib.rcParams['figure.figsize'] = [16.0,6.0]
 
@@ -29,6 +30,9 @@ def setplot(plotdata):
     Output: a modified version of plotdata.
     
     """
+    
+    claw_data = Data(os.path.join(plotdata.outdir,'claw.data'))
+    prob_data = Data(os.path.join(plotdata.outdir,'problem.data'))
 
     def hurricane_afterframe(current_data):
         # Draw line for eye of hurricane
@@ -55,10 +59,83 @@ def setplot(plotdata):
 
     plotdata.clearfigures()  # clear any old figures,axes,items data
     
+    xlimits = [claw_data.xlower,claw_data.xupper]
+    ylimits_velocities = (-0.15,0.15)
+    ylimits_depth = [-1.0,0.1]
+    ylimits_wind = [-5,5]
+    ylimits_kappa = [0.0,1.2]
+    
     # ========================================================================
-    #  Fill plot
+    #  Original Fill plot
     # ========================================================================
     plotfigure = plotdata.new_plotfigure(name='full',figno=0)
+    plotfigure.show = False
+    
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(2,1,1)'
+    plotaxes.title = 'Multilayer Surfaces'
+    plotaxes.xlimits = xlimits
+    plotaxes.ylimits = ylimits_depth
+     
+    # Top layer
+    plotitem = plotaxes.new_plotitem(plot_type='1d_fill_between')
+    plotitem.plot_var = eta_1
+    plotitem.plot_var2 = eta_2
+    plotitem.color = (0.2,0.8,1.0)
+    plotitem.show = True
+    
+    # Bottom Layer
+    plotitem = plotaxes.new_plotitem(plot_type='1d_fill_between')
+    plotitem.plot_var = eta_2
+    plotitem.plot_var2 = bathy
+    plotitem.color = 'b'
+    plotitem.show = True
+    
+    # Plot bathy
+    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
+    plotitem.plot_var = bathy
+    plotitem.color = 'k'
+    # plotitem.plotstyle = '-'
+    plotitem.show = True
+    
+    # Plot line in between layers
+    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
+    plotitem.plot_var = eta_2
+    plotitem.color = 'k'
+    # plotitem.plotstyle = 'o'
+    plotitem.show = True
+    
+    # Plot line on top layer
+    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
+    plotitem.plot_var = eta_1
+    plotitem.color = 'k'
+    # plotitem.plotstyle = 'x'
+    plotitem.show = True
+    
+    # Layer Velocities
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(2,1,2)'
+    plotaxes.title = "Layer Velocities"
+    plotaxes.xlimits = xlimits
+    plotaxes.ylimits = ylimits_velocities
+    # plotaxes.afteraxes = jump_afteraxes
+    
+    # Bottom layer
+    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
+    plotitem.plot_var = u_2
+    plotitem.color = 'b'
+    plotitem.show = True
+
+    # Top layer
+    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
+    plotitem.color = (0.2,0.8,1.0)
+    plotitem.plot_var = u_1
+    plotitem.show = True
+    
+    # ========================================================================
+    #  Fill plot with Kappa
+    # ========================================================================
+    plotfigure = plotdata.new_plotfigure(name='full_kappa',figno=14)
     
     def twin_axes(cd):
         fig = mpl.gcf()
@@ -68,11 +145,6 @@ def setplot(plotdata):
         
         # Draw fill plot
         ax1 = fig.add_subplot(121)
-        ax1.set_title('Multilayer Surfaces t = %s' % cd.t)
-        ax1.set_xlim((0.0,1.0))
-        ax1.set_ylim((-1.0,0.2))
-        ax1.set_xlabel('x')
-        ax1.set_ylabel('Depth')
         
         # Bottom layer
         ax1.fill_between(x,bathy(cd),eta_1(cd),color='b')
@@ -85,21 +157,29 @@ def setplot(plotdata):
         # Plot surface
         ax1.plot(x,eta_1(cd),'k')
         
+        ax1.set_title('Multilayer Surfaces t = %s' % cd.t)
+        ax1.set_xlim((0.0,1.0))
+        ax1.set_ylim((-1.0,0.2))
+        ax1.set_xlabel('x')
+        ax1.set_ylabel('Depth')
+        
         # Draw velocity and kappa plot
         ax1 = fig.add_subplot(122)     # the velocity scale
         ax2 = ax1.twinx()              # the kappa scale
         
-        ax1.set_xlim((cd.xlower,cd.xupper))
-        ax1.set_ylim((-0.15,0.15))
-        ax2.set_ylim((0.0,1.2))
-        
         # Bottom layer velocity
-        ax1.plot(x,u_2(cd),color='b')
+        bottom_layer = ax1.plot(x,u_2(cd),'k-',label="Bottom Layer Velocity")
         # Top Layer velocity
-        ax1.plot(x,u_1(cd),color=(0.2,0.8,1.0))
+        top_layer = ax1.plot(x,u_1(cd),'b-',label="Top Layer velocity")#,color=(0.2,0.8,1.0))
+        
         # Kappa
-        ax2.plot(x,cd.q[:,5],color='r')
-
+        kappa_line = ax2.plot(x,cd.q[:,5],color='r',label="Kappa")
+        ax2.plot(x,np.ones(x.shape),'r--')
+        
+        ax1.legend((bottom_layer,top_layer,kappa_line),('Bottom Layer','Top Layer',"Kappa"),loc=4)
+        ax1.set_xlim(xlimits)
+        ax1.set_ylim(ylimits_velocities)
+        ax2.set_ylim(ylimits_kappa)
         ax1.set_title('Layer Velocities and Kappa')
         ax1.set_ylabel('Velocities (m/s)')
         ax2.set_ylabel('Kappa (1/Ri)')
@@ -117,8 +197,8 @@ def setplot(plotdata):
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(1,2,1)'
     plotaxes.title = "Layer Velocities"
-    plotaxes.xlimits = 'auto'
-    plotaxes.ylimits = 'auto'
+    plotaxes.xlimits = xlimits
+    plotaxes.ylimits = ylimits_velocities
     
     # Bottom layer
     plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
@@ -136,8 +216,8 @@ def setplot(plotdata):
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(1,2,2)'
     plotaxes.title = "Wind Velocity"
-    plotaxes.xlimits = 'auto'
-    plotaxes.ylimits = 'auto'
+    plotaxes.xlimits = xlimits
+    plotaxes.ylimits = ylimits_wind
     
     plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
     plotitem.plot_var = 4
@@ -152,8 +232,8 @@ def setplot(plotdata):
     
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.title = "Wind Velocity"
-    plotaxes.xlimits = 'auto'
-    plotaxes.ylimits = [-5.0,5.0]
+    plotaxes.xlimits = xlimits
+    plotaxes.ylimits = ylimits_wind
     
     plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
     plotitem.plot_var = 4
@@ -168,8 +248,8 @@ def setplot(plotdata):
     
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.title = "Discrete Richardson Number"
-    plotaxes.xlimits = [0,1]
-    plotaxes.ylimits = [0.0,1.2]
+    plotaxes.xlimits = xlimits
+    plotaxes.ylimits = ylimits_kappa
     
     plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
     plotitem.plot_var = 5

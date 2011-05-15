@@ -16,6 +16,7 @@ import matplotlib
 import matplotlib.pyplot as mpl
 
 from pyclaw.plotters import geoplot, colormaps
+from pyclaw.data import Data
 
 # matplotlib.rcParams['figure.figsize'] = [6.0,10.0]
 
@@ -30,12 +31,15 @@ def setplot(plotdata):
     
     """
 
+    problem_data = Data(os.path.join(plotdata.outdir,'problem.data'))
+
     def jump_afteraxes(current_data):
         # Plot position of jump on plot
         mpl.hold(True)
         mpl.plot([0.5,0.5],[-10.0,10.0],'k--')
         mpl.plot([0.0,1.0],[0.0,0.0],'k--')
         mpl.hold(False)
+        mpl.title('Layer Velocities')
 
     def bathy(current_data):
         out_dir = current_data.plotdata.outdir
@@ -71,17 +75,24 @@ def setplot(plotdata):
     xlimits = [0.0,1.0]
     xlimits_zoomed = [0.45,0.55]
     
-    ylimits_depth = [-1.0,0.5]
-    ylimits_depth_zoomed = []
     # External wave
-    ylimits_velocities = [-0.6,0.6]
+    if problem_data.wave_family == 4:
+        ylimits_velocities = [-0.6,0.6]
+        ylimits_depth = [-1.0,0.3]
+        ylimits_depth_zoomed = [-1.0,0.4]
+        ylimits_velocities_zoomed = [-0.1,0.75]
     # internal wave
-    # ylimits_velocities = [-0.2,0.2] 
+    elif problem_data.wave_family == 3:
+        ylimits_velocities = [-0.1,0.1] 
+        ylimits_velocities_zoomed = ylimits_velocities
+        ylimits_depth = [-1.0,0.2]
+        ylimits_depth_zoomed = ylimits_depth
     
     # ========================================================================
     #  Fill plot
     # ========================================================================
     plotfigure = plotdata.new_plotfigure(name='full',figno=0)
+    plotfigure.show = False
     
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(2,1,1)'
@@ -145,15 +156,83 @@ def setplot(plotdata):
     plotitem.show = True
     
     # ========================================================================
+    #  Fill plot with Kappa
+    # ========================================================================
+    plotfigure = plotdata.new_plotfigure(name='full_kappa',figno=14)
+    plotfigure.show = True
+    
+    def twin_axes(cd):
+        fig = mpl.gcf()
+        fig.clf()
+        
+        x = cd.grid.dimensions[0].center
+        
+        # Draw fill plot
+        ax1 = fig.add_subplot(211)
+        
+        # Bottom layer
+        ax1.fill_between(x,bathy(cd),eta_1(cd),color='b')
+        # Top Layer
+        ax1.fill_between(x,eta_1(cd),eta_2(cd),color=(0.2,0.8,1.0))
+        # Plot bathy
+        ax1.plot(x,bathy(cd),'k')
+        # Plot internal layer
+        ax1.plot(x,eta_2(cd),'k')
+        # Plot surface
+        ax1.plot(x,eta_1(cd),'k')
+        
+        # Remove ticks from top plot
+        locs,labels = mpl.xticks()
+        labels = ['' for i in xrange(len(locs))]
+        mpl.xticks(locs,labels)
+        
+        ax1.set_title('Multilayer Surfaces t = %3.2f' % cd.t)
+        ax1.set_xlim((0.0,1.0))
+        ax1.set_ylim(ylimits_depth)
+        # ax1.set_xlabel('x')
+        ax1.set_ylabel('Depth')
+        
+        # Draw velocity and kappa plot
+        ax1 = fig.add_subplot(212)     # the velocity scale
+        ax2 = ax1.twinx()              # the kappa scale
+        
+        # Bottom layer velocity
+        bottom_layer = ax1.plot(x,u_2(cd),'k-',label="Bottom Layer Velocity")
+        # Top Layer velocity
+        top_layer = ax1.plot(x,u_1(cd),'b-',label="Top Layer velocity")#,color=(0.2,0.8,1.0))
+        
+        # Kappa
+        kappa_line = ax2.plot(x,cd.q[:,5],color='r',label="Kappa")
+        ax2.plot(x,np.ones(x.shape),'r--')
+
+        ax1.plot([problem_data.bathy_location,problem_data.bathy_location],ylimits_velocities,'k--')
+        ax1.legend((bottom_layer,top_layer,kappa_line),('Bottom Layer','Top Layer',"Kappa"),loc=4)
+        ax1.set_title('Layer Velocities and Kappa')
+        ax1.set_ylabel('Velocities (m/s)')
+        ax2.set_ylabel('Kappa (1/Ri)')
+        ax1.set_xlim((cd.xlower,cd.xupper))
+        ax1.set_ylim(ylimits_velocities)
+        ax2.set_ylim((0.0,1.2))
+        
+        # mpl.subplots_adjust(hspace=0.1)
+    
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.afteraxes = twin_axes
+    
+    # ========================================================================
     #  Fill plot zoom
     # ========================================================================
     plotfigure = plotdata.new_plotfigure(name='full_zoom',figno=1)
+    
+    def fill_zoom_afteraxes(cd):
+        mpl.title('Multilaye Surfaces at t = %3.2f' % cd.t)
     
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(2,1,1)'
     plotaxes.title = 'Multilayer Surfaces'
     plotaxes.xlimits = xlimits_zoomed
-    plotaxes.ylimits = ylimits_depth
+    plotaxes.ylimits = ylimits_depth_zoomed
+    plotaxes.afteraxes = fill_zoom_afteraxes
      
     # Top layer
     plotitem = plotaxes.new_plotitem(plot_type='1d_fill_between')
@@ -195,7 +274,7 @@ def setplot(plotdata):
     plotaxes.axescmd = 'subplot(2,1,2)'
     plotaxes.title = "Layer Velocities"
     plotaxes.xlimits = xlimits_zoomed
-    plotaxes.ylimits = ylimits_velocities
+    plotaxes.ylimits = ylimits_velocities_zoomed
     plotaxes.afteraxes = jump_afteraxes
     
     # Bottom layer

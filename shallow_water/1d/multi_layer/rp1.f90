@@ -24,15 +24,13 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
     double precision, dimension(4) :: flux_l,flux_r
     double precision, dimension(2) :: h_l,u_l,hu_l,h_r,u_r,hu_r,h_ave,u_ave
     double precision :: b_l,b_r,gamma_l,gamma_r,momentum_transfer,tau,w_l,w_r
-    double precision :: kappa_l,kappa_r,total_depth_l,total_depth_r,wind_speed
+    double precision :: total_depth_l,total_depth_r,wind_speed
     double precision :: mult_depth_l,mult_depth_r,eta_l(2),eta_r(2)
     logical :: dry_state_l(2), dry_state_r(2)
         
     integer, parameter :: lwork = 4*4
     double precision :: real_evalues(4),imag_evalues(4)
     double precision :: empty,work(1,lwork)
-    
-    double precision, parameter :: RICH_TOLERANCE = 0.95d0
 
     ! Common block
     double precision :: dt,dx,t
@@ -64,12 +62,14 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             ! Check for dry states in this layer
             if (h_l(j) < dry_tolerance) then
                 dry_state_l(j) = .true.
+                h_l(j) = 0.d0
                 u_l(j) = 0.d0
             else
                 u_l(j) = hu_l(j) / h_l(j)
             endif
             if (h_r(j) < dry_tolerance) then
                 dry_state_r(j) = .true.
+                h_r(j) = 0.d0
                 u_r(j) = 0.d0
             else
                 u_r(j) = hu_r(j) / h_r(j)
@@ -80,17 +80,6 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         b_r = auxl(i,1)
         w_l = auxr(i-1,2)
         w_r = auxl(i,2)
-        
-        kappa_l = (u_l(1)-u_l(2))**2 / (g*one_minus_r*sum(h_l))
-        kappa_r = (u_r(1)-u_r(2))**2 / (g*one_minus_r*sum(h_r))
-        if ((kappa_l > RICH_TOLERANCE).and.(.not.dry_state_l(2))) then
-            print "(a,i4,a,d16.8)","Hyperbolicity may have failed, kappa(",i,") = ",kappa_l
-        else if ((kappa_r > RICH_TOLERANCE).and.(.not.dry_state_r(2))) then
-            print "(a,i4,a,d16.8)","Hyperbolicity may have failed, kappa(",i,") = ",kappa_r
-        endif
-        
-        auxl(i,5) = kappa_l
-        auxr(i-1,5) = kappa_r
         
         ! ====================================================================
         ! Calculate eigen-space values
