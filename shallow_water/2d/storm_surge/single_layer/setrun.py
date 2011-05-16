@@ -93,7 +93,7 @@ def setrun(claw_pkg='geoclaw'):
     clawdata.meqn = 3
 
     # Number of auxiliary variables in the aux array (initialized in setaux)
-    clawdata.maux = 9
+    clawdata.maux = 10
     
     # Index of aux array corresponding to capacity function, if there is one:
     clawdata.mcapa = 0
@@ -233,7 +233,7 @@ def setrun(claw_pkg='geoclaw'):
 
 
     # max number of refinement levels:
-    mxnest = 5
+    mxnest = 4
 
     clawdata.mxnest = -mxnest   # negative ==> anisotropic refinement in x,y,t
 
@@ -249,7 +249,7 @@ def setrun(claw_pkg='geoclaw'):
     #   'center',  'capacity', 'xleft', or 'yleft'  (see documentation).
 
     clawdata.auxtype = ['center','center','center','center','center','center',
-                        'center','center','center']
+                        'center','center','center','center']
 
 
     clawdata.tol = -1.0     # negative ==> don't use Richardson estimator
@@ -321,7 +321,7 @@ def setgeo(rundata):
     # to specify regions of refinement append lines of the form
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
     # geodata.regions.append([1, 1, 0.e0, 1.e10, -100.,100., -100.,100.])
-    # geodata.regions.append([1, 2, 0.e0, 1.e10,    0.,100., -100.,100.])
+    geodata.regions.append([4, 4, -RAMP_UP_TIME, 1.e10, 400e3,525e3,-325e3,325e3])
 
     # == setgauges.data values ==
     geodata.gauges = []
@@ -355,11 +355,12 @@ def set_hurricane_data(ramp_up_time=RAMP_UP_TIME):
     data.momentum_refinement = False
     data.max_speed_nest = 5
     # data.speed_nest = [1.0,2.0,3.0,4.0,5.0]
-    data.speed_nest = [0.5,1.0,2.0,3.0,4.0,5.0]
+    # data.speed_nest = [0.5,1.0,2.0,3.0,4.0,5.0]
+    data.speed_nest = [0.25,0.5,1.0,2.0,3.0,4.0]
     
     # Hurricane location based refinement
-    data.max_R_nest = 3
-    data.R_refine = [60.0e3,40e3,20e3]
+    data.max_R_nest = 4
+    data.R_refine = [60.0e3,50e3,40e3,30e3]
         
     # Wind strength based refinement
     data.max_wind_nest = 3
@@ -419,14 +420,14 @@ def set_multilayer_data():
     data.bathy_left = -4000
     data.bathy_right = -200
     
-    # Bathy settings for type == 2        
+    # Bathy settings for type == 2 or 3       
     data.x0 = 350e3
     data.x1 = 450e3
     data.x2 = 480e3
     data.basin_depth = -3000.0
     data.shelf_depth = -100.0
-    data.beach_slope = 0.05
-    data.h = 0.0
+    data.beach_slope = 0.025
+    data.h = 100.0
     
     return data
 

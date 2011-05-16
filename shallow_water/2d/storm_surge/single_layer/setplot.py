@@ -457,83 +457,121 @@ def setplot(plotdata):
     # ========================================================================
     #  Profile Plots
     # ========================================================================
-    plotfigure = plotdata.new_plotfigure(name='profile', figno=4)
-    plotfigure.show = False
+    # Profile variables
+    slice_value = 0.0
+    def slice_index(cd):
+        if cd.grid.y.lower < slice_value < cd.grid.y.upper:
+            return int((slice_value - cd.grid.y.lower) / cd.dy - 0.5)
+        else:
+            return None
     
-    def after_axes_profile(current_data):
+    def bathy_profile(current_data):
+        index = slice_index(current_data)
+        if index:
+            return current_data.x[:,index], b(current_data)[:,index]
+        else:
+            return None, None
+        
+    def surface_profile(current_data):
+        index = slice_index(current_data)
+        if index:
+            return current_data.x[:,index], eta(current_data)[:,index]
+        else:
+            return None, None
+            
+    def profile_afteraxes(current_data):
         hour_figure_title(current_data)
-        loc,lable = plt.xticks()
-        lable = loc/1.e3
-        plt.xticks(loc,lable)
+        loc,label = plt.xticks()
+        label = loc/1.e3
+        plt.xticks(loc,label)
         plt.xlabel('km')
         if current_data.plotaxes.title == 'Wind':
             plt.ylabel('m/s')
         else:
             plt.ylabel('m')
-    
-    plotaxes = plotfigure.new_plotaxes()
-    plotaxes.axescmd = 'subplot(211)'
-    plotaxes.xlimits = [amrdata.xlower,amrdata.xupper]
-    plotaxes.title = "Wind"
-    plotaxes.afteraxes = after_axes_profile
-    
-    # Surface
-    plotitem = plotaxes.new_plotitem(plot_type='1d_from_2d_data')
-    plotitem.plot_var = geoplot.surface
-    def sea_surface_profile(current_data):
-    #     if current_data.level == 1:
-    #         q = current_data.var
-    #         return current_data.x[:,0],q[:,0]
-        return None
-    plotitem.map_2d_to_1d = sea_surface_profile
-    plotitem.plotstyle = '-k'
-    plotitem.show = False
-    
-    # Speed
-    plotitem = plotaxes.new_plotitem(plot_type='1d_from_2d_data')
-    plotitem.plot_var = water_speed
-    def sea_speed_profile(current_data):
-        if current_data.level == 1:
-            q = current_data.var
-            x = current_data.x
-            return x[:,0],q[:,0]
-        return None
-    plotitem.map_2d_to_1d = sea_speed_profile
-    plotitem.plotstyle = '-k'
-    plotitem.show = False
-    
-    # Wind
-    plotitem = plotaxes.new_plotitem(plot_type='1d_from_2d_data')
-    def wind_speed(current_data):
-        return np.sqrt(current_data.q[:,:,4]**2 + current_data.q[:,:,5]**2)
-    def wind_speed_profile(current_data):
-        q = current_data.var
-        index = np.floor(amrdata.my / 2)
-        return current_data.x[:,index],q[:,index]
-    plotitem.plot_var = wind_speed
-    plotitem.map_2d_to_1d = wind_speed_profile
-    plotitem.plotstyle = '-k'
-    plotitem.show = False
-    
-    plotaxes = plotfigure.new_plotaxes()
-    plotaxes.axescmd = 'subplot(212)'
-    plotaxes.xlimits = [amrdata.xlower,amrdata.xupper]
-    plotaxes.title = "Bathymetery"
-    plotaxes.afteraxes = after_axes_profile
-    plotitem.amr_color=['r','b','g']
-    
-    plotitem = plotaxes.new_plotitem(plot_type='1d_from_2d_data')    
-    def bathy(current_data):
-        return current_data.q[:,:,3] - current_data.q[:,:,0]
-    plotitem.plot_var = bathy
-    def bath_profile(current_data):
-        q = current_data.var
-        index = np.floor(amrdata.my / 2)
-        return current_data.x[:,index],q[:,index]
-    plotitem.map_2d_to_1d = bath_profile
-    plotitem.plotstyle = '-k'
-    plotitem.show = False
+            
+        t = current_data.t
+        # Hurricane eye
+        x = t * hurricane_data.hurricane_velocity[0] + hurricane_data.R_eye_init[0]
+        plt.hold(True)
+        plt.plot(x,0.0,'r+')
+        plt.hold(False)
         
+            
+    def remove_labels_profile(cd,direction='x'):
+        plt.hold(True)
+        if direction == 'x':
+            plt.xlabel('')
+            locs,labels = plt.xticks()
+            # labels = np.flipud(locs)/1.e3
+            labels = ['' for i in xrange(len(locs))]
+            plt.xticks(locs,labels)
+            plt.ylabel('m')
+        elif direction == 'y':
+            plt.ylabel('')
+            locs,labels = plt.yticks()
+            # labels = np.flipud(locs)/1.e3
+            labels = ['' for i in xrange(len(locs))]
+            plt.yticks(locs,labels)
+            plt.xlabel('m')
+        plt.hold(False)
+        
+    def labels_profile(cd,direction='x'):
+        if direction == 'x':
+            loc,label = plt.xticks()
+            label = loc/1.e3
+            plt.xticks(loc,label)
+            plt.xlabel('km')
+            if cd.plotaxes.title == 'Wind':
+                plt.ylabel('m/s')
+            else:
+                plt.ylabel('m')
+        elif direction == 'y':
+            loc,label = plt.yticks()
+            label = loc/1.e3
+            plt.yticks(loc,label)
+            plt.ylabel('km')
+            if cd.plotaxes.title == 'Wind':
+                plt.xlabel('m/s')
+            else:
+                plt.xlabel('m')
+                    
+    def bathy_ref_lines_profile(cd,limits):
+        plt.hold(True)
+        for line in ref_lines:
+            plt.plot([line,line],limits,'k--')
+        plt.hold(False)
+        
+    def eye_location_profile(cd):
+        x = cd.t * hurricane_data.hurricane_velocity[0] + hurricane_data.R_eye_init[0]
+        plt.hold(True)
+        plt.plot(x,0.0,'r+')
+        plt.hold(False)
+        
+    def profile_afteraxes(current_data):
+        hour_figure_title(current_data)
+        labels_profile(current_data)
+        # bathy_ref_lines_profile(current_data,surface_limits)
+        eye_location_profile(current_data)
+    
+    
+    plotfigure = plotdata.new_plotfigure(name='profile', figno=4)
+    plotfigure.show = True
+        
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.title = 'Profiles'
+    plotaxes.xlimits = xlimits
+    # plotaxes.ylimits = surface_limits
+    plotaxes.afteraxes = profile_afteraxes
+    
+    plotitem = plotaxes.new_plotitem(plot_type="1d_from_2d_data")
+    plotitem.map_2d_to_1d = surface_profile
+    plotitem.amr_plotstyle = ['-','-.','+','x','.']
+    plotitem.color = 'b'#(0.2,0.8,1.0)
+    plotitem = plotaxes.new_plotitem(plot_type='1d_from_2d_data')
+    plotitem.map_2d_to_1d = bathy_profile
+    plotitem.amr_plotstyle = ['-','-.','+','x','.']  
+    plotitem.color = 'k'
         
     # ========================================================================
     #  Bathy Profile
