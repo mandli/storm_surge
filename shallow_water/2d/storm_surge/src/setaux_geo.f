@@ -85,8 +85,19 @@ c           # for lat-lon grid on sphere:
                     else if (x2 < xcell) then
                         aux(i,j,1) = beach_slope*(xcell-x2)+shelf_depth
                     endif
-                    if (aux(i,j,1) > 0.d0 .and. x2 > xcell) then
-                        continue
+                else if (bathy_type == 3) then
+                    ! Bottom of basin
+                    if (xcell < x0) then 
+                        aux(i,j,1) = basin_depth
+                    ! Shelf slope
+                    else if (x0 <= xcell .and. xcell < eta_int) then
+                        aux(i,j,1) = shelf_slope*(xcell-x0)+basin_depth
+                    ! Shelf
+                    else if (eta_int <= xcell .and. xcell < x2) then
+                        aux(i,j,1) = shelf_depth
+                    ! Beach slope
+                    else if (x2 <= xcell) then
+                        aux(i,j,1) = beach_slope*(xcell-x2)+shelf_depth
                     endif
                 else
                      aux(i,j,1) = bathy_left   
@@ -115,8 +126,6 @@ c     This actually only handles 2 layers right now...
               enddo
           enddo
       endif
-
-      
 
       return
 

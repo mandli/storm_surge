@@ -79,9 +79,10 @@ def setrun(claw_pkg='geoclaw'):
         
 
     # Number of grid cells:
-    clawdata.mx = 70
+    levels = 4
+    clawdata.mx = 70*levels*2
     # clawdata.mx = 560
-    clawdata.my = 60
+    clawdata.my = 60*levels*2
     # clawdata.my = 480
     # clawdata.mx = 100
     # clawdata.my = 100
@@ -94,7 +95,7 @@ def setrun(claw_pkg='geoclaw'):
     clawdata.meqn = 6
 
     # Number of auxiliary variables in the aux array (initialized in setaux)
-    clawdata.maux = 8
+    clawdata.maux = 10
     
     # Index of aux array corresponding to capacity function, if there is one:
     clawdata.mcapa = 0
@@ -176,10 +177,10 @@ def setrun(claw_pkg='geoclaw'):
     
     # Desired Courant number if variable dt used, and max to allow without 
     # retaking step with a smaller dt:
-    # clawdata.cfl_desired = 0.8
-    # clawdata.cfl_max = 0.9
-    clawdata.cfl_desired = 0.4
-    clawdata.cfl_max = 0.5
+    clawdata.cfl_desired = 0.8
+    clawdata.cfl_max = 0.9
+    # clawdata.cfl_desired = 0.4
+    # clawdata.cfl_max = 0.5
     
     # Maximum number of time steps to allow between output times:
     clawdata.max_steps = 5000
@@ -192,10 +193,10 @@ def setrun(claw_pkg='geoclaw'):
     # ------------------
 
     # Order of accuracy:  1 => Godunov,  2 => Lax-Wendroff plus limiters
-    clawdata.order = 1
+    clawdata.order = 2
     
     # Transverse order for 2d or 3d (not used in 1d):
-    clawdata.order_trans = 0
+    clawdata.order_trans = 2
     
     # Number of waves in the Riemann solution:
     clawdata.mwaves = 6
@@ -237,7 +238,7 @@ def setrun(claw_pkg='geoclaw'):
 
 
     # max number of refinement levels:
-    mxnest = 5
+    mxnest = 1
 
     clawdata.mxnest = -mxnest   # negative ==> anisotropic refinement in x,y,t
 
@@ -253,7 +254,7 @@ def setrun(claw_pkg='geoclaw'):
     #   'center',  'capacity', 'xleft', or 'yleft'  (see documentation).
 
     clawdata.auxtype = ['center','center','center','center','center','center',
-                        'center','center']
+                        'center','center','center','center']
 
 
     clawdata.tol = -1.0     # negative ==> don't use Richardson estimator
@@ -312,7 +313,7 @@ def setgeo(rundata):
     # for topography, append lines of the form
     #   [topotype, minlevel, maxlevel, t1, t2, fname]
     # geodata.topofiles.append([2, 1, 1, 0., 1.e10, 'bowl.topotype2'])
-    geodata.topofiles.append([1, 1, 5, 0., 1e10, 'topo.data'])
+    # geodata.topofiles.append([1, 1, 5, 0., 1e10, 'topo.data'])
     
     # == setdtopo.data values ==
     geodata.dtopofiles = []
@@ -389,7 +390,7 @@ def set_hurricane_data(ramp_up_time=RAMP_UP_TIME):
     data.wind_tolerance = 1e-6
     
     # Path of hurricane, speed in m/s
-    velocity = 0.0
+    velocity = 5.0
     angle = 0.0 * np.pi
     # Speeds of hurricane
     data.hurricane_velocity = (velocity * np.cos(angle),velocity * np.sin(angle)) 
@@ -416,7 +417,7 @@ def set_multilayer_data():
     data.rho[1] = data.rho[0] / 0.90
     
     # Algorithm Parameters
-    data.eigen_method = 4
+    data.eigen_method = 2
     data.richardson_tolerance = 0.95
     data.wave_tolerance = [0.1,0.5]
     data.dry_limit = True
@@ -431,21 +432,21 @@ def set_multilayer_data():
     data.sigma = 25e3
     
     # Bathy settings
-    data.bathy_type = 2
+    data.bathy_type = 3
     
     # Bathy settings for type == 1
     data.bathy_location = 450e3
     data.bathy_left = -4000
     data.bathy_right = -200
     
-    # Bathy settings for type == 2        
+    # Bathy settings for type == 2 and 3   
     data.x0 = 350e3
     data.x1 = 450e3
     data.x2 = 480e3
     data.basin_depth = -3000.0
     data.shelf_depth = -100.0
     data.beach_slope = 0.05
-    data.h = 0.0
+    data.h = 100.0
     
     return data
     

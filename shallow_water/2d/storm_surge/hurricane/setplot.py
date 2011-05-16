@@ -86,6 +86,63 @@ def setplot(plotdata):
         plt.plot(x,0.0,'r+')
         plt.hold(False)
         
+            
+    def remove_labels_profile(cd,direction='x'):
+        plt.hold(True)
+        if direction == 'x':
+            plt.xlabel('')
+            locs,labels = plt.xticks()
+            # labels = np.flipud(locs)/1.e3
+            labels = ['' for i in xrange(len(locs))]
+            plt.xticks(locs,labels)
+            plt.ylabel('m')
+        elif direction == 'y':
+            plt.ylabel('')
+            locs,labels = plt.yticks()
+            # labels = np.flipud(locs)/1.e3
+            labels = ['' for i in xrange(len(locs))]
+            plt.yticks(locs,labels)
+            plt.xlabel('m')
+        plt.hold(False)
+        
+    def labels_profile(cd,direction='x'):
+        if direction == 'x':
+            loc,label = plt.xticks()
+            label = loc/1.e3
+            plt.xticks(loc,label)
+            plt.xlabel('km')
+            if cd.plotaxes.title == 'Wind':
+                plt.ylabel('m/s')
+            else:
+                plt.ylabel('m')
+        elif direction == 'y':
+            loc,label = plt.yticks()
+            label = loc/1.e3
+            plt.yticks(loc,label)
+            plt.ylabel('km')
+            if cd.plotaxes.title == 'Wind':
+                plt.xlabel('m/s')
+            else:
+                plt.xlabel('m')
+                    
+    def bathy_ref_lines_profile(cd,limits):
+        plt.hold(True)
+        for line in ref_lines:
+            plt.plot([line,line],limits,'k--')
+        plt.hold(False)
+        
+    def eye_location_profile(cd):
+        x = cd.t * hurricane_data.hurricane_velocity[0] + hurricane_data.R_eye_init[0]
+        plt.hold(True)
+        plt.plot(x,0.0,'r+')
+        plt.hold(False)
+        
+    def profile_afteraxes(current_data):
+        hour_figure_title(current_data)
+        labels_profile(current_data)
+        bathy_ref_lines_profile(current_data,[-2000,0])
+        eye_location_profile(current_data)
+        
     def hour_figure_title(current_data):
         t = current_data.t
         title = current_data.plotaxes.title
@@ -294,6 +351,35 @@ def setplot(plotdata):
         plt.quiverkey(Q,0.15,0.95,0.5*max_speed,label,labelpos='W')
         plt.hold(False)
     
+    # Profile variables
+    slice_value = 0.0
+    def slice_index(cd):
+        if cd.grid.y.lower < slice_value < cd.grid.y.upper:
+            return int((slice_value - cd.grid.y.lower) / cd.dy - 0.5)
+        else:
+            return None
+    
+    def bathy_profile(current_data):
+        index = slice_index(current_data)
+        if index:
+            return current_data.x[:,index], b(current_data)[:,index]
+        else:
+            return None
+    
+    def lower_surface(current_data):
+        index = slice_index(current_data)
+        if index:
+            return current_data.x[:,index], eta2(current_data)[:,index]
+        else:
+            return None
+        
+    def upper_surface(current_data):
+        index = slice_index(current_data)
+        if index:
+            return current_data.x[:,index], eta1(current_data)[:,index]
+        else:
+            return None
+    
     # ========================================================================
     #  Plot items
     # ========================================================================
@@ -313,6 +399,19 @@ def setplot(plotdata):
             plotitem.add_colorbar = True
             plotitem.amr_gridlines_show = [0,0,0]
             plotitem.amr_gridedges_show = [1,1,1]
+            
+        elif plot_type == 'profile':
+            plotitem = plotaxes.new_plotitem(plot_type='1d_from_2d_data')
+            if surface == 1:
+                plotitem.plot_var = eta1
+                plotitem.map_2d_to_1d = upper_surface
+            elif surface == 2:
+                plotitem.plot_var = eta2
+                plotitem.map_2d_to_1d = lower_surface
+            if bounds is not None:
+                plotitem.ylimits = bounds
+            plotitem.amr_plotstyle = ['-','-.','+','x','.']
+            # plotitem.color = (0.2,0.8,1.0)
 
         elif plot_type == 'contour':
             plotitem = plotaxes.new_plotitem(plot_type='2d_contour')
@@ -340,6 +439,19 @@ def setplot(plotdata):
             plotitem.add_colorbar = True
             plotitem.amr_gridlines_show = [0,0,0]
             plotitem.amr_gridedges_show = [1,1,1]
+        elif plot_type == 'profile':
+            plotitem = plotaxes.new_plotitem(plot_type='1d_from_2d_data')
+            plotitem.map_2d_to_1d = upper_surface
+            if surface == 1:
+                plotitem.plot_var = 0
+            elif surface == 2:
+                plotitem.plot_var = 3
+            if bounds is not None:
+                plotitem.ylimits = bounds
+            plotitem.amr_plotstyle = ['-','-.','+','x','.']
+            # plotitem.color = (0.2,0.8,1.0)
+        else:
+            raise NotImplementedError("Plot type %s not implemented" % plot_type)
     
     def add_speed(plotaxes,layer,bounds=None,plot_type='pcolor'):        
         if plot_type == 'pcolor' or plot_type == 'imshow':
@@ -355,8 +467,21 @@ def setplot(plotdata):
             plotitem.add_colorbar = True
             plotitem.amr_gridlines_show = [0,0,0]
             plotitem.amr_gridedges_show = [1]
+        elif plot_type == 'profile':
+            plotitem = plotaxes.new_plotitem(plot_type='1d_from_2d_data')
+            plotitem.map_2d_to_1d = upper_surface
+            if surface == 1:
+                plotitem.plot_var = water_speed1
+            elif surface == 2:
+                plotitem.plot_var = water_speed2
+            if bounds is not None:
+                plotitem.ylimits = bounds
+            plotitem.amr_plotstyle = ['-','-.','+','x','.']
+            # plotitem.color = (0.2,0.8,1.0)
         elif plot_type == 'contour':
             pass
+        else:
+            raise NotImplementedError("Plot type %s not implemented" % plot_type)
 
     def add_x_velocity(plotaxes,layer,plot_type='pcolor',bounds=None):
         if plot_type == 'pcolor' or plot_type == 'imshow':
@@ -394,7 +519,7 @@ def setplot(plotdata):
     
     
     # Land
-    def add_land(plotaxes,plot_type='pcolor'):
+    def add_land(plotaxes,bounds=None,plot_type='pcolor'):
         r"""Add plot item for land"""
         
         if plot_type == 'pcolor':
@@ -407,6 +532,14 @@ def setplot(plotdata):
             plotitem.add_colorbar = False
             plotitem.amr_gridlines_show = [0,0,0]
             plotitem.amr_gridedges_show = [1,1,1]
+        elif plot_type == 'profile':
+            plotitem = plotaxes.new_plotitem(plot_type='1d_from_2d_data')
+            plotitem.plot_var = geoplot.land
+            plotitem.map_2d_to_1d = bathy_profile
+            plotitem.amr_plotstyle = ['-','-.','+','x','.']
+            if bounds is not None:
+                plotitem.ylimits = bounds
+                
         elif plot_type == 'contour':            
             plotitem = plotaxes.new_plotitem(plot_type='2d_contour')
             plotitem.plot_var = geoplot.land
@@ -437,6 +570,7 @@ def setplot(plotdata):
     
     surface_zoomed = [eta[0] - 0.5,eta[0]+0.5]
     internal_zoomed = [eta[1] - 5.0,eta[1] + 5.0]
+    bathy_limits = [-3000,100]
     
     # Single layer test limits
     # top_surface_limits = [eta[0]-2.5,eta[0]+2.5]
@@ -774,127 +908,86 @@ def setplot(plotdata):
     #  Profile Plots
     # ========================================================================
     plotfigure = plotdata.new_plotfigure(name='profile', figno=4)
-    plotfigure.show = False
+    plotfigure.show = True
     
-    # Top surface
     plotaxes = plotfigure.new_plotaxes()
+    plotaxes.title = 'Profiles'
     plotaxes.xlimits = xlimits
-    plotaxes.ylimits = [-2000,20]
-    plotaxes.title = "Profile of depth"
-    plotaxes.afteraxes = profile_afteraxes
-    
-    slice_index = 30
-    
-    # Internal surface
-    def bathy_profile(current_data):
-        if current_data.level == 1:
-            return current_data.x[:,slice_index], b(current_data)[:,slice_index]
-        return None
-    
-    def lower_surface(current_data):
-        return current_data.x[:,slice_index], eta2(current_data)[:,slice_index]
         
-    
-    def upper_surface(current_data):
-        return current_data.x[:,slice_index], eta1(current_data)[:,slice_index]
-        
-    
     # Bathy
-    plotitem = plotaxes.new_plotitem(plot_type='1d_from_2d_data')
-    plotitem.map_2d_to_1d = bathy_profile
-    plotitem.plot_var = 0
-    plotitem.amr_plotstyle = ['-','+','x']
-    plotitem.color = 'k'
-    plotitem.show = True
+    add_land(plotaxes,bounds=None,plot_type='profile')
     
     # Internal Interface
-    plotitem = plotaxes.new_plotitem(plot_type='1d_from_2d_data')
-    plotitem.map_2d_to_1d = lower_surface
-    plotitem.plot_var = 7
-    plotitem.amr_plotstyle = ['-','+','x']
-    plotitem.color = 'b'
-    plotitem.show = True
+    add_surface_elevation(plotaxes,2,bounds=internal_zoomed,plot_type='profile')
     
     # Upper Interface
-    plotitem = plotaxes.new_plotitem(plot_type='1d_from_2d_data')
-    plotitem.map_2d_to_1d = upper_surface
-    plotitem.plot_var = 6
-    plotitem.amr_plotstyle = ['-','+','x']
-    plotitem.color = (0.2,0.8,1.0)
-    plotitem.show = True
+    add_surface_elevation(plotaxes,1,bounds=surface_zoomed,plot_type='profile')
     
     # ========================================================================
     #  Combined Profile Plot
     # ========================================================================
     plotfigure = plotdata.new_plotfigure(name='combined_surface',figno=130)
-    plotfigure.show = False
+    plotfigure.show = True
     plotfigure.kwargs = {'figsize':(6,6)}
     
+    def top_afteraxes(cd):
+        remove_labels_profile(cd)
+        hour_figure_title(cd)
+        eye_location_profile(cd)
+        bathy_ref_lines_profile(cd,top_surface_limits)
+        
     # Top surface
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(2,1,1)'
     plotaxes.title = 'Surfaces'
     plotaxes.xlimits = xlimits
-    # plotaxes.ylimits = surface_zoomed
-    def top_afteraxes(cd):
-        plt.hold(True)
-        plt.xlabel('')
-        locs,labels = plt.xticks()
-        # labels = np.flipud(locs)/1.e3
-        labels = ['' for i in xrange(len(locs))]
-        plt.xticks(locs,labels)
-        plt.plot([450e3,450e3],[-1,1],'--k')
-        plt.ylabel('m')
-        plt.hold(False)
+    plotaxes.ylimits = surface_zoomed
+        
     plotaxes.afteraxes = top_afteraxes
     plotitem = plotaxes.new_plotitem(plot_type="1d_from_2d_data")
     plotitem.map_2d_to_1d = upper_surface
-    plotitem.amr_plotstyle = ['-','+','x']
-    # plotitem.color = (0.2,0.8,1.0)
-    plotitem.show = True
+    plotitem.amr_plotstyle = ['-','-.','+','x','.']
+    plotitem.color = (0.2,0.8,1.0)
+    plotitem = plotaxes.new_plotitem(plot_type='1d_from_2d_data')
+    plotitem.map_2d_to_1d = bathy_profile
+    plotitem.amr_plotstyle = ['-','-.','+','x','.']  
+    plotitem.color = 'k'  
+    
+    def internal_surf_afteraxes(cd):
+        labels_profile(cd)
+        hour_figure_title(cd)
+        eye_location_profile(cd)
+        bathy_ref_lines_profile(cd,internal_surface_limits)
     
     # Internal surface
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(2,1,2)'
     plotaxes.title = ''
     plotaxes.xlimits = xlimits
-    # plotaxes.ylimits = internal_zoomed
-    def internal_surf_afteraxes(cd):
-        plt.hold(True)
-        # km_labels(cd)
-        plt.title('')
-        plt.ylabel('m')
-        plt.subplots_adjust(hspace=0.05)
-        plt.plot([450e3,450e3],[-301,-299],'--k')
-        plt.hold(False)
+    plotaxes.ylimits = internal_zoomed
     plotaxes.afteraxes = internal_surf_afteraxes
+    
     plotitem = plotaxes.new_plotitem(plot_type='1d_from_2d_data')
     plotitem.map_2d_to_1d = lower_surface
     plotitem.amr_plotstyle = ['-','+','x']
-    plotitem.color = 'k'
-    plotitem.show = True  
+    plotitem.color = 'b'
+    plotitem = plotaxes.new_plotitem(plot_type='1d_from_2d_data')
+    plotitem.map_2d_to_1d = bathy_profile
+    plotitem.amr_plotstyle = ['-','-.','+','x','.'] 
+    plotitem.color = 'k'   
     
         
     # ========================================================================
     #  Bathy Profile
     # ========================================================================
     plotfigure = plotdata.new_plotfigure(name='bathy_profile',figno=20)
-    plotfigure.show = False
+    plotfigure.show = True
     
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.xlimits = xlimits
     plotaxes.title = "Bathymetry Profile"
-    plotaxes.scaled = 'equal'
     
-    plotitem = plotaxes.new_plotitem(plot_type='2d_imshow')
-    plotitem.plot_var = b
-    plotitem.imshow_cmin = -4000
-    plotitem.imshow_cmax = 10
-    plotitem.add_colorbar = True
-    plotitem.amr_imshow_show = [1,1,1]
-    plotitem.amr_gridlines_show = [0,0,0]
-    plotitem.amr_gridedges_show = [1,1,1]
-    plotitem.show = True
+    add_land(plotaxes,bounds=bathy_limits,plot_type='profile')
     
     
     # ========================================================================

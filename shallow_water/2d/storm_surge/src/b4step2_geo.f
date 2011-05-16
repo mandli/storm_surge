@@ -73,8 +73,9 @@ c     # set hu = hv = 0 in all these cells
      & dy,t,aux(:,:,6))
      
       ! Check Richardson number
+      if (layers > 1) then
       do i=1,mx
-          do j=1,mx
+          do j=1,my
               dry_state = .false.
               do layer=1,2
                   m = 3*(layer-1)
@@ -89,18 +90,19 @@ c     # set hu = hv = 0 in all these cells
                   endif
               enddo
               
-              aux(i,j,7) = (u(1) - u(2))**2 / (g*one_minus_r*sum(h))
-              if ((aux(i,j,7) > richardson_tolerance)
+              aux(i,j,9) = (u(1) - u(2))**2 / (g*one_minus_r*sum(h))
+              if ((aux(i,j,9) > richardson_tolerance)
      &          .and.(.not.dry_state(2))) then
                   print 100,i,j,aux(i,j,7)
               endif
-              aux(i,j,8) = (v(1) - v(2))**2 / (g*one_minus_r*sum(h))
-              if ((aux(i,j,8) > richardson_tolerance)
+              aux(i,j,10) = (v(1) - v(2))**2 / (g*one_minus_r*sum(h))
+              if ((aux(i,j,10) > richardson_tolerance)
      &          .and.(.not.dry_state(2))) then
                   print 100,i,j,aux(i,j,8)
               endif
           enddo
       enddo
+      endif
       
 100   format ("Hyperbolicity failed, kappa(",i4,",",i4,") = ",d16.8)
 

@@ -109,11 +109,18 @@ c
       go to (100,110,120,130) mthbc(1)+1
 c
   100 continue
-c     # user-specified boundary conditions go here in place of error output
-      write(6,*) 
-     &   '*** ERROR *** mthbc(1)=0 and no BCs specified in bc2amr'
-      stop
-      go to 199
+c     Wall boundary conditions for two layer swe
+      do i=1,nxl
+          do j=1,ncol
+              aux(i,j,1) = aux(nxl+1,j,1)  !inserted for bc2amr_noslope
+              val(i,j,1) = val(nxl+1,j,1)
+              val(i,j,2) = -val(nxl+1,j,2)
+              val(i,j,3) = val(nxl+1,j,3)
+              val(i,j,4) = val(nxl+1,j,4)
+              val(i,j,5) = -val(nxl+1,j,5)
+              val(i,j,6) = val(nxl+1,j,6)
+          enddo
+      enddo
 c
   110 continue
 c     # zero-order extrapolation:
@@ -163,11 +170,18 @@ c
       go to (200,210,220,230) mthbc(2)+1
 c
   200 continue
-c     # user-specified boundary conditions go here in place of error output
-      write(6,*) 
-     &   '*** ERROR *** mthbc(2)=0 and no BCs specified in bc2amr'
-      stop
-      go to 299
+c     Wall boundary conditions for 2 layer swe
+      do i=ibeg,nrow
+          do j=1,ncol
+              aux(i,j,1) = aux(ibeg-1,j,1) !inserted for bc2amr_noslope
+              val(i,j,1) = val(ibeg-1,j,1)
+              val(i,j,2) = -val(ibeg-1,j,2)
+              val(i,j,3) = val(ibeg-1,j,3)
+              val(i,j,4) = val(ibeg-1,j,4)
+              val(i,j,5) = -val(ibeg-1,j,5)
+              val(i,j,6) = val(ibeg-1,j,6)
+          enddo
+      enddo
 
   210 continue
 c     # zero-order extrapolation:
@@ -216,11 +230,18 @@ c
       go to (300,310,320,330) mthbc(3)+1
 c
   300 continue
-c     # user-specified boundary conditions go here in place of error output
-      write(6,*) 
-     &   '*** ERROR *** mthbc(3)=0 and no BCs specified in bc2amr'
-      stop
-      go to 399
+c     Wall boundary conditions for 2 layer swe
+      do i=1,nyb
+          do j=1,nrow
+              aux(i,j,1) = aux(i,nyb+1,1)
+              val(i,j,1) = val(i,nyb+1,1)
+              val(i,j,2) = val(i,nyb+1,2)
+              val(i,j,3) = -val(i,nyb+1,3)
+              val(i,j,4) = val(i,nyb+1,4)
+              val(i,j,5) = val(i,nyb+1,5)
+              val(i,j,6) = -val(i,nyb+1,6)
+          enddo
+      enddo
 c
   310 continue
 c     # zero-order extrapolation:
@@ -270,11 +291,18 @@ c
       go to (400,410,420,430) mthbc(4)+1
 c
   400 continue
-c     # user-specified boundary conditions go here in place of error output
-      write(6,*) 
-     &   '*** ERROR *** mthbc(4)=0 and no BCs specified in bc2amr'
-      stop
-      go to 499
+c     Wall boundary conditions for 2 layer swe
+      do j=jbeg,ncol
+          do i=1,nrow
+              aux(i,j,1) = aux(i,jbeg-1,1)  !inserted for bc2amr_noslope
+              val(i,j,1) = val(i,jbeg-1,1)
+              val(i,j,2) = val(i,jbeg-1,2)
+              val(i,j,3) = -val(i,jbeg-1,3)
+              val(i,j,4) = val(i,jbeg-1,4)
+              val(i,j,5) = val(i,jbeg-1,5)
+              val(i,j,6) = -val(i,jbeg-1,6)
+          enddo
+      enddo
 
   410 continue
 c     # zero-order extrapolation:

@@ -105,8 +105,8 @@ c  old        ycorn = rnode(cornylo,mptr) - .5d0*hyposs(level)
             if (abs(wind_y) < 1d-90) then
                 wind_y = 0.d0
             endif
-            kappa_x = alloc(iaddaux(i,j,7))
-            kappa_y = alloc(iaddaux(i,j,8))
+            kappa_x = alloc(iaddaux(i,j,9))
+            kappa_y = alloc(iaddaux(i,j,10))
             if (abs(kappa_x) < 1d-90) then
                 kappa_x = 0.d0
             endif

@@ -107,7 +107,7 @@ contains
             read(13,*) bathy_location
             read(13,*) bathy_left
             read(13,*) bathy_right
-        else if (bathy_type == 2) then
+        else if (bathy_type == 2 .or. bathy_type == 3) then
             read(13,*) x0
             read(13,*) x1
             read(13,*) x2
