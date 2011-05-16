@@ -85,6 +85,9 @@ c           # for lat-lon grid on sphere:
                     else if (x2 < xcell) then
                         aux(i,j,1) = beach_slope*(xcell-x2)+shelf_depth
                     endif
+                    if (aux(i,j,1) > 0.d0 .and. x2 > xcell) then
+                        continue
+                    endif
                 else
                      aux(i,j,1) = bathy_left   
                 endif

@@ -44,14 +44,38 @@ def write_topo_file(file,bathy_type=None,plot=False,force=False):
     topo_type = 1
     
     # Bathy types
+    # Beach slopes
     beach_slope = 0.05
     y_end = beach_slope * (xupper - 477e3) - 100.0
+    
+    # New bathy support
+    epsilon = 1.0
+    x0 = 350e3
+    x1 = 450e3
+    x2 = 480e3
+    x0 = 350e3
+    x1 = 450e3
+    x2 = 480e3
+    basin_depth = -3000
+    shelf_depth = -100
+    eta = [0.0,-300]
+    h = 10.0
+    A = basin_depth - eta[1] + 0.5*h
+    B = shelf_depth - eta[1] - 0.5*h
+    eta_int = (A*x1 - B*x0) / (A-B)
+    shelf_slope =  A / (x0 - eta_int)
+    
     # Points and depths for gulf shelf
     #  1: (25°39'2.85"N, 86° 7'24.77"W)   --   -3228 m   --   0.0 m
     #  2: (27°53'44.74"N, 88° 0'34.02"W)   --   -2438 m   --   312.17313 km
     #  3: (28°59'47.14"N, 88°59'53.19"W)   --   -188 m   --    467.59957 km
     #  4: ( 29° 4'6.90"N,  89° 4'11.39"W)    --   0 m   --   479.10557 km
-    bathys = {"shallow_shelf":[(477e3,-100),(xupper,y_end)],
+    
+    bathys = {"new_bathy":[(-250e3,basin_depth),(x0,basin_depth),
+                       (eta_int-epsilon,shelf_slope*(eta_int-epsilon-x0)+basin_depth),
+                       (eta_int+epsilon,shelf_slope*(eta_int+epsilon-x1)+shelf_depth),
+                       (x1,shelf_depth),(x2,shelf_depth),(500e3,beach_slope*(500e3-x2)+shelf_depth)],
+              "shallow_shelf":[(477e3,-100),(xupper,y_end)],
               "gulf_shelf":[(0.0,-3228),(312e3,-2438),(467e3,-188),(479e3,0.0),(579e3,300.0)],
               "step_shelf1":[(0.0,-2000.0),(470e3-0.001,-2000.0),(470e3,-200.0),(500e3,-200.0)],
               "shelf":[(0.0,-3000),(400e3,-2700),(450e3,-100),(500e3,-100)],

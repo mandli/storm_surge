@@ -130,7 +130,7 @@ def run_tests(tests):
         os.chdir(temp_location)
 
         # Run the simulation
-        run_cmd = "%s xclaw %s T %s" % (runclaw_cmd,output_path,data_path)
+        run_cmd = "%s xclaw %s T F %s" % (runclaw_cmd,output_path,data_path)
         plot_cmd = "%s %s %s %s" % (plotclaw_cmd,output_path,plots_path,test['setplot'])
         tar_cmd = "tar -cvzf %s.tgz %s" % (plots_path,plots_path)
         cmd = ";".join((run_cmd,plot_cmd))

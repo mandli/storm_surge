@@ -21,6 +21,7 @@ import sys
 import os
 import copy
 import time
+import glob
 
 import numpy as np
 
@@ -36,6 +37,7 @@ else:
     base_path = os.getcwd()
 base_path = os.path.expanduser(base_path)
 parallel = True
+poll_interval = 15.0
 if os.environ.has_key('OMP_NUM_THREADS'):
     max_processes = int(os.environ['OMP_NUM_THREADS'])
 else:
@@ -116,8 +118,9 @@ test_suites = []
 #     test_suites.append(test)
 
 # Convergence test for shelf
-for method in [1,2,3,4]:
-    for mx in [100,200,400,800,1200,1600,2000,4000]:
+for method in [3,4]:
+    for mx in [5000]:
+    # for mx in [100,200,400,800,1200,1600,2000,4000]:
         test = copy.deepcopy(base_shelf_test)
         test['run_data']['mx'] = mx
         test['multilayer_data']['eigen_method'] = method
@@ -137,13 +140,37 @@ def run_tests(tests):
         # Set multilayer data
         for (key,value) in test['multilayer_data'].iteritems():
             setattr(ml_data,key,value)
+            
+            
+        # Create output paths
+        prefix = "ml_%sd_e%s_m%s_%s" % (rundata.clawdata.ndim,
+                                        ml_data.eigen_method,
+                                        rundata.clawdata.mx,
+                                        test['name'])
+        data_dirname = ''.join((prefix,'_data'))
+        output_dirname = ''.join((prefix,"_output"))
+        plots_dirname = ''.join((prefix,"_plots"))
+        log_name = ''.join((prefix,"_log"))
+
+        data_path = os.path.join(base_path,test['name'],data_dirname)
+        output_path = os.path.join(base_path,test['name'],output_dirname)
+        plots_path = os.path.join(base_path,test['name'],plots_dirname)
+        log_path = os.path.join(base_path,test['name'],log_name)
         
-        # Write out data files
-        rundata.write()
-        ml_data.write()
+        # Create test directory if not present
+        if not os.path.exists(os.path.join(base_path,test['name'])):
+            os.mkdir(os.path.join(base_path,test['name']))
         
-        # Create output directory
-        prefix = "ml_1d_e%s_m%s_%s" % (ml_data.eigen_method,rundata.clawdata.mx,test['name'])
+        # Clobber old data directory
+        if os.path.exists(data_path):
+            data_files = glob.glob(os.path.join(data_path,'*.data'))
+            for data_file in data_files:
+                os.remove(data_file)
+        else:
+            os.mkdir(data_path)
+        
+        # Open and start log file
+        log_file = open(log_path,'w')
         tm = time.localtime()
         year = str(tm[0]).zfill(4)
         month = str(tm[1]).zfill(2)
@@ -151,23 +178,18 @@ def run_tests(tests):
         hour = str(tm[3]).zfill(2)
         minute = str(tm[4]).zfill(2)
         second = str(tm[5]).zfill(2)
-        date = ''
-        #date = '_%s%s%s-%s%s%s' % (year,month,day,hour,minute,second)
-        output_dirname = ''.join((prefix,date,"_output"))
-        plots_dirname = ''.join((prefix,date,"_plots"))
-        log_name = ''.join((prefix,date,"_log"))
-
-        if not os.path.exists(os.path.join(base_path,test['name'])):
-            os.mkdir(os.path.join(base_path,test['name']))
-
-        output_path = os.path.join(base_path,test['name'],output_dirname)
-        plots_path = os.path.join(base_path,test['name'],plots_dirname)
-        log_path = os.path.join(base_path,test['name'],log_name)
+        date = '%s/%s/%s - %s:%s.%s\n' % (year,month,day,hour,minute,second)
+        log_file.write(date)
         
-        log_file = open(log_path,'w')
+        # Write out data files to output directory
+        temp_location = os.getcwd()
+        os.chdir(data_path)
+        rundata.write()
+        ml_data.write()
+        os.chdir(temp_location)
 
         # Run the simulation
-        run_cmd = "%s xclaw %s" % (runclaw_cmd,output_path)
+        run_cmd = "%s xclaw %s T F %s" % (runclaw_cmd,output_path,data_path)
         plot_cmd = "%s %s %s %s" % (plotclaw_cmd,output_path,plots_path,test['setplot'])
         tar_cmd = "tar -cvzf %s.tgz %s" % (plots_path,plots_path)
         cmd = ";".join((run_cmd,plot_cmd))
@@ -176,9 +198,11 @@ def run_tests(tests):
         # print "Number of processes currently:",len(process_queue)
         if parallel:
             while len(process_queue) == max_processes:
+                print "Number of processes currently:",len(process_queue)
                 for process in process_queue:
                     if process.poll() == 0:
                         process_queue.remove(process)
+                time.sleep(poll_interval)
             process_queue.append(subprocess.Popen(cmd,shell=True,
                 stdout=log_file,stderr=log_file))
             
@@ -187,9 +211,13 @@ def run_tests(tests):
             subprocess.Popen(cmd,shell=True,stdout=log_file,
                 stderr=log_file).wait()
                 
-        # Remove any proccess that have completed
-        # print "Number of processes currently:",len(process_queue)
-                
+    # Wait to exit while processes are still going
+    while len(process_queue) > 0:
+        print "Number of processes currently:",len(process_queue)
+        for process in process_queue:
+            if process.poll() == 0:
+                process_queue.remove(process)
+        time.sleep(poll_interval)
 
 def print_tests():
     for (i,test) in enumerate(test_suites):

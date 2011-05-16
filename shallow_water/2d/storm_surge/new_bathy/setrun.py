@@ -79,9 +79,9 @@ def setrun(claw_pkg='geoclaw'):
         
 
     # Number of grid cells:
-    clawdata.mx = 70
+    clawdata.mx = 70*2
     # clawdata.mx = 560
-    clawdata.my = 60
+    clawdata.my = 60*2
     # clawdata.my = 480
     # clawdata.mx = 100
     # clawdata.my = 100
@@ -237,7 +237,7 @@ def setrun(claw_pkg='geoclaw'):
 
 
     # max number of refinement levels:
-    mxnest = 5
+    mxnest = 3
 
     clawdata.mxnest = -mxnest   # negative ==> anisotropic refinement in x,y,t
 
@@ -312,7 +312,7 @@ def setgeo(rundata):
     # for topography, append lines of the form
     #   [topotype, minlevel, maxlevel, t1, t2, fname]
     # geodata.topofiles.append([2, 1, 1, 0., 1.e10, 'bowl.topotype2'])
-    # geodata.topofiles.append([1, 1, 5, 0., 1e10, 'topo.data'])
+    geodata.topofiles.append([1, 1, 5, 0., 1e10, 'topo.data'])
     
     # == setdtopo.data values ==
     geodata.dtopofiles = []
@@ -331,7 +331,7 @@ def setgeo(rundata):
     # to specify regions of refinement append lines of the form
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
     # geodata.regions.append([1, 1, 0.e0, 1.e10, -100.,100., -100.,100.])
-    #geodata.regions.append([5, 5, 0.e0, 1.e10,425e3,475e3,-325e3,325e3])
+    # geodata.regions.append([5, 5, 0.e0, 1.e10,425e3,475e3,-325e3,325e3])
 
     # == setgauges.data values ==
     geodata.gauges = []
@@ -411,7 +411,6 @@ def set_multilayer_data():
     
     # Physical parameters
     data.layers = 2
-    # data.rho = [1.0,0.0]
     data.rho = [1025.0,0.0]
     data.rho[1] = data.rho[0] / 0.90
     
@@ -431,21 +430,16 @@ def set_multilayer_data():
     data.sigma = 25e3
     
     # Bathy settings
-    data.bathy_type = 2
-    
-    # Bathy settings for type == 1
-    data.bathy_location = 450e3
-    data.bathy_left = -4000
-    data.bathy_right = -200
+    data.bathy_type = 0
     
     # Bathy settings for type == 2        
-    data.x0 = 350e3
-    data.x1 = 450e3
+    data.x0 = 370e3
+    data.x1 = 470e3
     data.x2 = 480e3
     data.basin_depth = -3000.0
     data.shelf_depth = -100.0
     data.beach_slope = 0.05
-    data.h = 0.0
+    data.h = 100.0
     
     return data
     
@@ -461,6 +455,13 @@ if __name__ == '__main__':
     rundata = setrun()
     hurricane_data = set_hurricane_data()
     multilayer_data = set_multilayer_data()
+    
+    # Add region around location of bathy jump
+    A = multilayer_data.basin_depth - multilayer_data.eta[1] + 0.5 * multilayer_data.h
+    B = multilayer_data.shelf_depth - multilayer_data.eta[1] - 0.5 * multilayer_data.h
+    eta_int = (A*multilayer_data.x1 - B*multilayer_data.x0) / (A-B)
+    shelf_slope = A / (multilayer_data.x0 - eta_int)
+    rundata.geodata.regions.append([3,3,-RAMP_UP_TIME,1e10,eta_int-25e3,eta_int+25e3,-325e3,325e3])
 
     # Write our run data file
     rundata.write()
@@ -468,6 +469,6 @@ if __name__ == '__main__':
     multilayer_data.write()    
     
     # Write out topography and qinit data files if needed
-    topo_data.write_topo_file('./topo.data',bathy_type='flat',
+    topo_data.write_topo_file('./topo.data',bathy_type='new_bathy',
                                         plot=False,force=False)
     

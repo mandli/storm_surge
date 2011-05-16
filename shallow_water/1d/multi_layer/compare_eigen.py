@@ -16,6 +16,7 @@ Compare the last results assuming they are different eigenvalue methods
 
 import sys
 import os
+import subprocess
 
 import numpy as np
 from scipy.linalg import norm
@@ -55,7 +56,7 @@ def reformat_title(title):
 # Parameters
 name = 'shelf'
 mx = 2000
-index_frame = 91
+index_frame = 150
 plot_styles = ['bx','b+','b.','k-']
 plot_labels = ['Static Linearized','Dynamic Linearized','Velocity Expansion','LAPACK']
 plot_titles = ["Top Layer Depths","Top Layer Velocities","Bottom Layer Depths","Bottom Layer Velocities"]
@@ -76,7 +77,7 @@ for method in [1,2,3,4]:
 
 
 # Setup exact solution for error estimates
-x_exact,h_exact,u_exact = extract_data(problem_datas[3],solutions[3])
+x_exact,h_exact,u_exact = extract_data(problem_datas[2],solutions[2])
 
 # Plots
 figs = []
@@ -85,6 +86,7 @@ for i in [0,1,2,3]:
     figs.append(plt.figure(i))
     axes.append(figs[i].add_subplot(111))
 
+table_string = ""
 for (i,sol) in enumerate(solutions):
     x,h,u = extract_data(problem_datas[i],sol)
     
@@ -93,6 +95,11 @@ for (i,sol) in enumerate(solutions):
     print "Top layer - velocity difference    =",norm(u[:,0] - u_exact[:,0])
     print "Bottom layer - depth difference    =",norm(h[:,1] - h_exact[:,1])
     print "Bottom layer - velocity difference =",norm(u[:,1] - u_exact[:,1])
+    error_string = "%s & %s & %s & %s & %s" % (i+1,norm(h[:,0] - h_exact[:,0]),
+                                                   norm(u[:,0] - u_exact[:,0]),
+                                                   norm(h[:,1] - h_exact[:,1]),
+                                                   norm(u[:,1] - u_exact[:,1]))
+    table_string = "\\\\ \n".join((table_string,error_string))
     
     # Top layer - depth
     axes[0].plot(x.center,h[:,0],plot_styles[i],label=plot_labels[i])
@@ -103,8 +110,35 @@ for (i,sol) in enumerate(solutions):
     # Bottom layer - velocity
     axes[3].plot(x.center,u[:,1],plot_styles[i],label=plot_labels[i])
     
-axes[0].legend(loc=1)
+print table_string
+    
+# ===============   =============
+# Location String   Location Code
+# ===============   =============
+# 'best'            0
+# 'upper right'     1
+# 'upper left'      2
+# 'lower left'      3
+# 'lower right'     4
+# 'right'           5
+# 'center left'     6
+# 'center right'    7
+# 'lower center'    8
+# 'upper center'    9
+# 'center'          10
+# ===============   =============
+
+axes[0].legend(loc=3)
 
 for i in [0,1,2,3]:
     axes[i].set_title(plot_titles[i])
     figs[i].savefig(os.path.join(base_path,"%s.pdf" % reformat_title(plot_titles[i])))
+
+# Also plot the contours
+if name == "shelf" and True:
+    mx = 4000
+    for method in [1,2,3,4]:
+        prefix = "ml_1d_e%s_m%s_%s" % (method,mx,name)
+        out_dir = os.path.join(base_path,''.join((prefix,"_output")))
+        cmd = "python shelf_contour.py %s" % out_dir
+        subprocess.Popen(cmd,shell=True).wait()

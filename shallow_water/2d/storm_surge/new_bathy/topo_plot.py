@@ -18,10 +18,31 @@ import pyclaw.plotters.gaugetools as gt
 import pyclaw.plotters.colormaps as colormaps
 
 # Generate bathy
+dx = 100
+N = 700e3 / dx
 N = 100
 x = np.linspace(-200e3,500e3,N)
 y = np.linspace(-300e3,300e3,N)
 [X,Y] = np.meshgrid(x,y)
+
+# New bathy support
+# N = 1000
+epsilon = 1.0
+x0 = 350e3
+x1 = 450e3
+x2 = 480e3
+x0 = 350e3
+x1 = 450e3
+x2 = 480e3
+basin_depth = -3000
+shelf_depth = -100
+beach_slope = 0.05
+eta = [0.0,-300]
+h = 10.0
+A = basin_depth - eta[1] + 0.5*h
+B = shelf_depth - eta[1] - 0.5*h
+eta_int = (A*x1 - B*x0) / (A-B)
+shelf_slope =  A / (x0 - eta_int)
 
     
 # Bathy types
@@ -30,12 +51,16 @@ y = np.linspace(-300e3,300e3,N)
 #  2: (27°53'44.74"N, 88° 0'34.02"W)   --   -2438 m   --   312.17313 km
 #  3: (28°59'47.14"N, 88°59'53.19"W)   --   -188 m   --    467.59957 km
 #  4: ( 29° 4'6.90"N,  89° 4'11.39"W)    --   0 m   --   479.10557 km
-bathys = {"gulf_shelf":[(0.0,-3228),(312e3,-2438),(467e3,-188),(479e3,0.0),(579e3,300.0)],
+bathys = {"new_bathy":[(-250e3,basin_depth),(x0,basin_depth),
+                       (eta_int-epsilon,shelf_slope*(eta_int-epsilon-x0)+basin_depth),
+                       (eta_int+epsilon,shelf_slope*(eta_int+epsilon-x1)+shelf_depth),
+                       (x1,shelf_depth),(x2,shelf_depth),(500e3,beach_slope*(500e3-x2)+shelf_depth)],
+          "gulf_shelf":[(0.0,-3228),(312e3,-2438),(467e3,-188),(479e3,0.0),(579e3,300.0)],
           "step_shelf1":[(0.0,-2000.0),(470e3-0.001,-2000.0),(470e3,-200.0),(500e3,-200.0)],
           "step_shelf2":[(0.0,-4000.0),(450e3-0.001,-4000.0),(450e3,-200.0),(500e3,-200.0)],
           "continental_shelf":[(2000e3,-7000),(2800e3,-3000),(2900e3,-100),(3000e3,0.0)],
           "flat":[(0.0,-2000)]}
-bathy_profile = bathys["step_shelf2"]
+bathy_profile = bathys["new_bathy"]
 
 ylimits = [0.0,0.0]
 for i in xrange(len(bathy_profile)):
@@ -54,7 +79,7 @@ for i in xrange(len(x)):
 # Profile plot
 # topo_file = '/Users/mandli/Documents/research/Papers/awr10/figures/ss_topo.png'
 topo_file = './ss_topo.png'
-if not os.path.exists(topo_file):
+if not os.path.exists(topo_file) or True:
     plt.figure(1)
     index = np.trunc(N/2.0)
     plt.hold(True)

@@ -226,7 +226,54 @@ def setplot(plotdata):
         label = r"%s m/s" % str(np.ceil(0.5*max_speed))
         plt.quiverkey(Q,0.15,0.95,0.5*max_speed,label,labelpos='W')
         plt.hold(False)
+
+    # ========================================================================
+    #  Plot items
+    # ========================================================================
+    def add_surface_elevation(plotaxes,bounds=None,plot_type='pcolor'):
+        if plot_type == 'pcolor':            
+            plotitem = plotaxes.new_plotitem(plot_type='2d_imshow')
+            # plotitem.plotvar = eta
+            plotitem.plot_var = geoplot.surface
+            plotitem.imshow_cmap = colormaps.make_colormap({1.0:'r',0.5:'w',0.0:'b'})
+            if bounds is not None:
+                plotitem.imshow_cmin = bounds[0]
+                plotitem.imshow_cmax = bounds[1]
+            plotitem.add_colorbar = True
+            plotitem.amr_gridlines_show = [0,0,0]
+            plotitem.amr_gridedges_show = [1,1,1]
     
+    def add_speed(plotaxes,bounds=None,plot_type='pcolor'):
+        if plot_type == 'pcolor':
+            plotitem = plotaxes.new_plotitem(plot_type='2d_imshow')
+            plotitem.plot_var = water_speed
+            # plotitem.plot_var = 1
+            plotitem.imshow_cmap = plt.get_cmap('PuBu')
+            if bounds is not None:
+                plotitem.imshow_cmin = bounds[0]
+                plotitem.imshow_cmax = bounds[1]
+            plotitem.add_colorbar = True
+            plotitem.amr_gridlines_show = [0,0,0]
+            plotitem.amr_gridedges_show = [1]
+    
+    def add_land(plotaxes,plot_type='pcolor'):
+        if plot_type == 'pcolor':
+            plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
+            plotitem.show = True
+            plotitem.plot_var = geoplot.land
+            plotitem.pcolor_cmap = geoplot.land_colors
+            plotitem.pcolor_cmin = 0.0
+            plotitem.pcolor_cmax = 80.0
+            plotitem.add_colorbar = False
+            plotitem.amr_gridlines_show = [0,0,0]
+            plotitem.amr_gridedges_show = [1,1,1]
+
+    # Limits
+    xlimits = [amrdata.xlower,amrdata.xupper]
+    ylimits = [amrdata.ylower,amrdata.yupper]
+    surface_limits = [-0.5,0.5]
+    speed_limits = [0.0,6.0]
+
     # ========================================================================
     #  Surface Elevation
     # ========================================================================
@@ -237,38 +284,12 @@ def setplot(plotdata):
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.title = 'Surface'
     plotaxes.scaled = True
-    plotaxes.xlimits = [amrdata.xlower,amrdata.xupper]
-    plotaxes.ylimits = [amrdata.ylower,amrdata.yupper]
+    plotaxes.xlimits = xlimits
+    plotaxes.ylimits = ylimits
     plotaxes.afteraxes = pcolor_afteraxes
     
-    # Water
-    plotitem = plotaxes.new_plotitem(plot_type='2d_imshow')
-    plotitem.plot_var = geoplot.surface
-    # plotitem.plot_var = 0
-    # plotitem.imshow_cmin = -2.5
-    # plotitem.imshow_cmax = 2.5
-    # plotitem.pcolor_cmap = geoplot.tsunami_colormap
-    plotitem.imshow_cmap = colormaps.make_colormap({1.0:'r',0.5:'w',0.0:'b'})
-    # plotitem.pcolor_cmin = -1.e-2
-    # plotitem.pcolor_cmax = 1.e-2
-    # plotitem.pcolor_cmin = -1.0
-    # plotitem.pcolor_cmax = 1.0
-    # plotitem.pcolor_cmin = -2.5 # -3.0
-    # plotitem.pcolor_cmax = 2.5 # 3.0
-    plotitem.add_colorbar = True
-    plotitem.amr_gridlines_show = [0,0,0]
-    plotitem.amr_gridedges_show = [1,1,1]
-
-    # Land
-    plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
-    plotitem.show = True
-    plotitem.plot_var = geoplot.land
-    plotitem.pcolor_cmap = geoplot.land_colors
-    plotitem.pcolor_cmin = 0.0
-    plotitem.pcolor_cmax = 80.0
-    plotitem.add_colorbar = False
-    plotitem.amr_gridlines_show = [0,0,0]
-    plotitem.amr_gridedges_show = [1,1,1]
+    add_surface_elevation(plotaxes,bounds=surface_limits)
+    add_land(plotaxes)
     
     # ========================================================================
     #  Water Speed
@@ -280,32 +301,18 @@ def setplot(plotdata):
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.title = 'Currents'
     plotaxes.scaled = True
-    plotaxes.xlimits = [amrdata.xlower,amrdata.xupper]
-    plotaxes.ylimits = [amrdata.ylower,amrdata.yupper]
+    plotaxes.xlimits = xlimits
+    plotaxes.ylimits = ylimits
     
     def pcolor_afteraxes(current_data):
         eye_location(current_data)
         hour_figure_title(current_data)
-        bathy_ref_lines(current_data)
+        # bathy_ref_lines(current_data)
         m_to_km_labels()
     plotaxes.afteraxes = pcolor_afteraxes
 
     # Speed
-    plotitem = plotaxes.new_plotitem(plot_type='2d_imshow')
-    plotitem.plot_var = water_speed
-    # plotitem.plot_var = 1
-    plotitem.imshow_cmap = plt.get_cmap('PuBu')
-    # plotitem.pcolor_cmap = plt.get_cmap('PuBu')
-    # plotitem.pcolor_cmin = 0.0
-    # plotitem.pcolor_cmax = 1e-1 # 6.0
-    # plotitem.pcolor_cmin = 0.0
-    # plotitem.pcolor_cmax = 5.0 # 6.0
-    # plotitem.imshow_cmin = 0.0
-    # plotitem.imshow_cmax = 0.0015
-    plotitem.add_colorbar = True
-    plotitem.amr_gridlines_show = [0,0,0]
-    plotitem.amr_gridedges_show = [1]
-    # plotitem.aftergrid = water_quiver
+    add_speed(plotaxes,bounds=speed_limits)
     
     # Velocity vectors
     plotitem = plotaxes.new_plotitem(plot_type='2d_quiver')
@@ -317,20 +324,14 @@ def setplot(plotdata):
     plotitem.show = False
 
     # Land
-    plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
-    plotitem.plot_var = geoplot.land
-    plotitem.pcolor_cmap = geoplot.land_colors
-    plotitem.pcolor_cmin = 0.0
-    plotitem.pcolor_cmax = 80.0
-    plotitem.add_colorbar = False
-    plotitem.amr_gridlines_show = [0,0,0]
+    add_land(plotaxes)
     
     #-----------------------------------------
     # Hurricane forcing
     #-----------------------------------------
     # Pressure field
     plotfigure = plotdata.new_plotfigure(name='pressure', figno=2)
-    plotfigure.show = hurricane_data.pressure_src and True
+    plotfigure.show = hurricane_data.pressure_src
     
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.xlimits = [amrdata.xlower,amrdata.xupper]
@@ -362,7 +363,7 @@ def setplot(plotdata):
 
     # Pressure gradient plots - x
     plotfigure = plotdata.new_plotfigure(name='pressure_x', figno=30)
-    plotfigure.show = hurricane_data.pressure_src and True
+    plotfigure.show = hurricane_data.pressure_src
     
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.xlimits = [amrdata.xlower,amrdata.xupper]
@@ -412,8 +413,7 @@ def setplot(plotdata):
     # ========================================================================
     # Wind field
     plotfigure = plotdata.new_plotfigure(name='wind',figno=3)
-    plotfigure.show = hurricane_data.wind_src and True
-    
+    plotfigure.show = hurricane_data.wind_src
     
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.xlimits = [amrdata.xlower,amrdata.xupper]
@@ -432,13 +432,13 @@ def setplot(plotdata):
     plotitem.show = False
     
     # Pcolor
-    plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
+    plotitem = plotaxes.new_plotitem(plot_type='2d_imshow')
     plotitem.plot_var = wind_speed
-    plotitem.pcolor_cmap = plt.get_cmap('PuBu')
-    plotitem.pcolor_cmin = 0
-    plotitem.pcolor_cmax = 55
+    plotitem.imshow_cmap = plt.get_cmap('PuBu')
+    plotitem.imshow_cmin = 0
+    plotitem.imshow_cmax = 55
     plotitem.add_colorbar = True
-    plotitem.amr_pcolor_show = [1,1,1]
+    plotitem.amr_imshow_show = [1,1,1]
     plotitem.amr_gridlines_show = [0,0,0]
     plotitem.amr_gridedges_show = [1,1,1]
     plotitem.show = True
@@ -452,13 +452,7 @@ def setplot(plotdata):
     plotitem.show = False 
     
     # Land
-    plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
-    plotitem.plot_var = geoplot.land
-    plotitem.pcolor_cmap = geoplot.land_colors
-    plotitem.pcolor_cmin = 0.0
-    plotitem.pcolor_cmax = 80.0
-    plotitem.add_colorbar = False
-    plotitem.amr_gridlines_show = [0,0,0]
+    add_land(plotaxes)
 
     # ========================================================================
     #  Profile Plots

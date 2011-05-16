@@ -33,7 +33,12 @@ def setplot(plotdata):
     hurricane_data = Data(os.path.join(plotdata.rundir,'hurricane.data'))
     multilayer_data = Data(os.path.join(plotdata.rundir,'multilayer.data'))
 
-    ref_lines = [350e3,450e3,480e3]
+    A = multilayer_data.basin_depth - multilayer_data.eta[1] + 0.5 * multilayer_data.h
+    B = multilayer_data.shelf_depth - multilayer_data.eta[1] - 0.5 * multilayer_data.h
+    eta_int = (A*multilayer_data.x1 - B*multilayer_data.x0) / (A-B)
+    shelf_slope = A / (multilayer_data.x0 - eta_int)
+    
+    ref_lines = [350e3,450e3,eta_int,480e3]
 
     plotdata.clearfigures()
     plotdata.clear_frames = False
@@ -791,7 +796,7 @@ def setplot(plotdata):
     #  Profile Plots
     # ========================================================================
     plotfigure = plotdata.new_plotfigure(name='profile', figno=4)
-    plotfigure.show = False
+    plotfigure.show = True
     
     # Top surface
     plotaxes = plotfigure.new_plotaxes()
@@ -844,7 +849,7 @@ def setplot(plotdata):
     plotitem.plot_var = 7
     plotitem.amr_plotstyle = ['-','+','x']
     plotitem.color = 'b'
-    plotitem.show = True
+    plotitem.show = False
     
     # Upper Interface
     plotitem = plotaxes.new_plotitem(plot_type='1d_from_2d_data')
@@ -852,7 +857,7 @@ def setplot(plotdata):
     plotitem.plot_var = 6
     plotitem.amr_plotstyle = ['-','+','x']
     plotitem.color = (0.2,0.8,1.0)
-    plotitem.show = True
+    plotitem.show = False
     
     # ========================================================================
     #  Combined Profile Plot

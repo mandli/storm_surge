@@ -88,7 +88,7 @@ def contour_plot(X,T,eta):
     # # pylab.ylabel("Hours",fontsize=20)
     pylab.title("Contours of internal surface",fontsize=15)
     # add_timeslices()
-    fname = "_".join((out_dir,"shelf_internal.png"))
+    fname = "_".join((out_dir,"shelf_contour.png"))
     print "Writing out to %s" % fname
     pylab.savefig(fname)
 

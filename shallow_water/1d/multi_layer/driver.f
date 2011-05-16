@@ -12,8 +12,8 @@ c     # set parameters for maximum array sizes used in declarations
 c     # these must be increased for larger problems.
 c
 c
-      parameter (maxmx = 4000)
-      parameter (mwork = 152152)
+      parameter (maxmx = 5000)
+      parameter (mwork = 190152)
 
       parameter (mbc = 2)
       parameter (meqn = 4)
