@@ -45,7 +45,7 @@ def write_topo_file(file,bathy_type=None,plot=False,force=False):
     
     # Bathy types
     # Beach slopes
-    beach_slope = 0.05
+    beach_slope = 0.008
     y_end = beach_slope * (xupper - 477e3) - 100.0
     
     # New bathy support

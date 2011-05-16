@@ -233,7 +233,7 @@ def setrun(claw_pkg='geoclaw'):
 
 
     # max number of refinement levels:
-    mxnest = 4
+    mxnest = 5
 
     clawdata.mxnest = -mxnest   # negative ==> anisotropic refinement in x,y,t
 
@@ -321,7 +321,7 @@ def setgeo(rundata):
     # to specify regions of refinement append lines of the form
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
     # geodata.regions.append([1, 1, 0.e0, 1.e10, -100.,100., -100.,100.])
-    geodata.regions.append([4, 4, -RAMP_UP_TIME, 1.e10, 400e3,525e3,-325e3,325e3])
+    # geodata.regions.append([4, 4, -RAMP_UP_TIME, 1.e10, 400e3,525e3,-325e3,325e3])
 
     # == setgauges.data values ==
     geodata.gauges = []
@@ -413,7 +413,7 @@ def set_multilayer_data():
     data.sigma = 25e3
     
     # Bathy settings
-    data.bathy_type = 2
+    data.bathy_type = 0
     
     # Bathy settings for type == 1
     data.bathy_location = 450e3
