@@ -72,7 +72,7 @@ def write_topo_file(file,bathy_type=None,plot=False,force=False):
     #  4: ( 29° 4'6.90"N,  89° 4'11.39"W)    --   0 m   --   479.10557 km
     
     
-    bathys = {"new_bathy1":[(-250e3,basin_depth),(x0,basin_depth),
+    bathys = {"new_bathy1":[(-250e3,basin_depth),
                             (x0,basin_depth),
                             (x1,shelf_depth),
                             (x2,shelf_depth),
@@ -99,6 +99,8 @@ def write_topo_file(file,bathy_type=None,plot=False,force=False):
     else:
         if bathy_type in bathys.keys():
             bathy_profile = bathys[bathy_type]
+    
+    print bathy_profile
     
     # Create and write topography
     import pyclaw.geotools.topotools as tt
