@@ -4,6 +4,8 @@
 Module to setup multilayer data
 """ 
 
+import sys
+
 import numpy as np
 
 from pyclaw import data 
@@ -72,7 +74,7 @@ class MultilayerData(data.Data):
             data.data_write(out_file,self,'bathy_location','(Bathymetry jump location)')
             data.data_write(out_file,self,'bathy_left','(Depth to left of bathy_location)')
             data.data_write(out_file,self,'bathy_right','(Depth to right of bathy_location)')
-        elif self.bathy_type == 2:
+        elif self.bathy_type == 2 or self.bathy_type == 3: 
             data.data_write(out_file,self,'x0','(Location of basin end)')
             data.data_write(out_file,self,'x1','(Location of shelf slope end)')
             data.data_write(out_file,self,'x2','(Location of beach slope)')
