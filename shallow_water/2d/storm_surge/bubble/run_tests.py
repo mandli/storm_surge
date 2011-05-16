@@ -37,6 +37,7 @@ else:
     base_path = os.getcwd()
 base_path = os.path.expanduser(base_path)
 parallel = True
+poll_interval = 15.0
 if os.environ.has_key('OMP_NUM_THREADS'):
     max_processes = int(os.environ['OMP_NUM_THREADS'])
 else:
@@ -131,12 +132,13 @@ def run_tests(tests):
         cmd = ";".join((run_cmd,plot_cmd))
         # cmd = run_cmd
         print cmd
-        # print "Number of processes currently:",len(process_queue)
         if parallel:
+            print "Number of processes currently:",len(process_queue)
             while len(process_queue) == max_processes:
                 for process in process_queue:
                     if process.poll() == 0:
                         process_queue.remove(process)
+                time.sleep(poll_interval)
             process_queue.append(subprocess.Popen(cmd,shell=True,
                 stdout=log_file,stderr=log_file))
             

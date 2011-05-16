@@ -48,27 +48,18 @@ plotclaw_cmd = "python $CLAW/python/pyclaw/plotters/plotclaw.py"
          
 test_suites = []
 
-base_test_3 = {'name':'idealized_redux_3','setplot':"setplot",
-                'run_data':{'mx':100,'my':100},
-                'multilayer_data':{'eigen_method':1,'wave_family':3},
-                'hurricane_data':{}
-               }
+base_shelf_test = {'name':'shelf_redux','setplot':'setplot',
+                   'run_data':{'mx':2000,'my':100,'nout':300,'outstyle':1,
+                      'tfinal':7200.0,'xlower':-400000.0,'mthbc_xupper':3},
+                   'multilayer_data':{'rho_air':1.0,'rho_1':1025.0,'rho_2':1028.0,
+                      'eigen_method':1,'init_type':5,'init_location':300e3,
+                      'eta_2':-300,'epsilon':0.4,'bathy_location':-30e3,
+                      'bathy_left':-4000,'bathy_right':-200,'wind_type':0}
+                  }
 
-base_test_4 = {'name':'idealized_redux_4','setplot':"setplot",
-                'run_data':{'mx':100,'my':100},
-                'multilayer_data':{'eigen_method':1,'wave_family':4},
-                'hurricane_data':{}
-               }
-
-# Wave family 3 tests
+# Eigenmethod tests
 for method in [1,2,3,4]:
-    test = copy.deepcopy(base_test_3)
-    test['multilayer_data']['eigen_method'] = method
-    test_suites.append(test)
-    
-# Wave family 4 tests
-for method in [1,2,3,4]:
-    test = copy.deepcopy(base_test_4)
+    test = copy.deepcopy(base_shelf_test)
     test['multilayer_data']['eigen_method'] = method
     test_suites.append(test)
 

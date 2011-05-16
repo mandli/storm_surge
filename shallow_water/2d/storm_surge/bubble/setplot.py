@@ -49,7 +49,7 @@ def setplot(plotdata):
         bathy_ref_lines(current_data)
         
     def profile_afteraxes(current_data):
-        pass
+        plt.title('Sufrace Profiles t = %4.1f s' % cd.t)
         
     def bathy_ref_lines(current_data,direction="x"):
         plt.hold(True)
@@ -308,25 +308,31 @@ def setplot(plotdata):
     plotfigure.show = True
     plotfigure.kwargs = {'figsize':(14,4)}
     
+    def top_surf_afteaxes(cd):
+        bathy_ref_lines(cd)
+        plt.title('Top Surface t = %4.1f s' % cd.t)
+    
+    def internal_surf_afteaxes(cd):
+        bathy_ref_lines(cd)
+        plt.title('Internal Surface t = %4.1f s' % cd.t)
+    
     # Top surface
     plotaxes = plotfigure.new_plotaxes()
-    plotaxes.title = 'Top Surface'
     plotaxes.axescmd = 'subplot(1,2,1)'
     plotaxes.scaled = True
     plotaxes.xlimits = xlimits
     plotaxes.ylimits = ylimits
-    plotaxes.afteraxes = pcolor_afteraxes
+    plotaxes.afteraxes = top_surf_afteaxes
     add_surface_elevation(plotaxes,1,bounds=top_surface_limits)
     add_land(plotaxes)
     
     # Bottom surface
     plotaxes = plotfigure.new_plotaxes()
-    plotaxes.title = 'Internal Surface'
     plotaxes.axescmd = 'subplot(1,2,2)'
     plotaxes.scaled = True
     plotaxes.xlimits = xlimits
     plotaxes.ylimits = ylimits
-    plotaxes.afteraxes = pcolor_afteraxes
+    plotaxes.afteraxes = internal_surf_afteaxes
     add_surface_elevation(plotaxes,2,bounds=internal_surface_limits)
     add_land(plotaxes)
     
@@ -366,6 +372,14 @@ def setplot(plotdata):
     plotfigure.show = True
     plotfigure.kwargs = {'figsize':(14,4)}
 
+    def top_vel_afteraxes(cd):
+        bathy_ref_lines(cd)
+        plt.title('Currents of Top Layer t = %4.1f s' % cd.t)
+
+    def bottom_vel_afteraxes(cd):
+        bathy_ref_lines(cd)
+        plt.title('Currents of Bottom Layer t = %4.1f s' % cd.t)
+
     # Top layer speed
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.title = 'Currents - Top Layer'
@@ -373,7 +387,7 @@ def setplot(plotdata):
     plotaxes.xlimits = xlimits
     plotaxes.ylimits = ylimits
     plotaxes.axescmd = 'subplot(1,2,1)'
-    plotaxes.afteraxes = pcolor_afteraxes
+    plotaxes.afteraxes = top_vel_afteraxes
     add_speed(plotaxes,1,bounds=top_speed_limits)
     add_land(plotaxes)
     
@@ -384,7 +398,7 @@ def setplot(plotdata):
     plotaxes.xlimits = xlimits
     plotaxes.ylimits = ylimits
     plotaxes.axescmd = 'subplot(1,2,2)'
-    plotaxes.afteraxes = pcolor_afteraxes
+    plotaxes.afteraxes = bottom_vel_afteraxes
     add_speed(plotaxes,2,bounds=internal_speed_limits)
     add_land(plotaxes)
     
@@ -535,6 +549,7 @@ def setplot(plotdata):
         plt.xticks(locs,labels)
         plt.plot([multilayer_data.bathy_location,multilayer_data.bathy_location],top_surf_zoomed,'--k')
         plt.ylabel('m')
+        plt.title('Sufrace Profiles t = %4.1f s' % cd.t)
         plt.hold(False)
     plotaxes.afteraxes = top_surf_afteraxes
     plotitem = plotaxes.new_plotitem(plot_type="1d_from_2d_data")
