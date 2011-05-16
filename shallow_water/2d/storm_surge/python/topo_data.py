@@ -59,7 +59,7 @@ def write_topo_file(file,bathy_type=None,plot=False,force=False):
     basin_depth = -3000
     shelf_depth = -100
     eta = [0.0,-300]
-    h = 10.0
+    h = 100.0
     A = basin_depth - eta[1] + 0.5*h
     B = shelf_depth - eta[1] - 0.5*h
     eta_int = (A*x1 - B*x0) / (A-B)
@@ -71,7 +71,18 @@ def write_topo_file(file,bathy_type=None,plot=False,force=False):
     #  3: (28°59'47.14"N, 88°59'53.19"W)   --   -188 m   --    467.59957 km
     #  4: ( 29° 4'6.90"N,  89° 4'11.39"W)    --   0 m   --   479.10557 km
     
-    bathys = {"new_bathy":[(-250e3,basin_depth),(x0,basin_depth),
+    
+    bathys = {"new_bathy1":[(-250e3,basin_depth),(x0,basin_depth),
+                            (x0,basin_depth),
+                            (x1,shelf_depth),
+                            (x2,shelf_depth),
+                            (500e3,beach_slope*(500e3-x2)+shelf_depth)],
+              "new_bathy2":[(-250e3,basin_depth),(x0,basin_depth),
+                       (eta_int-epsilon,shelf_slope*(eta_int-epsilon-x0)+basin_depth),
+                       (eta_int+epsilon,shelf_depth),
+                       (x2,shelf_depth),
+                       (500e3,beach_slope*(500e3-x2)+shelf_depth)],
+              "new_bathy3":[(-250e3,basin_depth),(x0,basin_depth),
                        (eta_int-epsilon,shelf_slope*(eta_int-epsilon-x0)+basin_depth),
                        (eta_int+epsilon,shelf_slope*(eta_int+epsilon-x1)+shelf_depth),
                        (x1,shelf_depth),(x2,shelf_depth),(500e3,beach_slope*(500e3-x2)+shelf_depth)],
