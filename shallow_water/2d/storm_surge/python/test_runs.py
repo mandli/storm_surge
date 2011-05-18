@@ -31,15 +31,15 @@ def print_tests(tests):
         print "====== Test #%s ===========================" % i
         print str(test)
 
-def run_tests(tests,data_path=None,max_processes=None,parallel=True,
-                verbose=False,terminal_output=False):
+def run_tests(tests,max_processes=None,parallel=True,verbose=False,
+                terminal_output=False):
     # Parameters
-    if data_path is None:
-        if os.environ.has_key('DATA_PATH'):
-            base_path = os.path.join(os.environ['DATA_PATH'],test[0].name)
-        else:
-            base_path = os.getcwd()
+    if os.environ.has_key('DATA_PATH'):
+        base_path = os.environ['DATA_PATH']
+    else:
+        base_path = os.getcwd()
     base_path = os.path.expanduser(base_path)
+    
     poll_interval = 15.0
     if max_processes is None:
         if os.environ.has_key('OMP_NUM_THREADS'):
@@ -53,23 +53,22 @@ def run_tests(tests,data_path=None,max_processes=None,parallel=True,
     
     # Run tests
     for (i,test) in enumerate(tests):
-        # Write out data files locally
-        test.create_data_objects()
-        test.set_data_objects()
-    
         # Create output directory
-        data_dirname = ''.join((prefix,'_data'))
+        data_dirname = ''.join((test.prefix,'_data'))
         output_dirname = ''.join((test.prefix,"_output"))
         plots_dirname = ''.join((test.prefix,"_plots"))
         log_name = ''.join((test.prefix,"_log.txt"))
-
-        output_path = os.path.join(base_path,output_dirname)
-        plots_path = os.path.join(base_path,plots_dirname)
-        log_path = os.path.join(base_path,log_name)
+        
+        test_path = os.path.join(base_path,test.type,test.name)
+        test_path = os.path.abspath(test_path)
+        data_path = os.path.join(test_path,data_dirname)
+        output_path = os.path.join(test_path,output_dirname)
+        plots_path = os.path.join(test_path,plots_dirname)
+        log_path = os.path.join(test_path,log_name)
 
         # Create test directory if not present
-        if not os.path.exists(os.path.join(base_path,test['name'])):
-            os.mkdir(os.path.join(base_path,test['name']))
+        if not os.path.exists(test_path):
+            os.makedirs(test_path)
 
         # Clobber old data directory
         if os.path.exists(data_path):
@@ -94,16 +93,15 @@ def run_tests(tests,data_path=None,max_processes=None,parallel=True,
         # Write out data
         temp_path = os.getcwd()
         os.chdir(data_path)
-        test.write_data_objects(data_objects)
+        test.write_data_objects()
         os.chdir(temp_path)
         
         # Run the simulation
-        run_cmd = "%s xclaw %s T F %s" % (runclaw_cmd,output_path,data_path)
-        plot_cmd = "%s %s %s %s" % (plotclaw_cmd,output_path,plots_path,test['setplot'])
+        run_cmd = "%s xclaw %s T F %s" % (RUNCLAW_CMD,output_path,data_path)
+        plot_cmd = "%s %s %s %s" % (PLOTCLAW_CMD,output_path,plots_path,test.setplot)
         tar_cmd = "tar -cvzf %s.tgz %s" % (plots_path,plots_path)
         cmd = ";".join((run_cmd,plot_cmd))
-        if verbose:
-            print cmd
+        print cmd
         if parallel:
             while len(process_queue) == max_processes:
                 if verbose:
@@ -137,17 +135,14 @@ class Test(object):
     
     def __init__(self):
         # Base test traits
-        self.name = "test"
-        self.prefix = ""
+        self.type = ""
+        self.name = ""
         self.setplot = "setplot"
         
     def __str__(self):
         output = "Test %s:" % self.name
         output += "\n  Setplot: %s" % self.setplot
         return output
-        
-    def set_data_objects(self):
-        pass
         
     def write_data_objects(self):
         pass
@@ -163,9 +158,7 @@ class TestML2D(Test):
         self.ml_data = setrun.set_multilayer_data()
         self.hurricane_data = setrun.set_hurricane_data()
         
-        self.prefix = "ml_1d_e%s_m%s_%s" % (self.ml_data.eigen_method,
-                                            self.run_data.clawdata.mx,
-                                            self.name)
+        self.type = "ml_2d"
                                             
     def __str__(self):
         output = super(TestML2D,self).__str__()
@@ -175,14 +168,6 @@ class TestML2D(Test):
         output += "\n--------------------------------------"
         output += "\nHurricane:  \n%s" % self.hurricane_data
         return output
-    
-    def set_data_objects(self):
-        # Fill in data object differences
-        #
-        # Reset prefix
-        self.prefix = "ml_1d_e%s_m%s_%s" % (self.ml_data.eigen_method,
-                                            self.run_data.clawdata.mx,
-                                            self.name)
     
     def write_data_objects(self):
         self.run_data.write()
@@ -201,9 +186,7 @@ class TestML1D(Test):
         self.run_data = setrun.setrun()
         self.ml_data = setrun.set_multilayer_data()
         
-        self.prefix = "ml_1d_e%s_m%s_%s" % (self.ml_data.eigen_method,
-                                            self.run_data.clawdata.mx,
-                                            self.name)
+        self.type = "ml_2d"
                                             
     def __str__(self):
         output = super(TestML1D,self).__str__()
@@ -211,14 +194,6 @@ class TestML1D(Test):
         output += "\n--------------------------------------"
         output += "\n  Multilayer: \n%s" % self.ml_data
         return output
-    
-    def set_data_objects(self):
-        # Fill in data object differences
-        
-        # Reset prefix
-        self.prefix = "ml_1d_e%s_m%s_%s" % (self.ml_data.eigen_method,
-                                            self.run_data.clawdata.mx,
-                                            self.name)
     
     def write_data_objects(self):
         self.run_data.write()

@@ -24,28 +24,23 @@ import test_runs
 
 tests = []
 
-# Parameters for these tests
-data_path = os.path.join(os.environ['DATA_PATH'],'plane_wave')
-
 # Base Plane Wave Test
 class PlaneWaveBaseTest(test_runs.TestML2D):
     
     def __init__(self,angle):
-        self.angle = angle
+        super(PlaneWaveBaseTest,self).__init__()
+
         self.name = "plane_wave"
         
-        super(PlaneWaveBaseTest,self).__init__()
-        
-    def set_data_objects(self):
         self.run_data.clawdata.mx = 100
         self.run_data.clawdata.my = 100
         
         self.ml_data.eigen_method = 2
         self.ml_data.init_type = 2
-        self.ml_data.angle = self.angle
-        
-        super(PlaneWaveBaseTest,self).set_data_objects()
-               
+        self.ml_data.angle = angle
+
+        # Convert angle to degrees for the label
+        self.prefix = "ml_2d_angle%s" % int(angle * 180.0 / np.pi)
                
 # Angle test suite
 for angle in [0.0,np.pi/4.0,np.pi/2.0,-np.pi/4.0]:
@@ -60,7 +55,7 @@ if __name__ == '__main__':
             for test in sys.argv[1:]:
                 tests_to_be_run.append(tests[int(test)])
             
-        test_runs.run_tests(tests,data_path=data_path,parallel=True)
+        test_runs.run_tests(tests,parallel=True)
 
     else:
         test_runs.print_tests(tests)

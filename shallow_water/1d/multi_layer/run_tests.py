@@ -25,23 +25,15 @@ import test_runs
 
 tests = []
 
-# Parameters
-data_path = os.path.join(os.environ['DATA_PATH'],"multi_layer_1d")
-
 class IdealizedBaseTest(test_runs.TestML1D):
     
     def __init__(self,wave_family,mx=500,eigen_method=2,epsilon=0.1):
-        # Specific parameters
-        self.mx = mx
-        self.wave_family = wave_family
-        self.eigen_method = eigen_method
-        self.epsilon = epsilon
-        
-        self.name = "idealized_%s" % wave_family
         
         super(IdealizedBaseTest,self).__init__()
         
-    def set_data_objects(self):
+        self.name = "idealized_%s" % wave_family
+        self.prefix = "ml_2d_angle%s" % int(angle*100.0)
+        
         # Static data
         self.run_data.clawdata.xlower = 0.0
         self.run_data.clawdata.xupper = 1.0
@@ -58,26 +50,21 @@ class IdealizedBaseTest(test_runs.TestML1D):
         self.ml_data.rho_1 = 0.95
         
         # Parameters
-        self.run_data.clawdata.mx = self.mx
-        self.ml_data.wave_family = self.wave_family
-        self.ml_data.eigen_method = self.eigen_method
-        self.ml_data.epsilon = self.epsilon
-        
-        super(Idealized3BaseTest,self).set_data_objects()
+        self.run_data.clawdata.mx = mx
+        self.ml_data.wave_family = wave_family
+        self.ml_data.eigen_method = eigen_method
+        self.ml_data.epsilon = epsilon
+
         
 class OscillatoryWindBaseTest(test_runs.TestML1D):
     
     def __init__(self,eigen_method=2):
         
-        self.eigen_method = eigen_method
+        super(OscillatoryWindBaseTest,self).__init__()
         
         self.name = "oscillatory_wind"
         self.setplot = "setplot_oscillatory"
         
-        super(OscillatoryWindBaseTest,self).__init__()
-        
-    def set_data_objects(self):
-        # Static data
         self.run_data.clawdata.mx = 100
         self.run_data.clawdata.outstyle = 1
         self.run_data.clawdata.nout = 160
@@ -99,23 +86,25 @@ class OscillatoryWindBaseTest(test_runs.TestML1D):
                                     - self.run_data.clawdata.t0)
         self.ml_data.bathy_left = -1.0
         self.ml_data.bathy_right = -1.0
-        self.ml_data.eigen_method = self.eigen_method
+        self.ml_data.eigen_method = eigen_method
         
-        super(OscillatoryWindBaseTest,self).set_data_objects()
+        self.prefix = "ml_e%s" % eigen_method
+        
         
 class ShelfBaseTest(test_runs.TestML1D):
     
     def __init__(self,eigen_method=2,mx=2000):
-        self.eigen_method = eigen_method
-        self.mx = mx
-        
-        self.name = "shelf"
-        self.setplot = "setplot_shelf"
         
         super(ShelfBaseTest,self).__init__()
         
-    def set_data_objects(self):
-        # Static data
+        # Test parameters
+        self.name = "shelf"
+        self.setplot = "setplot_shelf"
+
+        # Data parameters
+        self.ml_data.eigen_method = self.eigen_method
+        self.run_data.clawdata.mx = mx
+        
         self.run_data.clawdata.nout = 300
         self.run_data.clawdata.outstyle = 1
         self.run_data.clawdata.tfinal = 7200.0
@@ -134,11 +123,7 @@ class ShelfBaseTest(test_runs.TestML1D):
         self.ml_data.bathy_right = -200.0
         self.ml_data.wind_type = 0
         
-        # Variable paramaters
-        self.ml_data.eigen_method = self.eigen_method
-        self.run_data.clawdata.mx = mx
-        
-        super(ShelfBaseTest,self).set_data_objects()
+        self.prefix = "ml_e%s_m%s" % (eigen_method,mx)
     
 # Idealized 3 eigen_method test
 for method in [1,2,3,4]:
@@ -170,7 +155,7 @@ if __name__ == '__main__':
             for test in sys.argv[1:]:
                 tests_to_be_run.append(tests[int(test)])
             
-        test_runs.run_tests(tests,data_path=data_path,parallel=True)
+        test_runs.run_tests(tests,parallel=True)
 
     else:
         test_runs.print_tests(tests)
