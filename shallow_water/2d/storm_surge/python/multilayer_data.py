@@ -32,6 +32,7 @@ class MultilayerData(data.Data):
         self.add_attribute('wave_family',4)
         self.add_attribute('epsilon',0.4)
         self.add_attribute('sigma',25e3)
+        self.add_attribute('theta',0.0)
         
         # Bathymetry
         self.add_attribute('bathy_type',0)
@@ -62,10 +63,13 @@ class MultilayerData(data.Data):
         data.data_write(out_file,self,None)
         data.data_write(out_file,self,'eta','(Top surface of each layer)')
         data.data_write(out_file,self,'init_type','(Type of initial condition)')
-        data.data_write(out_file,self,'init_location','(Location for perturbation)')
-        data.data_write(out_file,self,'wave_family','(Wave family of the perturbation)')
         data.data_write(out_file,self,'epsilon','(Perturbation strength)')
-        data.data_write(out_file,self,'sigma','(Gaussian width for init_type=2,3)')
+        if 1 <= self.init_type and self.init_type <= 3 :
+            data.data_write(out_file,self,'init_location','(Location for perturbation)')
+            data.data_write(out_file,self,'wave_family','(Wave family of the perturbation)')
+            if 2 <= self.init_type and self.init_type <= 3:
+                data.data_write(out_file,self,'angle','(Angle of direction of travel from x-axis)')
+                data.data_write(out_file,self,'sigma','(Gaussian width')
         data.data_write(out_file,self,None)
         data.data_write(out_file,self,'bathy_type','(Type of bathymetry prescribed)')
         if self.bathy_type == 0:
