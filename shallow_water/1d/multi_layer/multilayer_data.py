@@ -21,7 +21,7 @@ import pyclaw.data as data
 
 # Simple hurricane data format
 class MultilayerData(data.Data):
-    def __init__(self,rundata):
+    def __init__(self):
         super(MultilayerData,self).__init__()
         
         # Physics
@@ -54,7 +54,7 @@ class MultilayerData(data.Data):
         self.add_attribute('A',5.0)
         self.add_attribute('omega',2.0)
         self.add_attribute('N',2.0)
-        self.add_attribute('t_length',rundata.clawdata.tfinal-rundata.clawdata.t0)
+        self.add_attribute('t_length',10.0)
         self.add_attribute('B',1.5)
         self.add_attribute('Pn',1005.0)
         self.add_attribute('Pc',950.0)

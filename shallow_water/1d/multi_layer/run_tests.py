@@ -19,223 +19,158 @@ Can run a particular test by giving the number of the test at the comand line
 import subprocess
 import sys
 import os
-import copy
-import time
-import glob
-
 import numpy as np
 
-from pyclaw.runclaw import runclaw
-from pyclaw.plotters.plotclaw import plotclaw
+import test_runs
 
-import setrun
+tests = []
 
 # Parameters
-if os.environ.has_key('DATA_PATH'):
-    base_path = os.path.join(os.environ['DATA_PATH'],"multi_layer_1d")
-else:
-    base_path = os.getcwd()
-base_path = os.path.expanduser(base_path)
-parallel = True
-poll_interval = 15.0
-if os.environ.has_key('OMP_NUM_THREADS'):
-    max_processes = int(os.environ['OMP_NUM_THREADS'])
-else:
-    max_processes = 4
-process_queue = []
-runclaw_cmd = "python $CLAW/python/pyclaw/runclaw.py"
-plotclaw_cmd = "python $CLAW/python/pyclaw/plotters/plotclaw.py"
+data_path = os.path.join(os.environ['DATA_PATH'],"multi_layer_1d")
 
-base_idealized_3 = {'name':'idealized_3','setplot':'setplot',
-                    'run_data':{'xlower':0.0,'xupper':1.0,'mx':500,'outstyle':1,
-                        'nout':50,'tfinal':0.5},
-                    'multilayer_data':{'eigen_method':1,'init_type':1,
-                        "init_location":0.45,"wave_family":3,'eta_2':-0.6,
-                        'bathy_left':-1.0,'bathy_right':-0.2,'wind_type':0,
-                        'epsilon':0.1,'rho_1':0.95}
-                    }
-
-base_idealized_4 = {'name':'idealized_4','setplot':'setplot',
-                    'run_data':{'xlower':0.0,'xupper':1.0,'mx':500,'outstyle':1,
-                        'nout':50,'tfinal':0.5},
-                    'multilayer_data':{'eigen_method':1,'init_type':1,
-                        "init_location":0.45,"wave_family":4,'eta_2':-0.6,
-                        'bathy_left':-1.0,'bathy_right':-0.2,'wind_type':0,
-                        'epsilon':0.04,'rho_1':0.95}
-                    }
-                    
-base_idealized_4_breakdown = {'name':'idealized_4_breakdown','setplot':'setplot',
-                    'run_data':{'xlower':0.0,'xupper':1.0,'mx':500,'outstyle':1,
-                        'nout':50,'tfinal':0.1},
-                    'multilayer_data':{'eigen_method':1,'init_type':1,
-                        "init_location":0.45,"wave_family":4,'eta_2':-0.6,
-                        'bathy_left':-1.0,'bathy_right':-0.2,'wind_type':0,
-                        'epsilon':0.1,'rho_1':0.95}
-                    }
-
-base_oscillatory_wind = {'name':'oscillatory_wind','setplot':'setplot_oscillatory',
-                         'run_data':{'mx':100,'outstyle':1,'nout':160,'tfinal':10.0,
-                            'mthbc_xlower':3,'mthbc_xupper':3},
-                         'multilayer_data':{'init_type':0,'eta_1':0.0,'eta_2':-0.25,
-                            'wind_type':3,'A':5.0,"rho_air":1.15,"rho_1":1025,
-                            "rho_2":1045,"N":2.0,'omega':2.0,"t_length":10.0,
-                            'bathy_left':-1.0,'bathy_right':-1.0,'eigen_method':3}
-                        }
-                        
-base_shelf_test = {'name':'shelf','setplot':'setplot_shelf',
-                   'run_data':{'mx':2000,'nout':300,'outstyle':1,'tfinal':7200.0,
-                      'xlower':-400000.0,'mthbc_xupper':3},
-                   'multilayer_data':{'rho_air':1.0,'rho_1':1025.0,'rho_2':1028.0,
-                      'eigen_method':1,'init_type':4,'init_location':300e3,
-                      'eta_2':-300,'epsilon':0.4,'bathy_location':-30e3,
-                      'bathy_left':-4000,'bathy_right':-200,'wind_type':0}
-                  }
-
-test_suites = []
-
-# Eigen method tests for idealized_3
-# for method in [1,2,3,4]:
-#     test = copy.deepcopy(base_idealized_3)
-#     test['multilayer_data']['eigen_method'] = method
-#     test_suites.append(test)
+class IdealizedBaseTest(test_runs.TestML1D):
     
-# Eigen method tests for idealized_4_breakdown
-# for method in [1,2,3,4]:
-#     test = copy.deepcopy(base_idealized_4_breakdown)
-#     test['multilayer_data']['eigen_method'] = method
-#     test_suites.append(test)
+    def __init__(self,wave_family,mx=500,eigen_method=2,epsilon=0.1):
+        # Specific parameters
+        self.mx = mx
+        self.wave_family = wave_family
+        self.eigen_method = eigen_method
+        self.epsilon = epsilon
+        
+        self.name = "idealized_%s" % wave_family
+        
+        super(IdealizedBaseTest,self).__init__()
+        
+    def set_data_objects(self):
+        # Static data
+        self.run_data.clawdata.xlower = 0.0
+        self.run_data.clawdata.xupper = 1.0
+        self.run_data.clawdata.outstyle = 1
+        self.run_data.clawdata.nout = 50
+        self.run_data.clawdata.tfinal = 0.5
+        
+        self.ml_data.init_type = 1
+        self.ml_data.init_location = 0.45
+        self.ml_data.eta_2 = -0.6
+        self.ml_data.bathy_left = -1.0
+        self.ml_data.bathy_right = -0.2
+        self.ml_data.wind_type = 0
+        self.ml_data.rho_1 = 0.95
+        
+        # Parameters
+        self.run_data.clawdata.mx = self.mx
+        self.ml_data.wave_family = self.wave_family
+        self.ml_data.eigen_method = self.eigen_method
+        self.ml_data.epsilon = self.epsilon
+        
+        super(Idealized3BaseTest,self).set_data_objects()
+        
+class OscillatoryWindBaseTest(test_runs.TestML1D):
+    
+    def __init__(self,eigen_method=2):
+        
+        self.eigen_method = eigen_method
+        
+        self.name = "oscillatory_wind"
+        self.setplot = "setplot_oscillatory"
+        
+        super(OscillatoryWindBaseTest,self).__init__()
+        
+    def set_data_objects(self):
+        # Static data
+        self.run_data.clawdata.mx = 100
+        self.run_data.clawdata.outstyle = 1
+        self.run_data.clawdata.nout = 160
+        self.run_data.clawdata.tfinal = 10.0
+        self.run_data.clawdata.mthbc_xlower = 3
+        self.run_data.clawdata.mthbc_xupper = 3
+        
+        self.ml_data.init_type = 0
+        self.ml_data.eta_1 = 0.0
+        self.ml_data.eta_2 = -0.25
+        self.ml_data.wind_type = 3
+        self.ml_data.A = 5.0
+        self.ml_data.rho_air = 1.15
+        self.ml_data.rho_1 = 1025.0
+        self.ml_data.rho_2 = 1045.0
+        self.ml_data.N = 2.0
+        self.ml_data.omega = 2.0
+        self.ml_data.t_length = (self.run_data.clawdata.tfinal 
+                                    - self.run_data.clawdata.t0)
+        self.ml_data.bathy_left = -1.0
+        self.ml_data.bathy_right = -1.0
+        self.ml_data.eigen_method = self.eigen_method
+        
+        super(OscillatoryWindBaseTest,self).set_data_objects()
+        
+class ShelfBaseTest(test_runs.TestML1D):
+    
+    def __init__(self,eigen_method=2,mx=2000):
+        self.eigen_method = eigen_method
+        self.mx = mx
+        
+        self.name = "shelf"
+        self.setplot = "setplot_shelf"
+        
+        super(ShelfBaseTest,self).__init__()
+        
+    def set_data_objects(self):
+        # Static data
+        self.run_data.clawdata.nout = 300
+        self.run_data.clawdata.outstyle = 1
+        self.run_data.clawdata.tfinal = 7200.0
+        self.run_data.clawdata.xlower = -400e3
+        self.run_data.clawdata.mthbc_xupper = 3
+        
+        self.ml_data.rho_air = 1.0
+        self.ml_data.rho_1 = 1025.0
+        self.ml_data.rho_2 = 1028.0
+        self.ml_data.init_type = 4
+        self.ml_data.init_location = 300e3
+        self.ml_data.eta_2 = -300.0
+        self.ml_data.epsilon = 0.4
+        self.ml_data.bathy_location = -30e3
+        self.ml_data.bathy_left = -4000.0
+        self.ml_data.bathy_right = -200.0
+        self.ml_data.wind_type = 0
+        
+        # Variable paramaters
+        self.ml_data.eigen_method = self.eigen_method
+        self.run_data.clawdata.mx = mx
+        
+        super(ShelfBaseTest,self).set_data_objects()
+    
+# Idealized 3 eigen_method test
+for method in [1,2,3,4]:
+    tests.append(IdealizedBaseTest(3,epsilon=0.1,eigen_method=method))
+    
+# Idealized 4 eigen_method test
+for method in [1,2,3,4]:
+    tests.append(IdealizedBaseTest(4,epsilon=0.04,eigen_method=method))
 
-# Eigen method tests for idealized_4
-# for method in [1,2,3,4]:
-#     test = copy.deepcopy(base_idealized_4)
-#     test['multilayer_data']['eigen_method'] = method
-#     test_suites.append(test)
+# Idealized 4 break down    
+for method in [1,2,3,4]:
+    tests.append(IdealizedBaseTest(4,eigen_method=method,epsilon=0.1))
 
 # Eigen method tests for oscillatory wind
-# for method in [1,2,3,4]:
-#     test = copy.deepcopy(base_oscillatory_wind)
-#     test['multilayer_data']['eigen_method'] = method
-#     test_suites.append(test)
-
-# Convergence test for shelf
-for method in [3,4]:
-    for mx in [5000]:
-    # for mx in [100,200,400,800,1200,1600,2000,4000]:
-        test = copy.deepcopy(base_shelf_test)
-        test['run_data']['mx'] = mx
-        test['multilayer_data']['eigen_method'] = method
-        test_suites.append(test)
-        
-def run_tests(tests):
+for method in [1,2,3,4]:
+    tests.append(OscillatoryWindBaseTest(eigen_method=method))
     
-    for (i,test) in enumerate(tests):
-        # Base parameters
-        rundata = setrun.setrun()
-        ml_data = setrun.set_multilayer(rundata)
-        
-        # Set rundata parameters
-        for (key,value) in test['run_data'].iteritems():
-            setattr(rundata.clawdata,key,value)
-        
-        # Set multilayer data
-        for (key,value) in test['multilayer_data'].iteritems():
-            setattr(ml_data,key,value)
-            
-            
-        # Create output paths
-        prefix = "ml_%sd_e%s_m%s_%s" % (rundata.clawdata.ndim,
-                                        ml_data.eigen_method,
-                                        rundata.clawdata.mx,
-                                        test['name'])
-        data_dirname = ''.join((prefix,'_data'))
-        output_dirname = ''.join((prefix,"_output"))
-        plots_dirname = ''.join((prefix,"_plots"))
-        log_name = ''.join((prefix,"_log"))
-
-        data_path = os.path.join(base_path,test['name'],data_dirname)
-        output_path = os.path.join(base_path,test['name'],output_dirname)
-        plots_path = os.path.join(base_path,test['name'],plots_dirname)
-        log_path = os.path.join(base_path,test['name'],log_name)
-        
-        # Create test directory if not present
-        if not os.path.exists(os.path.join(base_path,test['name'])):
-            os.mkdir(os.path.join(base_path,test['name']))
-        
-        # Clobber old data directory
-        if os.path.exists(data_path):
-            data_files = glob.glob(os.path.join(data_path,'*.data'))
-            for data_file in data_files:
-                os.remove(data_file)
-        else:
-            os.mkdir(data_path)
-        
-        # Open and start log file
-        log_file = open(log_path,'w')
-        tm = time.localtime()
-        year = str(tm[0]).zfill(4)
-        month = str(tm[1]).zfill(2)
-        day = str(tm[2]).zfill(2)
-        hour = str(tm[3]).zfill(2)
-        minute = str(tm[4]).zfill(2)
-        second = str(tm[5]).zfill(2)
-        date = '%s/%s/%s - %s:%s.%s\n' % (year,month,day,hour,minute,second)
-        log_file.write(date)
-        
-        # Write out data files to output directory
-        temp_location = os.getcwd()
-        os.chdir(data_path)
-        rundata.write()
-        ml_data.write()
-        os.chdir(temp_location)
-
-        # Run the simulation
-        run_cmd = "%s xclaw %s T F %s" % (runclaw_cmd,output_path,data_path)
-        plot_cmd = "%s %s %s %s" % (plotclaw_cmd,output_path,plots_path,test['setplot'])
-        tar_cmd = "tar -cvzf %s.tgz %s" % (plots_path,plots_path)
-        cmd = ";".join((run_cmd,plot_cmd))
-        # cmd = run_cmd
-        print cmd
-        # print "Number of processes currently:",len(process_queue)
-        if parallel:
-            while len(process_queue) == max_processes:
-                print "Number of processes currently:",len(process_queue)
-                for process in process_queue:
-                    if process.poll() == 0:
-                        process_queue.remove(process)
-                time.sleep(poll_interval)
-            process_queue.append(subprocess.Popen(cmd,shell=True,
-                stdout=log_file,stderr=log_file))
-            
-        else:
-            # subprocess.Popen(cmd,shell=True).wait()
-            subprocess.Popen(cmd,shell=True,stdout=log_file,
-                stderr=log_file).wait()
-                
-    # Wait to exit while processes are still going
-    while len(process_queue) > 0:
-        print "Number of processes currently:",len(process_queue)
-        for process in process_queue:
-            if process.poll() == 0:
-                process_queue.remove(process)
-        time.sleep(poll_interval)
-
-def print_tests():
-    for (i,test) in enumerate(test_suites):
-        print "Test %s: %s" % (i,test['name'])
-        print "  Setplot: %s" % test['setplot']
-        print "  Run Data:"
-        print "    %s" % test['run_data']
-        print "  Multilayer Data:"
-        print "    %s" % test['multilayer_data']
+# Convergence test for shelf
+for method in [1,2,3,4]:
+    for mx in [100,200,400,800,1200,1600,2000,3000,4000,5000]:
+        tests.append(ShelfBaseTest(mx=mx,eigen_method=method))
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
         if sys.argv[1].lower() == 'all':
-            tests = test_suites
+            tests_to_be_run = tests
         else:
-            tests = []
+            tests_to_be_run = []
             for test in sys.argv[1:]:
-                tests.append(test_suites[int(test)])
-        run_tests(tests)
+                tests_to_be_run.append(tests[int(test)])
+            
+        test_runs.run_tests(tests,data_path=data_path,parallel=True)
+
     else:
-        print_tests()
+        test_runs.print_tests(tests)

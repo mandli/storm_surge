@@ -196,9 +196,9 @@ def setrun(claw_pkg='Classic'):
     # end of function setrun
     # ----------------------
 
-def set_multilayer(run_data):
+def set_multilayer_data():
     
-    prob_data = MultilayerData(run_data)
+    prob_data = MultilayerData()
     
     # Physics
     prob_data.rho_air = 1.15e-3
@@ -228,7 +228,7 @@ def set_multilayer(run_data):
     prob_data.A = 5.0
     prob_data.omega = 2.0
     prob_data.N = 2.0
-    prob_data.t_length = run_data.clawdata.tfinal-run_data.clawdata.t0
+    prob_data.t_length = 10.0
     prob_data.B = 1.5
     prob_data.Pn = 1005.0
     prob_data.Pc = 950.0
@@ -245,7 +245,7 @@ if __name__ == '__main__':
         rundata = setrun(sys.argv[1])
     else:
     	rundata = setrun()
-    prob_data = set_multilayer(rundata)
+    prob_data = set_multilayer()
 
     rundata.write()
     prob_data.write()
