@@ -151,9 +151,9 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
 !         wind_speed = sqrt(w_normal**2 + w_transverse**2)
 !         tau = wind_drag(wind_speed) * rho_air * wind_speed
 !         if (ixy == 1) then
-!             wind_stress = dxcom * tau * w_normal
+!             wind_stress = tau * w_normal
 !         else if (ixy == 2) then
-!             wind_stress = dycom * tau * w_normal
+!             wind_stress = tau * w_normal
 !         endif
 
         ! ====================================================================

@@ -32,6 +32,9 @@ def setplot(plotdata):
     amrdata = Data(os.path.join(plotdata.outdir,'amr2ez.data'))
     hurricane_data = Data(os.path.join(plotdata.outdir,'hurricane.data'))
     multilayer_data = Data(os.path.join(plotdata.outdir,'multilayer.data'))
+    
+    ref_lines = [multilayer_data.bathy_location]
+    
     plotdata.clearfigures()
     plotdata.clear_frames = False
     plotdata.clear_figs = True
@@ -291,13 +294,13 @@ def setplot(plotdata):
     xlimits_zoomed = xlimits
     ylimits = [amrdata.ylower,amrdata.yupper]
     eta = [multilayer_data.eta[0],multilayer_data.eta[1]]
-    top_surface_limits = [eta[0]-0.1,eta[0]+0.1]
-    internal_surface_limits = [eta[1]-2.0,eta[1]+2.0]
+    top_surface_limits = [eta[0]-0.5,eta[0]+0.5]
+    internal_surface_limits = [eta[1]-2.5,eta[1]+2.5]
     top_speed_limits = [0.0,2.0]
     internal_speed_limits = [0.0,0.15]
     
-    top_surf_zoomed = [eta[0] - 0.25,eta[0]+0.25]
-    bottom_surf_zoomed = [-0.7,-0.2]
+    top_surf_zoomed = top_surface_limits
+    bottom_surf_zoomed = internal_surface_limits
     # bottom_surf_zoomed = [eta[1] - 0.5,eta[1] + 0.5]
     velocities_zoomed = [-0.6,0.6]
     
@@ -310,7 +313,7 @@ def setplot(plotdata):
     # ========================================================================
     plotfigure = plotdata.new_plotfigure(name='Surface', figno=0)
     plotfigure.show = False
-    plotfigure.kwargs = {'figsize':(14,4)}
+    # plotfigure.kwargs = {'figsize':(14,4)}
     
     # Top surface
     plotaxes = plotfigure.new_plotaxes()
@@ -464,7 +467,7 @@ def setplot(plotdata):
     plotaxes.title = "Profile of depth"
     plotaxes.afteraxes = profile_afteraxes
     
-    slice_index = 30
+    slice_index = 5
     
     # Internal surface
     def bathy_profile(current_data):
@@ -535,7 +538,7 @@ def setplot(plotdata):
     plotaxes.afteraxes = top_surf_afteraxes
     plotitem = plotaxes.new_plotitem(plot_type="1d_from_2d_data")
     plotitem.map_2d_to_1d = upper_surface
-    plotitem.amr_plotstyle = ['x','-','+']
+    # plotitem.amr_plotstyle = ['x','-','+']
     # plotitem.color = (0.2,0.8,1.0)
     plotitem.show = True
     
@@ -548,6 +551,10 @@ def setplot(plotdata):
     def internal_surf_afteraxes(cd):
         plt.hold(True)
         plt.title('')
+        loc,label = plt.xticks()
+        label = -loc/1.e3
+        plt.xticks(loc,label)
+        plt.xlabel('km')
         plt.ylabel('m')
         plt.subplots_adjust(hspace=0.05)        
         plt.plot([multilayer_data.bathy_location,multilayer_data.bathy_location],bottom_surf_zoomed,'--k')
@@ -555,7 +562,7 @@ def setplot(plotdata):
     plotaxes.afteraxes = internal_surf_afteraxes
     plotitem = plotaxes.new_plotitem(plot_type='1d_from_2d_data')
     plotitem.map_2d_to_1d = lower_surface
-    plotitem.amr_plotstyle = ['x','-','+']
+    # plotitem.amr_plotstyle = ['x','-','+']
     plotitem.color = 'k'
     plotitem.show = True  
     
@@ -572,10 +579,11 @@ def setplot(plotdata):
     plotaxes.ylimits = velocities_zoomed
     def velocity_afteraxes(cd):
         plt.hold(True)
-        plt.xlabel('')
-        locs,labels = plt.xticks()
-        labels = ['' for i in xrange(len(locs))]
-        plt.xticks(locs,labels)
+        loc,label = plt.xticks()
+        label = -loc/1.e3
+        plt.xticks(loc,label)
+        plt.xlabel('km')
+        plt.ylabel('m/s')
         plt.plot([multilayer_data.bathy_location,multilayer_data.bathy_location],velocities_zoomed,'--k')
         plt.ylabel('m/s')
         plt.hold(False)

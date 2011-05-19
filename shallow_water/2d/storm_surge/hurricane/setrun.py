@@ -79,10 +79,12 @@ def setrun(claw_pkg='geoclaw'):
         
 
     # Number of grid cells:
-    levels = 4
-    clawdata.mx = 70*levels*2
+    levels = 1
+    clawdata.mx = 70
+    clawdata.my = 60
+    # clawdata.mx = 70*levels*2
     # clawdata.mx = 560
-    clawdata.my = 60*levels*2
+    # clawdata.my = 60*levels*2
     # clawdata.my = 480
     # clawdata.mx = 100
     # clawdata.my = 100
@@ -238,7 +240,7 @@ def setrun(claw_pkg='geoclaw'):
 
 
     # max number of refinement levels:
-    mxnest = 1
+    mxnest = 5
 
     clawdata.mxnest = -mxnest   # negative ==> anisotropic refinement in x,y,t
 
@@ -313,7 +315,7 @@ def setgeo(rundata):
     # for topography, append lines of the form
     #   [topotype, minlevel, maxlevel, t1, t2, fname]
     # geodata.topofiles.append([2, 1, 1, 0., 1.e10, 'bowl.topotype2'])
-    # geodata.topofiles.append([1, 1, 5, 0., 1e10, 'topo.data'])
+    geodata.topofiles.append([1, 1, 5, 0., 1e10, 'topo.data'])
     
     # == setdtopo.data values ==
     geodata.dtopofiles = []
@@ -371,8 +373,8 @@ def set_hurricane_data(ramp_up_time=RAMP_UP_TIME):
     data.speed_nest = [0.25,0.5,1.0,2.0,3.0,4.0]
     
     # Hurricane location based refinement
-    data.max_R_nest = 3
-    data.R_refine = [60.0e3,40e3,20e3]
+    data.max_R_nest = 4
+    data.R_refine = [60.0e3,50e3,40e3,30e3]
         
     # Wind strength based refinement
     data.max_wind_nest = 0
@@ -432,7 +434,7 @@ def set_multilayer_data():
     data.sigma = 25e3
     
     # Bathy settings
-    data.bathy_type = 3
+    data.bathy_type = 0
     
     # Bathy settings for type == 1
     data.bathy_location = 450e3

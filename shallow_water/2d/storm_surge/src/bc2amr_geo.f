@@ -109,18 +109,7 @@ c
       go to (100,110,120,130) mthbc(1)+1
 c
   100 continue
-c     Wall boundary conditions for two layer swe
-      do i=1,nxl
-          do j=1,ncol
-              aux(i,j,1) = aux(nxl+1,j,1)  !inserted for bc2amr_noslope
-              val(i,j,1) = val(nxl+1,j,1)
-              val(i,j,2) = -val(nxl+1,j,2)
-              val(i,j,3) = val(nxl+1,j,3)
-              val(i,j,4) = val(nxl+1,j,4)
-              val(i,j,5) = -val(nxl+1,j,5)
-              val(i,j,6) = val(nxl+1,j,6)
-          enddo
-      enddo
+      stop "Unimplemented boundary condition"
 c
   110 continue
 c     # zero-order extrapolation:
@@ -148,6 +137,7 @@ c     # negate the normal velocity:
       do 136 i=1,nxl
          do 136 j = 1,ncol
             val(i,j,2) = -val(i,j,2)
+            val(i,j,5) = -val(i,j,5)
   136    continue
       go to 199
 
@@ -170,18 +160,7 @@ c
       go to (200,210,220,230) mthbc(2)+1
 c
   200 continue
-c     Wall boundary conditions for 2 layer swe
-      do i=ibeg,nrow
-          do j=1,ncol
-              aux(i,j,1) = aux(ibeg-1,j,1) !inserted for bc2amr_noslope
-              val(i,j,1) = val(ibeg-1,j,1)
-              val(i,j,2) = -val(ibeg-1,j,2)
-              val(i,j,3) = val(ibeg-1,j,3)
-              val(i,j,4) = val(ibeg-1,j,4)
-              val(i,j,5) = -val(ibeg-1,j,5)
-              val(i,j,6) = val(ibeg-1,j,6)
-          enddo
-      enddo
+      stop "Unimplemented boundary condition"
 
   210 continue
 c     # zero-order extrapolation:
@@ -198,7 +177,7 @@ c     # periodic:   handled elsewhere in amr
       go to 299
 
   230 continue
-c     # solid wall (assumes 2'nd component is velocity or momentum in x):
+c     Wall boundary conditions for 2 layer swe
       do 235 m=1,meqn
          do 235 i=ibeg,nrow
             do 235 j = 1,ncol
@@ -209,6 +188,7 @@ c     # negate the normal velocity:
       do 236 i=ibeg,nrow
          do 236 j = 1,ncol
             val(i,j,2) = -val(i,j,2)
+            val(i,j,5) = -val(i,j,5)
   236    continue
       go to 299
 
@@ -230,18 +210,7 @@ c
       go to (300,310,320,330) mthbc(3)+1
 c
   300 continue
-c     Wall boundary conditions for 2 layer swe
-      do i=1,nyb
-          do j=1,nrow
-              aux(i,j,1) = aux(i,nyb+1,1)
-              val(i,j,1) = val(i,nyb+1,1)
-              val(i,j,2) = val(i,nyb+1,2)
-              val(i,j,3) = -val(i,nyb+1,3)
-              val(i,j,4) = val(i,nyb+1,4)
-              val(i,j,5) = val(i,nyb+1,5)
-              val(i,j,6) = -val(i,nyb+1,6)
-          enddo
-      enddo
+      stop "Unimplemented boundary condition"
 c
   310 continue
 c     # zero-order extrapolation:
@@ -269,6 +238,7 @@ c     # negate the normal velocity:
       do 336 j=1,nyb
          do 336 i=1,nrow
             val(i,j,3) = -val(i,j,3)
+            val(i,j,6) = -val(i,j,6)
   336    continue
       go to 399
 
@@ -291,18 +261,7 @@ c
       go to (400,410,420,430) mthbc(4)+1
 c
   400 continue
-c     Wall boundary conditions for 2 layer swe
-      do j=jbeg,ncol
-          do i=1,nrow
-              aux(i,j,1) = aux(i,jbeg-1,1)  !inserted for bc2amr_noslope
-              val(i,j,1) = val(i,jbeg-1,1)
-              val(i,j,2) = val(i,jbeg-1,2)
-              val(i,j,3) = -val(i,jbeg-1,3)
-              val(i,j,4) = val(i,jbeg-1,4)
-              val(i,j,5) = val(i,jbeg-1,5)
-              val(i,j,6) = -val(i,jbeg-1,6)
-          enddo
-      enddo
+      stop "Unimplemented boundary condition"
 
   410 continue
 c     # zero-order extrapolation:
@@ -330,6 +289,7 @@ c     # negate the normal velocity:
       do 436 j=jbeg,ncol
          do 436 i=1,nrow
             val(i,j,3) = -val(i,j,3)
+            val(i,j,6) = -val(i,j,6)
   436    continue
       go to 499
 

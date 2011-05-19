@@ -49,12 +49,9 @@ plotclaw_cmd = "python $CLAW/python/pyclaw/plotters/plotclaw.py"
 test_suites = []
 
 base_shelf_test = {'name':'shelf_redux','setplot':'setplot',
-                   'run_data':{'mx':2000,'my':100,'nout':300,'outstyle':1,
-                      'tfinal':7200.0,'xlower':-400000.0,'mthbc_xupper':3},
-                   'multilayer_data':{'rho_air':1.0,'rho_1':1025.0,'rho_2':1028.0,
-                      'eigen_method':1,'init_type':5,'init_location':300e3,
-                      'eta_2':-300,'epsilon':0.4,'bathy_location':-30e3,
-                      'bathy_left':-4000,'bathy_right':-200,'wind_type':0}
+                   'run_data':{},
+                   'multilayer_data':{},
+                   'hurricane_data':{}
                   }
 
 # Eigenmethod tests
@@ -137,8 +134,8 @@ def run_tests(tests):
         # cmd = run_cmd
         print cmd
         if parallel:
-            print "Number of processes currently:",len(process_queue)
             while len(process_queue) == max_processes:
+                print "Number of processes currently:",len(process_queue)
                 for process in process_queue:
                     if process.poll() == 0:
                         process_queue.remove(process)
@@ -150,6 +147,16 @@ def run_tests(tests):
             # subprocess.Popen(cmd,shell=True).wait()
             subprocess.Popen(cmd,shell=True,stdout=log_file,
                 stderr=log_file).wait()
+                
+    # Wait to exit while processes are still going
+    while len(process_queue) > 0:
+        for process in process_queue:
+            if process.poll() == 0:
+                process_queue.remove(process)
+                print "Number of processes currently:",len(process_queue)
+        time.sleep(poll_interval)
+                
+    
                 
 
 def print_tests():

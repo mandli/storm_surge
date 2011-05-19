@@ -59,11 +59,16 @@ def write_topo_file(file,bathy_type=None,plot=False,force=False):
     basin_depth = -3000
     shelf_depth = -100
     eta = [0.0,-300]
-    h = 100.0
+    h = 150.0
     A = basin_depth - eta[1] + 0.5*h
     B = shelf_depth - eta[1] - 0.5*h
     eta_int = (A*x1 - B*x0) / (A-B)
     shelf_slope =  A / (x0 - eta_int)
+    
+    x_star = (eta[1] - 0.5*h - basin_depth) * (x0-x1) / (basin_depth - shelf_depth) + x0
+    
+    def z_shelf_slope(x):
+        return (basin_depth - shelf_depth) / (x0-x1) * (x - x0) + basin_depth
     
     # Points and depths for gulf shelf
     #  1: (25°39'2.85"N, 86° 7'24.77"W)   --   -3228 m   --   0.0 m
@@ -78,10 +83,11 @@ def write_topo_file(file,bathy_type=None,plot=False,force=False):
                             (x2,shelf_depth),
                             (500e3,beach_slope*(500e3-x2)+shelf_depth)],
               "new_bathy2":[(-250e3,basin_depth),(x0,basin_depth),
-                       (eta_int-epsilon,shelf_slope*(eta_int-epsilon-x0)+basin_depth),
-                       (eta_int+epsilon,shelf_depth),
-                       (x2,shelf_depth),
-                       (500e3,beach_slope*(500e3-x2)+shelf_depth)],
+                            (x_star,eta[1]-0.5*h),
+                            (x1-epsilon,eta[1]-0.5*h),
+                            (x1+epsilon,shelf_depth),
+                            (x2,shelf_depth),
+                            (500e3,beach_slope*(500e3-x2)+shelf_depth)],
               "new_bathy3":[(-250e3,basin_depth),(x0,basin_depth),
                        (eta_int-epsilon,shelf_slope*(eta_int-epsilon-x0)+basin_depth),
                        (eta_int+epsilon,shelf_slope*(eta_int+epsilon-x1)+shelf_depth),

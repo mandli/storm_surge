@@ -66,16 +66,16 @@ def setrun(claw_pkg='geoclaw'):
     clawdata.ndim = ndim
     
     # Lower and upper edge of computational domain:
-    clawdata.xlower = 0.0
-    clawdata.xupper = 1.0
+    clawdata.xlower = -400000.0
+    clawdata.xupper = 0.0
     
-    clawdata.ylower = 0.0
-    clawdata.yupper = 1.0
+    clawdata.ylower = -300e3
+    clawdata.yupper = 300e3
         
 
     # Number of grid cells:
     # clawdata.mx = 70
-    clawdata.mx = 70 * 2
+    clawdata.mx = 500
     clawdata.my = 60
     # clawdata.my = 120
     # clawdata.mx = 100
@@ -89,7 +89,7 @@ def setrun(claw_pkg='geoclaw'):
     clawdata.meqn = 6
 
     # Number of auxiliary variables in the aux array (initialized in setaux)
-    clawdata.maux = 8
+    clawdata.maux = 10
     
     # Index of aux array corresponding to capacity function, if there is one:
     clawdata.mcapa = 0
@@ -118,9 +118,9 @@ def setrun(claw_pkg='geoclaw'):
     step = 0.25
     
     if clawdata.outstyle==1:
-        clawdata.nout = 80
+        clawdata.nout = 300
         # if wave_family < 4 and wave_family > 1:
-        clawdata.tfinal = 1.0
+        clawdata.tfinal = 7200.0
         # else:
             # clawdata.tfinal = 0.1
 
@@ -164,7 +164,7 @@ def setrun(claw_pkg='geoclaw'):
     # Initial time step for variable dt.  
     # If dt_variable==0 then dt=dt_initial for all steps:
     # clawdata.dt_initial = 0.64e2
-    clawdata.dt_initial = 0.575e-03
+    clawdata.dt_initial = 0.4039e-4
     
     # Max time step to be allowed if variable dt used:
     clawdata.dt_max = 1e+99
@@ -220,7 +220,7 @@ def setrun(claw_pkg='geoclaw'):
     #   3 => solid wall for systems where q(2) is normal velocity
     
     clawdata.mthbc_xlower = 1
-    clawdata.mthbc_xupper = 1
+    clawdata.mthbc_xupper = 3
     
     clawdata.mthbc_ylower = 1
     clawdata.mthbc_yupper = 1
@@ -248,7 +248,7 @@ def setrun(claw_pkg='geoclaw'):
     #   'center',  'capacity', 'xleft', or 'yleft'  (see documentation).
 
     clawdata.auxtype = ['center','center','center','center','center','center',
-                        'center','center']
+                        'center','center','center','center']
 
 
     clawdata.tol = -1.0     # negative ==> don't use Richardson estimator
@@ -402,7 +402,7 @@ def set_multilayer_data():
     # Physical parameters
     data.layers = 2
     # data.rho = [1.0,0.0]
-    data.rho = [0.90,1.0]
+    data.rho = [1025.0,1028.0]
     
     # Algorithm Parameters
     data.eigen_method = 1
@@ -412,18 +412,18 @@ def set_multilayer_data():
     
     # Initial conditions
     # data.eta = [0.0,-5000.0]
-    data.eta = [0.0,-0.6]
-    data.init_type = 1
-    data.init_location = [0.45,0.0]
+    data.eta = [0.0,-300.0]
+    data.init_type = 5
+    data.init_location = [300e3,50e3]
     data.wave_family = wave_family
-    data.epsilon = 0.05
+    data.epsilon = 0.4
     data.sigma = 0.02
     
     # Bathy settings
     data.bathy_type = 1
-    data.bathy_location = 0.5
-    data.bathy_left = -1.0
-    data.bathy_right = -0.2
+    data.bathy_location = -30e3
+    data.bathy_left = -4000
+    data.bathy_right = -200
     
     return data
     

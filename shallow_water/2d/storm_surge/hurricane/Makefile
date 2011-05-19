@@ -55,7 +55,6 @@ CLAW_SOURCES = \
 	$(MULTILAYER_SRC)/rpt2_dry_multilayer.f90 \
 	$(MULTILAYER_SRC)/multilayer_eigen.f90 \
 	$(MULTILAYER_SRC)/tick.f \
-	$(MULTILAYER_SRC)/qad_geo.f \
 	$(MULTILAYER_SRC)/stepgrid_geo.f \
 	$(CLAW_LIB)/filval.f \
 	$(CLAW_LIB)/filpatch.f \
@@ -66,6 +65,7 @@ DATA_FILES = hurricane.data topo.data multilayer.data
 	
 CLAW_LIBSOURCES = \
 	$(GEOLIB)/geoclaw_mod.f90 \
+	$(GEOLIB)/qad_geo.f \
 	$(GEOLIB)/riemannsolvers_geo.f \
 	$(GEOLIB)/topo_mod.f90 \
 	$(GEOLIB)/dtopo_mod.f90 \

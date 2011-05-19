@@ -49,14 +49,18 @@ plotclaw_cmd = "python $CLAW/python/pyclaw/plotters/plotclaw.py"
 test_suites = []
 
 base_test_3 = {'name':'idealized_redux_3','setplot':"setplot",
-                'run_data':{'mx':100,'my':100},
-                'multilayer_data':{'eigen_method':1,'wave_family':3},
+                'run_data':{'mx':100,'my':100,'xlower':0.0,'xupper':1.0,
+                    'outstyle':1,'nout':50,'tfinal':0.5},
+                'multilayer_data':{'eigen_method':1,'wave_family':3,
+                    'eta':[0.0,-0.6],'epsilon':0.1,'rho':[0.95,1.0]},
                 'hurricane_data':{}
                }
 
 base_test_4 = {'name':'idealized_redux_4','setplot':"setplot",
-                'run_data':{'mx':100,'my':100},
-                'multilayer_data':{'eigen_method':1,'wave_family':4},
+                'run_data':{'mx':100,'my':100,'xlower':0.0,'xupper':1.0,
+                    'outstyle':1,'nout':50,'tfinal':0.5},
+                'multilayer_data':{'eigen_method':1,'wave_family':4,
+                    'eta':[0.0,-0.6],'rho':[0.95,1.0],'epsilon':0.04},
                 'hurricane_data':{}
                }
 
@@ -90,7 +94,7 @@ def run_tests(tests):
             
         for (key,value) in test['hurricane_data'].iteritems():
             setattr(hurricane_data,key,value)
-        
+            
         # Create output paths
         prefix = "ml_%sd_e%s_m%s_%s" % (rundata.clawdata.ndim,
                                         ml_data.eigen_method,
@@ -145,11 +149,12 @@ def run_tests(tests):
         cmd = ";".join((run_cmd,plot_cmd))
         # cmd = run_cmd
         print cmd
+        # print "Number of processes currently:",len(process_queue)
         if parallel:
-            print "Number of processes currently:",len(process_queue)
             while len(process_queue) == max_processes:
+                print "Number of processes currently:",len(process_queue)
                 for process in process_queue:
-                    if process.poll() == 0:
+                    if process.poll() is not None:
                         process_queue.remove(process)
                 time.sleep(poll_interval)
             process_queue.append(subprocess.Popen(cmd,shell=True,
@@ -159,6 +164,14 @@ def run_tests(tests):
             # subprocess.Popen(cmd,shell=True).wait()
             subprocess.Popen(cmd,shell=True,stdout=log_file,
                 stderr=log_file).wait()
+                
+    # Wait to exit while processes are still going
+    while len(process_queue) > 0:
+        for process in process_queue:
+            if process.poll() is not None:
+                process_queue.remove(process)
+                print "Number of processes currently:",len(process_queue)
+        time.sleep(poll_interval)
                 
 
 def print_tests():

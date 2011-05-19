@@ -28,7 +28,7 @@ module multilayer_module
     
     ! Initial layer depths
     double precision, allocatable :: eta(:)
-    double precision :: epsilon,sigma,init_location(2)
+    double precision :: epsilon,sigma,init_location(2),angle
     integer :: init_type,wave_family
     
     ! Simple bathy states
@@ -93,10 +93,15 @@ contains
         ! Initial conditions
         read(13,*) eta
         read(13,*) init_type
-        read(13,*) init_location
-        read(13,*) wave_family
         read(13,*) epsilon
-        read(13,*) sigma
+        if (1 <= init_type .and. init_type <= 3) then  
+            read(13,*) init_location
+            read(13,*) wave_family
+            if(2 <= init_type .and. init_type <= 3) then
+                read(13,*) angle
+                read(13,*) sigma
+            endif
+        endif
         
         ! Bathymetry
         read(13,*) bathy_type
