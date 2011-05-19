@@ -32,12 +32,12 @@ class IdealizedBaseTest(test_runs.TestML1D):
         super(IdealizedBaseTest,self).__init__()
         
         self.name = "idealized_%s" % wave_family
-        self.prefix = "ml_2d_angle%s" % int(angle*100.0)
         
         # Static data
         self.run_data.clawdata.xlower = 0.0
         self.run_data.clawdata.xupper = 1.0
         self.run_data.clawdata.outstyle = 1
+        # self.run_data.clawdata.iout = [1,100]
         self.run_data.clawdata.nout = 50
         self.run_data.clawdata.tfinal = 0.5
         
@@ -54,6 +54,8 @@ class IdealizedBaseTest(test_runs.TestML1D):
         self.ml_data.wave_family = wave_family
         self.ml_data.eigen_method = eigen_method
         self.ml_data.epsilon = epsilon
+        
+        self.prefix = "ml_1d_e%s_m%s" % (eigen_method,mx)
 
         
 class OscillatoryWindBaseTest(test_runs.TestML1D):
@@ -102,7 +104,7 @@ class ShelfBaseTest(test_runs.TestML1D):
         self.setplot = "setplot_shelf"
 
         # Data parameters
-        self.ml_data.eigen_method = self.eigen_method
+        self.ml_data.eigen_method = eigen_method
         self.run_data.clawdata.mx = mx
         
         self.run_data.clawdata.nout = 300
@@ -155,7 +157,7 @@ if __name__ == '__main__':
             for test in sys.argv[1:]:
                 tests_to_be_run.append(tests[int(test)])
             
-        test_runs.run_tests(tests,parallel=True)
+        test_runs.run_tests(tests_to_be_run,parallel=True)
 
     else:
         test_runs.print_tests(tests)

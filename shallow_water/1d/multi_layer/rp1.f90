@@ -23,12 +23,12 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
     double precision :: eig_vec(4,4),A(4,4),delta(4),alpha(4),beta(4)
     double precision, dimension(4) :: flux_l,flux_r
     double precision, dimension(2) :: h_l,u_l,hu_l,h_r,u_r,hu_r,h_ave,u_ave
-    double precision :: b_l,b_r,gamma_l,gamma_r,momentum_transfer,tau,w_l,w_r
+    double precision :: b_l,b_r,gamma_l,gamma_r,tau,w_l,w_r
     double precision :: wind_speed,lambda(4),eta_l(2),eta_r(2),h_hat_l(2),h_hat_r(2)
     logical :: dry_state_l(2), dry_state_r(2)
     
     integer :: layer_index
-    double precision, parameter :: TOLERANCE = 1d-2
+    double precision :: momentum_transfer(2),flux_transfer_r,flux_transfer_l
 
     ! Common block
     double precision :: dt,dx,t
@@ -98,15 +98,8 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         
         ! Solve Single layer problem
         if (dry_state_r(2).and.dry_state_l(2)) then
-            s(i,1) = u_l(1) - sqrt(g*h_l(1))
-            s(i,2) = 0.d0
-            s(i,3) = 0.d0
-            s(i,4) = u_r(1) + sqrt(g*h_r(1))
-            
-            eig_vec(1,:) = 1.d0
-            eig_vec(2,:) = s(i,:)
-            eig_vec(3,:) = 0.d0
-            eig_vec(4,:) = 0.d0
+            call single_layer_eigen(h_l,h_r,u_l,u_r,b_l,b_r,rare,lambda,eig_vec)
+            s(i,:) = lambda
             
             delta(1) = rho(1) * (hu_r(1) - hu_l(1))
             flux_r(2) = rho(1) * (h_r(1) * u_r(1)**2 + 0.5d0 * g * h_r(1)**2)
@@ -151,50 +144,62 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         
         ! ====================================================================
         ! Calculate flux vector to be projected onto e-space
-        h_ave(:) = 0.5d0 * (h_r(:) + h_l(:))
-        
-        ! No dry state
-        if ((.not.dry_state_r(2)).and.(.not.dry_state_l(2))) then
-            do j=1,2
-                flux_r(2*j-1) = rho(j) * hu_r(j)
-                flux_l(2*j-1) = rho(j) * hu_l(j)
-                flux_r(2*j) = rho(j) * h_r(j) * u_r(j)**2 + 0.5d0 * g * rho(j) * h_r(j)**2
-                flux_l(2*j) = rho(j) * h_l(j) * u_l(j)**2 + 0.5d0 * g * rho(j) * h_l(j)**2
-            enddo
-            flux_r(4) = flux_r(4) + g * h_r(1) * h_r(2) * rho(1)
-            flux_l(4) = flux_l(4) + g * h_l(1) * h_l(2) * rho(1)
-            
-            delta = flux_r - flux_l
-        
-            ! Note that h_ave include rho values in it
-            momentum_transfer = g * rho(1) * h_ave(1) * (h_r(2) - h_l(2))
-        
-            delta(2) = delta(2) + momentum_transfer + g * rho(1) * h_ave(1) * (b_r - b_l)
-            delta(4) = delta(4) - momentum_transfer + g * rho(2) * h_ave(2) * (b_r - b_l)
-        ! Right dry state
-        else if (dry_state_r(2).and.(.not.dry_state_l(2))) then
-            delta(1) = rho(1) * (hu_r(1) - hu_l(1))
-            
-            eta_r(2) = b_r
-            eta_l(2) = h_l(2) + b_l
-            
-            flux_r(2) = rho(1) * h_r(1) * u_r(1)**2 + 0.5d0 * g * rho(1) * h_r(1)**2
-            flux_l(2) = rho(1) * h_l(1) * u_l(1)**2 + 0.5d0 * g * rho(1) * h_l(1)**2
-            delta(2) = flux_r(2) - flux_l(2) + g * rho(1) * h_ave(1) * (eta_r(2) - eta_l(2))
-            
-            h_r(2) = h_l(2)
-            hu_r(2) = -hu_l(2)
-            u_r(2) = -u_l(2)
-
-            delta(3) = rho(2) * (hu_r(2) - hu_l(2))                                
-            flux_r(4) = rho(2) * h_r(2) * u_r(2)**2 + 0.5d0 * g * rho(2) * h_r(2)**2
-            flux_l(4) = rho(2) * h_l(2) * u_l(2)**2 + 0.5d0 * g * rho(2) * h_l(2)**2
-            delta(4) = flux_r(4) - flux_l(4)
-            
-        ! Left dry state
+        ! Right state dry, left wet
+        if (dry_state_r(2).and.(.not.dry_state_l(2))) then
+            ! Inundation
+            if (rare == 1) then
+                stop "Inundation of right state not implemented."
+            else
+                h_r(2) = h_l(2)
+                hu_r(2) = -hu_l(2)
+                u_r(2) = -u_l(2)
+                
+                flux_transfer_r = 0.d0
+                flux_transfer_l = 0.d0
+                momentum_transfer(1) = g * rho(1) * h_ave(1) * (b_r - h_l(2) - b_l)
+                momentum_transfer(2) = 0.d0
+            endif
+        ! Left state dry, right wet
         else if (dry_state_l(2).and.(.not.dry_state_r(2))) then
-            stop "Not implemented yet..."
+            ! Inundation
+            if (rare == 2) then
+                stop "Inundation of left state not implemented."
+            else
+                h_l(2) = h_r(2)
+                hu_l(2) = -hu_r(2)
+                u_l(2) = -u_r(2)
+            
+                flux_transfer_r = 0.d0
+                flux_transfer_l = 0.d0
+                momentum_transfer(1) = g * rho(1) * h_ave(1) * (b_r + h_r(2) - b_l)
+                momentum_transfer(2) = 0.d0
+            endif
+        ! Fully wet bottom layer
+        else
+            momentum_transfer(1) =  g * rho(1) * h_ave(1) * (h_r(2) - h_l(2) + b_r - b_l)
+            momentum_transfer(2) = -g * rho(1) * h_ave(1) * (h_r(2) - h_l(2)) + g * rho(2) * h_ave(2) * (b_r - b_l)
+            flux_transfer_r = g * rho(1) * h_r(1) * h_r(2)
+            flux_transfer_l = g * rho(1) * h_l(1) * h_l(2)
         endif
+        
+        do j=1,2
+            layer_index = 2*(j-1)
+            flux_r(layer_index+1) = rho(j) * hu_r(j)
+            flux_r(layer_index+2) = rho(j) * (h_r(j) * u_r(j)**2 + 0.5d0 * g * h_r(j)**2)
+            
+            flux_l(layer_index+1) = rho(j) * hu_l(j)
+            flux_l(layer_index+2) = rho(j) * (h_l(j) * u_l(j)**2 + 0.5d0 * g * h_l(j)**2)
+        enddo
+        
+        ! Add extra flux terms
+        flux_r(4) = flux_r(4) + flux_transfer_r
+        flux_l(4) = flux_l(4) + flux_transfer_l
+        
+        delta = flux_r - flux_l
+        
+        ! Momentum transfer and bathy terms
+        delta(2) = delta(2) + momentum_transfer(1)
+        delta(4) = delta(4) + momentum_transfer(2)
         
         ! Wind forcing
         wind_speed = 0.5d0 * (w_l + w_r)
@@ -385,3 +390,26 @@ subroutine exact_eigen(h_l,h_r,u_l,u_r,b_l,b_r,rare,s,eig_vec)
         s(j) = real_evalues(j)
     enddo
 end subroutine exact_eigen
+
+subroutine single_layer_eigen(h_l,h_r,u_l,u_r,b_l,b_r,rare,s,eig_vec)
+
+    use parameters_module, only: g
+
+    implicit none
+    
+    ! I/O
+    double precision, intent(in) :: h_l(2),h_r(2),u_l(2),u_r(2),b_l,b_r
+    logical, intent(in) :: rare
+    double precision, intent(inout) :: s(4),eig_vec(4,4)
+    
+    s(1) = u_l(1) - sqrt(g*h_l(1))
+    s(2) = 0.d0
+    s(3) = 0.d0
+    s(4) = u_r(1) + sqrt(g*h_r(1))
+    
+    eig_vec(1,:) = 1.d0
+    eig_vec(2,:) = s(:)
+    eig_vec(3,:) = 0.d0
+    eig_vec(4,:) = 0.d0
+
+end subroutine single_layer_eigen
