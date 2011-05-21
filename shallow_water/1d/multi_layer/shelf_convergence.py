@@ -94,7 +94,6 @@ for (m,method) in enumerate(evalue_methods):
         error[i,m,2] = norm(h[:,1]-h_exact[:,1])
         error[i,m,3] = norm(u[:,1]-u_exact[:,1])
 
-# Top Depth Error Plot
 figures = []
 for field in [0,1,2,3]:
     figures.append(plt.figure())

@@ -11,7 +11,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
     integer, intent(in) :: maxmx,meqn,mwaves,mbc,mx
     
     double precision, intent(in), dimension(1-mbc:maxmx+mbc, meqn) :: ql,qr
-    double precision, intent(inout), dimension(1-mbc:maxmx+mbc, *) :: auxl,auxr
+    double precision, intent(in), dimension(1-mbc:maxmx+mbc, *) :: auxl,auxr
     
     ! Output arguments
     double precision, intent(out) :: s(1-mbc:maxmx+mbc, mwaves)
@@ -64,14 +64,12 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             ! Check for dry states in this layer
             if (h_l(j) < dry_tolerance) then
                 dry_state_l(j) = .true.
-                h_l(j) = 0.d0
                 u_l(j) = 0.d0
             else
                 u_l(j) = qr(i-1,layer_index+2) / qr(i-1,layer_index+1)
             endif
             if (h_r(j) < dry_tolerance) then
                 dry_state_r(j) = .true.
-                h_r(j) = 0.d0
                 u_r(j) = 0.d0
             else
                 u_r(j) = ql(i,layer_index+2) / ql(i,layer_index+1)
@@ -85,19 +83,110 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         w_l = auxr(i-1,2)
         w_r = auxl(i,2)
         
-        ! Inundation test
-        if (dry_state_r(2).and.(.not.dry_state_l(2)).and. &
-                h_l(2) + b_l > b_r) then
-            rare = 1
-        else if (dry_state_l(2).and.(.not.dry_state_r(2)).and. &
-                h_r(2) + b_r > b_l) then
-            rare = 2
-        else
-            rare = 0
-        endif
+        ! ====================================================================
+        !  Tests for special cases which are solved seperately
+        if (dry_state_r(2).and.(.not.dry_state_l(2)).and.(h_l(2) + b_l > b_r)) then
+!             print *,"Solving inundation problem..."            
+            
+            ! Solve for the eigenspace
+            if (inundation_method == 1) then
+                gamma_l = h_l(2) / h_l(1)
+                gamma_r = 0.d0
         
+                s(i,3) = u_l(2) + 2.d0 * sqrt(g*(1.d0-r)*h_l(2))
+
+                alpha(1) = 0.5d0*(gamma_l-1.d0+sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
+                alpha(2) = 0.5d0*(gamma_l-1.d0-sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
+                alpha(3) = r * g * h_l(2) / ((s(i,3) - u_l(2))**2 - g * h_l(2))
+                alpha(4) = 0.d0
+
+                s(i,1) = -sqrt(g*h_l(1)*(1+alpha(1)))
+                s(i,2) = -sqrt(g*h_l(1)*(1+alpha(2)))
+                s(i,4) = u_r(1) + sqrt(g*h_r(1))
+    
+                eig_vec(1,:) = 1.d0
+                eig_vec(2,:) = s(i,:)
+                eig_vec(3,:) = alpha
+                eig_vec(4,:) = s(i,:)*alpha(:)
+            else if (inundation_method == 2) then
+                h_r(2) = dry_tolerance
+                gamma_l = h_l(2) / h_l(1)
+                gamma_r = h_r(2) / h_r(1)
+
+                alpha(1) = 0.5d0*(gamma_l-1.d0+sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
+                alpha(2) = 0.5d0*(gamma_l-1.d0-sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
+                alpha(3) = 0.5d0*(gamma_r-1.d0-sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
+                alpha(4) = 0.d0
+
+                s(i,1) = -sqrt(g*h_l(1)*(1+alpha(1)))
+                s(i,2) = -sqrt(g*h_l(1)*(1+alpha(2)))
+                s(i,3) = sqrt(g*h_r(1)*(1+alpha(3)))
+                s(i,4) = u_r(1) + sqrt(g*h_r(1))
+    
+                eig_vec(1,:) = 1.d0
+                eig_vec(2,:) = s(i,:)
+                eig_vec(3,:) = alpha
+                eig_vec(4,:) = s(i,:)*alpha
+            endif                
+            
+            momentum_transfer(1) =   g * rho(1) * h_ave(1) * (h_r(2) - h_l(2) + b_r - b_l)
+            momentum_transfer(2) = - g * rho(1) * h_ave(1) * (h_r(2) - h_l(2)) + g * rho(2) * h_ave(2) * (b_r - b_l)
+            ! Bottom layer momentum transfer flux
+            flux_transfer_r = g * rho(1) * product(h_r)
+            flux_transfer_l = g * rho(1) * product(h_l)
+                            
+            ! Flux jumps
+            do j=1,2
+                layer_index = 2*(j-1)
+                flux_r(layer_index+1) = rho(j) * hu_r(j)
+                flux_r(layer_index+2) = rho(j) * (h_r(j) * u_r(j)**2 + 0.5d0 * g * h_r(j)**2)
+        
+                flux_l(layer_index+1) = rho(j) * hu_l(j)
+                flux_l(layer_index+2) = rho(j) * (h_l(j) * u_l(j)**2 + 0.5d0 * g * h_l(j)**2)
+            enddo
+            
+            delta = flux_r - flux_l
+
+            ! Bottom layer additional flux
+            delta(4) = delta(4) + flux_transfer_r - flux_transfer_l
+
+            ! Momentum source term from layers
+            delta(2) = delta(2) + momentum_transfer(1)
+            delta(4) = delta(4) + momentum_transfer(2)
+    
+            ! Wind forcing
+            wind_speed = 0.5d0 * (w_l + w_r)
+            tau = wind_drag(wind_speed) * rho_air * wind_speed
+            delta(2) = delta(2) - tau * wind_speed
+            
+            ! Project delta onto eigen vectors
+            A = eig_vec
+            call dgesv(4,1,A,4,ipiv,delta,4,info)
+            if (.not.(info == 0)) then 
+                print *, "Location (i) = (",i,")"
+                print *, "Dry states, L=",dry_state_l(2)," R=",dry_state_r(2)
+                print *, "h_l(2) = ",h_l(2)," h_r(2) = ",h_r(2)
+                print *, "Error solving R beta = delta, ",info
+                print *, "Eigen-speeds:",(s(i,mw),mw=1,mwaves)
+                print *, "Eigen-vectors:"
+                do j=1,4
+                    print "(4d16.8)",(eig_vec(j,m),m=1,meqn)
+                enddo
+                stop
+            endif
+            beta = delta
+                
+            ! Calculate waves
+            forall(mw=1:4)
+                fwave(i,:,mw) = eig_vec(:,mw) * beta(mw)
+            end forall
+            cycle
+            
+        else if (dry_state_l(2).and.(.not.dry_state_r(2)).and.(h_r(2) + b_r > b_l)) then
+            rare = 2
+            stop "Inundation of left state not implemented!"
         ! Solve Single layer problem seperately
-        if (dry_state_r(2).and.dry_state_l(2)) then
+        else if (dry_state_r(2).and.dry_state_l(2)) then
             call single_layer_eigen(h_l,h_r,u_l,u_r,b_l,b_r,rare,lambda,eig_vec)
             s(i,:) = lambda
             
@@ -116,6 +205,8 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
                 fwave(i,:,mw) = eig_vec(:,mw) * beta(mw)
             end forall
             cycle
+        else
+            rare = 0
         endif
         
         ! ====================================================================
@@ -144,44 +235,57 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         
         ! ====================================================================
         ! Calculate flux vector to be projected onto e-space
+        ! Calculate jumps in fluxes
+        
+        ! Correction to fluxes due to dry states and  the bottom laye
         ! Right state dry, left wet
         if (dry_state_r(2).and.(.not.dry_state_l(2))) then
             ! Inundation
             if (rare == 1) then
-                stop "Inundation of right state not implemented."
+                stop "here"
+            ! Bathymetry prevents inundation
             else
+                ! Wall boundary conditions
                 h_r(2) = h_l(2)
                 hu_r(2) = -hu_l(2)
                 u_r(2) = -u_l(2)
                 
+                ! Top layer eta(2) = b_r - h_l(2) - b_l
+                momentum_transfer(1) = g * rho(1) * h_ave(1) * (b_r - h_l(2) - b_l)
+                
+                momentum_transfer(2) = 0.d0
                 flux_transfer_r = 0.d0
                 flux_transfer_l = 0.d0
-                momentum_transfer(1) = g * rho(1) * h_ave(1) * (b_r - h_l(2) - b_l)
-                momentum_transfer(2) = 0.d0
             endif
         ! Left state dry, right wet
         else if (dry_state_l(2).and.(.not.dry_state_r(2))) then
             ! Inundation
             if (rare == 2) then
                 stop "Inundation of left state not implemented."
+            ! Bathymetry prevents inundation
             else
+                ! Wall boundary conditions
                 h_l(2) = h_r(2)
                 hu_l(2) = -hu_r(2)
                 u_l(2) = -u_r(2)
-            
+                
+                ! Top layer eta(2) = h_r(2) + b_r - b_l
+                momentum_transfer(1) = g * rho(1) * h_ave(1) * (b_r + h_r(2) - b_l)
+                
+                momentum_transfer(2) = 0.d0
                 flux_transfer_r = 0.d0
                 flux_transfer_l = 0.d0
-                momentum_transfer(1) = g * rho(1) * h_ave(1) * (b_r + h_r(2) - b_l)
-                momentum_transfer(2) = 0.d0
             endif
         ! Fully wet bottom layer
         else
-            momentum_transfer(1) =  g * rho(1) * h_ave(1) * (h_r(2) - h_l(2) + b_r - b_l)
-            momentum_transfer(2) = -g * rho(1) * h_ave(1) * (h_r(2) - h_l(2)) + g * rho(2) * h_ave(2) * (b_r - b_l)
-            flux_transfer_r = g * rho(1) * h_r(1) * h_r(2)
-            flux_transfer_l = g * rho(1) * h_l(1) * h_l(2)
+            momentum_transfer(1) =   g * rho(1) * h_ave(1) * (h_r(2) - h_l(2) + b_r - b_l)
+            momentum_transfer(2) = - g * rho(1) * h_ave(1) * (h_r(2) - h_l(2)) + g * rho(2) * h_ave(2) * (b_r - b_l)
+            ! Bottom layer momentum transfer flux
+            flux_transfer_r = g * rho(1) * product(h_r)
+            flux_transfer_l = g * rho(1) * product(h_l)
         endif
         
+        ! Flux jumps
         do j=1,2
             layer_index = 2*(j-1)
             flux_r(layer_index+1) = rho(j) * hu_r(j)
@@ -191,13 +295,12 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             flux_l(layer_index+2) = rho(j) * (h_l(j) * u_l(j)**2 + 0.5d0 * g * h_l(j)**2)
         enddo
         
-        ! Add extra flux terms
-        flux_r(4) = flux_r(4) + flux_transfer_r
-        flux_l(4) = flux_l(4) + flux_transfer_l
-        
         delta = flux_r - flux_l
-        
-        ! Momentum transfer and bathy terms
+
+        ! Bottom layer additional flux
+        delta(4) = delta(4) + flux_transfer_r - flux_transfer_l
+
+        ! Momentum source term from layers
         delta(2) = delta(2) + momentum_transfer(1)
         delta(4) = delta(4) + momentum_transfer(2)
         
@@ -246,7 +349,7 @@ end subroutine rp1
 
 subroutine linear_eigen(h_l,h_r,u_l,u_r,b_l,b_r,rare,s,eig_vec)
 
-    use parameters_module, only: r,g
+    use parameters_module, only: r,g,dry_tolerance
 
     implicit none
     
@@ -256,28 +359,11 @@ subroutine linear_eigen(h_l,h_r,u_l,u_r,b_l,b_r,rare,s,eig_vec)
     
     ! Locals
     double precision :: alpha(4),gamma_l,gamma_r
-
+        
     if (rare == 1) then
-        gamma_l = h_l(2) / h_l(1)
-
-        alpha(1) = 0.5d0*(gamma_l-1.d0+sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
-        alpha(2) = 0.5d0*(gamma_l-1.d0-sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
-
-        s(1) = -sqrt(g*h_l(1)*(1+alpha(1)))
-        s(2) = -sqrt(g*h_l(1)*(1+alpha(2)))
-        s(3) = u_l(2) + 2.d0 * sqrt(g*h_l(2))
-        s(4) = u_r(1) + sqrt(g*h_r(1))
-        
-        eig_vec(1,1:2) = 1.d0
-        eig_vec(2,1:2) = s(1:2)
-        eig_vec(3,1:2) = alpha(1:2)
-        eig_vec(4,1:2) = s(1:2)*alpha(1:2)
-        
-        eig_vec(:,3) = [0.d0,0.d0,1.d0,s(3)]
-        eig_vec(:,4) = [1.d0,s(4),0.d0,0.d0]
-        
+        stop "Inundation not handled here"
     else if (rare == 2) then
-        stop
+        stop "Inundation to left not handled."
     else
         gamma_l = h_l(2) / h_l(1)
         gamma_r = h_r(2) / h_r(1)
@@ -291,7 +377,7 @@ subroutine linear_eigen(h_l,h_r,u_l,u_r,b_l,b_r,rare,s,eig_vec)
         s(2) = -sqrt(g*h_l(1)*(1+alpha(2)))
         s(3) = sqrt(g*h_r(1)*(1+alpha(3)))
         s(4) = sqrt(g*h_r(1)*(1+alpha(4)))
-        
+    
         eig_vec(1,:) = 1.d0
         eig_vec(2,:) = s(:)
         eig_vec(3,:) = alpha

@@ -81,19 +81,11 @@ subroutine qinit(maxmx,meqn,mbc,mx,xlower,dx,q,maux,aux)
             endif
         ! Inundation test
         else if (init_type == 5) then
-!             deta = 1.d0
             q(i,2) = 0.d0
             q(i,4) = 0.d0
-!             if (x < init_location) then
-!                 q(i,3) = q(i,3) + rho(2) * deta
-!                 q(i,1) = q(i,1) - rho(1) * deta
-!             endif
-            deta = 0.01d0
             if (x > init_location) then
                 q(i,3) = 0.d0
-                q(i,1) = rho(1)
-!                 q(i,3) = rho(2) * 0.01d0
-!                 q(i,1) = rho(1) * (1.d0 - 0.01d0)
+                q(i,1) = rho(1) * (eta(1) - bathy_right)
             endif
         endif
     enddo

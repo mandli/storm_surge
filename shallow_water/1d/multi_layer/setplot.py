@@ -57,14 +57,14 @@ def setplot(plotdata):
         
     def u_1(current_data):
         h_1 = current_data.q[:,0]
-        index = np.nonzero(h_1 > 1e-3)
+        index = np.nonzero(h_1 > problem_data.dry_tolerance)
         u_1 = np.zeros(h_1.shape)
         u_1[index] = current_data.q[index,1]/h_1[index]
         return u_1
         
     def u_2(current_data):
         h_2 = current_data.q[:,2]
-        index = np.nonzero(h_2 > 1e-3)
+        index = np.nonzero(h_2 > problem_data.dry_tolerance)
         u_2 = np.zeros(h_2.shape)
         u_2[index] = current_data.q[index,3] / h_2[index]
         return u_2
@@ -225,7 +225,7 @@ def setplot(plotdata):
     plotfigure = plotdata.new_plotfigure(name='full_zoom',figno=1)
     
     def fill_zoom_afteraxes(cd):
-        mpl.title('Multilaye Surfaces at t = %3.2f' % cd.t)
+        mpl.title('Multilayer Surfaces at t = %3.2f' % cd.t)
     
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(2,1,1)'
@@ -307,6 +307,7 @@ def setplot(plotdata):
     #  h-values
     # ========================================================================
     plotfigure = plotdata.new_plotfigure(name='depths',figno=2)
+    plotfigure.show = False
     
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(2,1,1)'

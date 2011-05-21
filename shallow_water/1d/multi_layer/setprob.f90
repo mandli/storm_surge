@@ -9,7 +9,7 @@ module parameters_module
     
     ! Algorithm settings
     double precision :: dry_tolerance
-    integer :: eigen_method
+    integer :: eigen_method,inundation_method
 
     ! Initial condition settings
     integer :: init_type,wave_family
@@ -54,6 +54,7 @@ contains
         ! Algorithm settings
         read(13,*) dry_tolerance
         read(13,*) eigen_method
+        read(13,*) inundation_method
         read(13,*)
         
         ! Initial conditions

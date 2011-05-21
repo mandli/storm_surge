@@ -96,7 +96,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             rare = 0
         endif
         
-        ! Solve Single layer problem
+        ! Solve Single layer problem seperately
         if (dry_state_r(2).and.dry_state_l(2)) then
             call single_layer_eigen(h_l,h_r,u_l,u_r,b_l,b_r,rare,lambda,eig_vec)
             s(i,:) = lambda

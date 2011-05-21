@@ -21,7 +21,7 @@ CLAW_SOURCES = \
 	setprob.f90 \
 	driver.f \
 	qinit.f90 \
-	rp1.f90 \
+	rp1_inundation.f90 \
 	out1.f \
 	b4step1.f90 \
 	bc1.f \

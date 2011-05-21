@@ -33,6 +33,7 @@ class MultilayerData(data.Data):
         # Algorithm
         self.add_attribute('dry_tolerance',1e-3)
         self.add_attribute('eigen_method',4)
+        self.add_attribute('inundation_method',1)
         
         # Initial condition
         self.add_attribute('init_type',4)
@@ -74,6 +75,7 @@ class MultilayerData(data.Data):
         data.data_write(out_file,self,None)
         data.data_write(out_file,self,'dry_tolerance','(Dry state tolerance)')
         data.data_write(out_file,self,'eigen_method','(Method for calculating eigenspace)')
+        data.data_write(out_file,self,'inundation_method','(Method for calculating inundation Riemann problem)')
         data.data_write(out_file,self,None)
         data.data_write(out_file,self,'init_type','(Type of initial condition)')
         data.data_write(out_file,self,'init_location','(Location for perturbation)')
