@@ -25,26 +25,34 @@ subroutine setaux(maxmx,mbc,mx,xlower,dx,maux,aux)
     
     do i=1-mbc,mx+mbc
         x = xlower+(i-0.5)*dx
-        if (x < bathy_location) then
-            aux(i,1) = bathy_left
-            if (eta(2) > bathy_left) then
-                aux(i,3) = eta(1) - eta(2)
-                aux(i,4) = eta(2) - bathy_left
+        ! Jump in bathymetry
+        if (bathy_type == 1) then
+            if (x < bathy_location) then
+                aux(i,1) = bathy_left
             else
-                aux(i,3) = eta(1) - bathy_left
-                aux(i,4) = 0.d0
+                aux(i,1) = bathy_right
             endif
-        else
-            aux(i,1) = bathy_right
-            if (eta(2) > bathy_right) then
-                aux(i,3) = eta(1) - eta(2)
-                aux(i,4) = eta(2) - bathy_right
-            else
-                aux(i,3) = eta(1) - bathy_right
-                aux(i,4) = 0.d0
+        ! Simple shelf
+        else if (bathy_type == 2) then
+            if (x < x0) then
+                aux(i,1) = basin_depth
+            else if (x0 <= x .and. x < x1) then
+                aux(i,1) = shelf_slope * (x-x0) + basin_depth
+            else if (x1 <= x) then
+                aux(i,1) = shelf_depth
             endif
         endif
+        
+        ! Set initial states
+        if (eta(2) > aux(i,1)) then
+            aux(i,3) = eta(1) - eta(2)
+            aux(i,4) = eta(2) - aux(i,1)
+        else
+            aux(i,3) = eta(1) - aux(i,1)
+        endif
     enddo
+    
+    
     
     ! Calculate initial wind field
     call set_wind(maxmx,mbc,mx,xlower,dx,0.d0,aux(:,2))

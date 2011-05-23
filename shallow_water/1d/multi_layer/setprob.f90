@@ -5,7 +5,7 @@ module parameters_module
     ! Physics constants
     double precision, parameter :: PI = 3.141592654d0, g = 9.8d0
     double precision :: rho_air,rho(2)
-    double precision :: r, one_minus_r
+    double precision :: r, one_minus_r,manning
     
     ! Algorithm settings
     double precision :: dry_tolerance
@@ -13,8 +13,9 @@ module parameters_module
 
     ! Initial condition settings
     integer :: init_type,wave_family
-    double precision :: init_location,eta(2),epsilon,sigma
+    double precision :: init_location,eta(2),epsilon,sigma,bathy_type
     double precision :: bathy_location,bathy_left,bathy_right
+    double precision :: x0,basin_depth,x1,shelf_depth,shelf_slope
     
     ! Wind forcing settings
     integer, private :: wind_type
@@ -49,6 +50,7 @@ contains
         read(13,*) rho(2)
         r = rho(1) / rho(2)
         one_minus_r = 1.d0 - r
+        read(13,*) manning
         read(13,*)
         
         ! Algorithm settings
@@ -68,9 +70,18 @@ contains
         read(13,*)
         
         ! Bathymetry
-        read(13,*) bathy_location
-        read(13,*) bathy_left
-        read(13,*) bathy_right
+        read(13,*) bathy_type
+        if (bathy_type == 1) then
+            read(13,*) bathy_location
+            read(13,*) bathy_left
+            read(13,*) bathy_right
+        else if (bathy_type == 2) then
+            read(13,*) x0
+            read(13,*) basin_depth
+            read(13,*) x1
+            read(13,*) shelf_depth
+            shelf_slope = (basin_depth - shelf_depth) / (x0 - x1)
+        endif
         read(13,*)
         
         ! Wind settings

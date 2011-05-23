@@ -31,6 +31,13 @@ def setplot(plotdata):
     claw_data = Data(os.path.join(plotdata.outdir,'claw.data'))
     prob_data = Data(os.path.join(plotdata.outdir,'problem.data'))
     g = 9.81
+    
+    bathy_ref_lines = []
+    if prob_data.bathy_type == 1:
+        bathy_ref_lines.append(prob_data.bathy_location)
+    elif prob_data.bathy_type == 2:
+        bathy_ref_lines.append(prob_data.x0)
+        bathy_ref_lines.append(prob_data.x1)
         
     # ========================================================================
     #  Plot variable functions
@@ -86,7 +93,8 @@ def setplot(plotdata):
     #  Labels    
     def add_bathy_dashes(current_data):
         mpl.hold(True)
-        mpl.plot([-30e3,-30e3],[-10,10],'k--')
+        for ref_line in bathy_ref_lines:
+            mpl.plot([ref_line,ref_line],[-10,10],'k--')
         mpl.hold(False)
         
     def add_horizontal_dashes(current_data):
@@ -249,6 +257,22 @@ def setplot(plotdata):
     plotaxes = fill_items(plotaxes)
     
     # ========================================================================
+    #  Full plot
+    # ========================================================================
+    plotfigure = plotdata.new_plotfigure(name='bathy',figno=102)
+    plotfigure.show = True
+    
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.title = 'Bathymetry'
+    plotaxes.xlimits = xlimits
+    if prob_data.bathy_type == 1:
+        plotaxes.ylimits = [prob_data.bathy_right,10.0 ]
+    elif prob_data.bathy_type == 2:
+        plotaxes.ylimits = [prob_data.basin_depth + 10.0,prob_data.shelf_depth + 200.0]
+    
+    fill_items(plotaxes)
+    
+    # ========================================================================
     #  Velocities
     # ========================================================================
     plotfigure = plotdata.new_plotfigure(name="Velocities",figno=200)
@@ -308,8 +332,9 @@ def setplot(plotdata):
 
         ax1.set_xlabel('km')
         mpl.xticks([-300e3,-200e3,-100e3,-30e3],[300,200,100,30],fontsize=15)
-
-        ax1.plot([prob_data.bathy_location,prob_data.bathy_location],ylimits_velocities,'k--')
+        
+        for ref_line in bathy_ref_lines:
+            ax1.plot([ref_line,ref_line],ylimits_velocities,'k--')
         ax1.legend((bottom_layer,top_layer,kappa_line),('Bottom Layer','Top Layer',"Kappa"),loc=3)
         ax1.set_title("Layer Velocities and Kappa t = %4.1f s" % cd.t)
         ax1.set_ylabel('Velocities (m/s)')

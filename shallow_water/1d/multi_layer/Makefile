@@ -25,7 +25,8 @@ CLAW_SOURCES = \
 	out1.f \
 	b4step1.f90 \
 	bc1.f \
-	setaux.f90
+	setaux.f90 \
+    src1.f
 	
 CLAW_LIB = $(CLAW)/clawpack/1d/lib
 	
@@ -36,7 +37,6 @@ CLAW_LIBSOURCES = \
   $(CLAW_LIB)/copyq1.f \
   $(CLAW_LIB)/limiter.f \
   $(CLAW_LIB)/philim.f \
-  $(CLAW_LIB)/src1.f\
   $(CLAW_LIB)/opendatafile.f
 
 #-------------------------------------------------------------------

@@ -84,8 +84,16 @@ subroutine qinit(maxmx,meqn,mbc,mx,xlower,dx,q,maux,aux)
             q(i,2) = 0.d0
             q(i,4) = 0.d0
             if (x > init_location) then
-                q(i,3) = 0.d0
-                q(i,1) = rho(1) * (eta(1) - bathy_right)
+                q(i,3) = epsilon
+                q(i,1) = rho(1) * (eta(1) - aux(i,1) - epsilon)
+            endif
+        else if (init_type == 6) then
+            if (x< init_location) then
+                q(i,2) = 0.d0
+                q(i,4) = -q(i,3) * epsilon
+            else 
+                q(i,2) = 0.d0
+                q(i,4) = q(i,3) * epsilon
             endif
         endif
     enddo

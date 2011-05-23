@@ -29,6 +29,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
     
     integer :: layer_index
     double precision :: momentum_transfer(2),flux_transfer_r,flux_transfer_l
+    double precision :: inundation_height(2)
 
     ! Common block
     double precision :: dt,dx,t
@@ -81,112 +82,11 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         b_l = auxr(i-1,1)
         b_r = auxl(i,1)
         w_l = auxr(i-1,2)
-        w_r = auxl(i,2)
-        
+        w_r = auxl(i,2)      
+            
         ! ====================================================================
-        !  Tests for special cases which are solved seperately
-        if (dry_state_r(2).and.(.not.dry_state_l(2)).and.(h_l(2) + b_l > b_r)) then
-!             print *,"Solving inundation problem..."            
-            
-            ! Solve for the eigenspace
-            if (inundation_method == 1) then
-                gamma_l = h_l(2) / h_l(1)
-                gamma_r = 0.d0
-        
-                s(i,3) = u_l(2) + 2.d0 * sqrt(g*(1.d0-r)*h_l(2))
-
-                alpha(1) = 0.5d0*(gamma_l-1.d0+sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
-                alpha(2) = 0.5d0*(gamma_l-1.d0-sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
-                alpha(3) = r * g * h_l(2) / ((s(i,3) - u_l(2))**2 - g * h_l(2))
-                alpha(4) = 0.d0
-
-                s(i,1) = -sqrt(g*h_l(1)*(1+alpha(1)))
-                s(i,2) = -sqrt(g*h_l(1)*(1+alpha(2)))
-                s(i,4) = u_r(1) + sqrt(g*h_r(1))
-    
-                eig_vec(1,:) = 1.d0
-                eig_vec(2,:) = s(i,:)
-                eig_vec(3,:) = alpha
-                eig_vec(4,:) = s(i,:)*alpha(:)
-            else if (inundation_method == 2) then
-                h_r(2) = dry_tolerance
-                gamma_l = h_l(2) / h_l(1)
-                gamma_r = h_r(2) / h_r(1)
-
-                alpha(1) = 0.5d0*(gamma_l-1.d0+sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
-                alpha(2) = 0.5d0*(gamma_l-1.d0-sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
-                alpha(3) = 0.5d0*(gamma_r-1.d0-sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
-                alpha(4) = 0.d0
-
-                s(i,1) = -sqrt(g*h_l(1)*(1+alpha(1)))
-                s(i,2) = -sqrt(g*h_l(1)*(1+alpha(2)))
-                s(i,3) = sqrt(g*h_r(1)*(1+alpha(3)))
-                s(i,4) = u_r(1) + sqrt(g*h_r(1))
-    
-                eig_vec(1,:) = 1.d0
-                eig_vec(2,:) = s(i,:)
-                eig_vec(3,:) = alpha
-                eig_vec(4,:) = s(i,:)*alpha
-            endif                
-            
-            momentum_transfer(1) =   g * rho(1) * h_ave(1) * (h_r(2) - h_l(2) + b_r - b_l)
-            momentum_transfer(2) = - g * rho(1) * h_ave(1) * (h_r(2) - h_l(2)) + g * rho(2) * h_ave(2) * (b_r - b_l)
-            ! Bottom layer momentum transfer flux
-            flux_transfer_r = g * rho(1) * product(h_r)
-            flux_transfer_l = g * rho(1) * product(h_l)
-                            
-            ! Flux jumps
-            do j=1,2
-                layer_index = 2*(j-1)
-                flux_r(layer_index+1) = rho(j) * hu_r(j)
-                flux_r(layer_index+2) = rho(j) * (h_r(j) * u_r(j)**2 + 0.5d0 * g * h_r(j)**2)
-        
-                flux_l(layer_index+1) = rho(j) * hu_l(j)
-                flux_l(layer_index+2) = rho(j) * (h_l(j) * u_l(j)**2 + 0.5d0 * g * h_l(j)**2)
-            enddo
-            
-            delta = flux_r - flux_l
-
-            ! Bottom layer additional flux
-            delta(4) = delta(4) + flux_transfer_r - flux_transfer_l
-
-            ! Momentum source term from layers
-            delta(2) = delta(2) + momentum_transfer(1)
-            delta(4) = delta(4) + momentum_transfer(2)
-    
-            ! Wind forcing
-            wind_speed = 0.5d0 * (w_l + w_r)
-            tau = wind_drag(wind_speed) * rho_air * wind_speed
-            delta(2) = delta(2) - tau * wind_speed
-            
-            ! Project delta onto eigen vectors
-            A = eig_vec
-            call dgesv(4,1,A,4,ipiv,delta,4,info)
-            if (.not.(info == 0)) then 
-                print *, "Location (i) = (",i,")"
-                print *, "Dry states, L=",dry_state_l(2)," R=",dry_state_r(2)
-                print *, "h_l(2) = ",h_l(2)," h_r(2) = ",h_r(2)
-                print *, "Error solving R beta = delta, ",info
-                print *, "Eigen-speeds:",(s(i,mw),mw=1,mwaves)
-                print *, "Eigen-vectors:"
-                do j=1,4
-                    print "(4d16.8)",(eig_vec(j,m),m=1,meqn)
-                enddo
-                stop
-            endif
-            beta = delta
-                
-            ! Calculate waves
-            forall(mw=1:4)
-                fwave(i,:,mw) = eig_vec(:,mw) * beta(mw)
-            end forall
-            cycle
-            
-        else if (dry_state_l(2).and.(.not.dry_state_r(2)).and.(h_r(2) + b_r > b_l)) then
-            rare = 2
-            stop "Inundation of left state not implemented!"
         ! Solve Single layer problem seperately
-        else if (dry_state_r(2).and.dry_state_l(2)) then
+        if (dry_state_r(2).and.dry_state_l(2)) then
             call single_layer_eigen(h_l,h_r,u_l,u_r,b_l,b_r,rare,lambda,eig_vec)
             s(i,:) = lambda
             
@@ -211,72 +111,160 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         
         ! ====================================================================
         ! Calculate eigen-space values
-        if (eigen_method == 1) then
-            call linear_eigen(h_hat_l,h_hat_r,u_l,u_r,b_l,b_r,rare,lambda,eig_vec)
-            s(i,:) = lambda
-        else if (eigen_method == 2) then
-            call linear_eigen(h_l,h_r,u_l,u_r,b_l,b_r,rare,lambda,eig_vec)
-            s(i,:) = lambda
-        else if (eigen_method == 3) then 
-            call velocity_eigen(h_l,h_r,u_l,u_r,b_l,b_r,rare,lambda,eig_vec)
-            s(i,:) = lambda
-        else if (eigen_method == 4) then
-            if (dry_state_r(2).and.(.not.dry_state_l(2)).or. &
-                    dry_state_l(2).and.(.not.dry_state_r(2))) then
+        rare = 0
+        if (dry_state_r(2).and.(.not.dry_state_l(2)).and.(h_l(2) + b_l > b_r)) then
+            rare = 1
+            print *,"Right inundation problem"
+            if (inundation_method == 1) then
+                ! Linear eigensystem
+                inundation_height = [h_r(1),0.d0]
+                call linear_eigen(h_l,inundation_height,u_l,u_r,b_l,b_r,0,lambda,eig_vec)
+                s(i,:) = lambda
+                
+                ! Corrective wave
+                s(i,3) = u_l(2) + 2.d0 * sqrt(g*(1.d0-r)*h_l(2))
+                s(i,4) = u_r(1) + sqrt(g*h_r(1))
+                alpha(3) = r * g * h_l(2) / ((s(i,3) - u_l(2))**2 - g * h_l(2))
+                alpha(4) = 0.d0
+
+                eig_vec(1,3:4) = 1.d0
+                eig_vec(2,3:4) = s(i,3:4)
+                eig_vec(3,3:4) = alpha(3:4)
+                eig_vec(4,3:4) = s(i,3:4)*alpha(3:4)
+            else if (inundation_method == 2) then
+                inundation_height = [h_r(1),dry_tolerance]
+                h_r(2) = dry_tolerance
+                call linear_eigen(h_l,inundation_height,u_l,u_r,b_l,b_r,0,lambda,eig_vec)
+                s(i,:) = lambda
+                
+                s(i,4) = u_r(1) + sqrt(g*h_r(1))
+                eig_vec(:,4) = [1.d0,s(i,4),0.d0,0.d0]
+            else if (inundation_method == 3) then
+                inundation_height = [h_r(1),dry_tolerance]
+                call velocity_eigen(h_l,inundation_height,u_l,u_r,b_l,b_r,0,lambda,eig_vec)
+                s(i,:) = lambda
+                
+                ! Correction for fast wave
+                s(i,4) = u_r(1) + sqrt(g*h_r(1))
+                eig_vec(:,4) = [1.d0,s(i,4),0.d0,0.d0]
+            else if (inundation_method == 4) then
+                inundation_height = [h_r(1),0.d0]
+                call exact_eigen(h_l,inundation_height,u_l,u_r,b_l,b_r,0,lambda,eig_vec)
+                s(i,:) = lambda                
+            else if (inundation_method == 5) then
+                inundation_height = [h_r(1),dry_tolerance]
+                call exact_eigen(h_l,inundation_height,u_l,u_r,b_l,b_r,0,lambda,eig_vec)
+                s(i,:) = lambda
+                
+                ! Correction for the fast waves
+                s(i,2) = u_r(1) + sqrt(g*h_r(1))
+                eig_vec(:,2) = [1.d0,s(i,2),0.d0,0.d0]
+            endif   
+        else if (dry_state_l(2).and.(.not.dry_state_r(2)).and.(h_r(2) + b_r > b_l)) then
+            rare = 2
+            print *,"Left inundation problem"
+            ! Inundation problem eigen
+            if (inundation_method == 1) then
+                ! Linear eigensystem
+                inundation_height = [h_l(1),dry_tolerance]
+                call linear_eigen(inundation_height,h_r,u_l,u_r,b_l,b_r,0,lambda,eig_vec)
+                s(i,:) = lambda
+
+                ! Corrections to internal wave
+                s(i,2) = u_r(2) + 2.d0 * sqrt(g*(1.d0-r)*h_r(2))
+                alpha(2) = r * g * h_r(2) / ((s(i,2) - u_r(2))**2 - g * h_r(2))
+                eig_vec(:,2) = [1.d0,s(i,2),alpha(2),alpha(2)*s(i,2)]
+                
+                ! Correction for the fast waves
+                s(i,1) = u_l(1) - sqrt(g*h_l(1))
+                eig_vec(:,1) = [1.d0,s(i,1),0.d0,0.d0]
+            else if (inundation_method == 2) then
+                ! Use linearized eigensystem
+                inundation_height = [h_l(1),dry_tolerance]
+                call linear_eigen(inundation_height,h_r,u_l,u_r,b_l,b_r,0,lambda,eig_vec)
+                s(i,:) = lambda
+                            
+                ! Correction for the fast waves
+                s(i,1) = u_l(1) - sqrt(g*h_l(1))
+                eig_vec(:,1) = [1.d0,s(i,1),0.d0,0.d0]
+            else if (inundation_method == 3) then
+                ! Use velocity difference expansion eigensystems
+                inundation_height = [h_l(1),dry_tolerance]
+                call velocity_eigen(inundation_height,h_r,u_l,u_r,b_l,b_r,0,lambda,eig_vec)
+                s(i,:) = lambda                
+        
+                ! Correction for the fast waves
+                s(i,1) = u_r(1) - sqrt(g*h_r(1))
+                eig_vec(:,1) = [1.d0,s(i,1),0.d0,0.d0]
+            else if (inundation_method == 4) then
+                ! Use the LAPACK solver
+                inundation_height = [h_l(1),0.d0]
+                call exact_eigen(inundation_height,h_r,u_l,u_r,b_l,b_r,0,lambda,eig_vec)
+                s(i,:) = lambda
+            else if (inundation_method == 5) then
+                ! Use the LAPACK solver with no correction
+                inundation_height = [h_r(1),dry_tolerance]
+                call exact_eigen(h_l,inundation_height,u_l,u_r,b_l,b_r,0,lambda,eig_vec)
+                s(i,:) = lambda
+                            
+                ! Correction for the fast waves
+                s(i,1) = u_l(1) - sqrt(g*h_l(1))
+                eig_vec(:,1) = [1.d0,s(i,1),0.d0,0.d0]
+            endif              
+            
+        else
+            if (eigen_method == 1) then
+                call linear_eigen(h_hat_l,h_hat_r,u_l,u_r,b_l,b_r,rare,lambda,eig_vec)
+                s(i,:) = lambda
+            else if (eigen_method == 2) then
                 call linear_eigen(h_l,h_r,u_l,u_r,b_l,b_r,rare,lambda,eig_vec)
                 s(i,:) = lambda
-            else
-                call exact_eigen(h_l,h_r,u_l,u_r,b_l,b_r,rare,lambda,eig_vec)
+            else if (eigen_method == 3) then 
+                call velocity_eigen(h_l,h_r,u_l,u_r,b_l,b_r,rare,lambda,eig_vec)
                 s(i,:) = lambda
+            else if (eigen_method == 4) then
+                if (dry_state_r(2).and.(.not.dry_state_l(2)).or. &
+                        dry_state_l(2).and.(.not.dry_state_r(2))) then
+                    call linear_eigen(h_l,h_r,u_l,u_r,b_l,b_r,rare,lambda,eig_vec)
+                    s(i,:) = lambda
+                else
+                    call exact_eigen(h_l,h_r,u_l,u_r,b_l,b_r,rare,lambda,eig_vec)
+                    s(i,:) = lambda
+                endif
+            else
+                stop "Invalid eigensystem method requested, method = (1,4)."
             endif
-        else
-            stop "Invalid eigensystem method requested, method = (1,4)."
         endif
         
         ! ====================================================================
         ! Calculate flux vector to be projected onto e-space
         ! Calculate jumps in fluxes
-        
-        ! Correction to fluxes due to dry states and  the bottom laye
-        ! Right state dry, left wet
-        if (dry_state_r(2).and.(.not.dry_state_l(2))) then
-            ! Inundation
-            if (rare == 1) then
-                stop "here"
-            ! Bathymetry prevents inundation
-            else
-                ! Wall boundary conditions
-                h_r(2) = h_l(2)
-                hu_r(2) = -hu_l(2)
-                u_r(2) = -u_l(2)
-                
-                ! Top layer eta(2) = b_r - h_l(2) - b_l
-                momentum_transfer(1) = g * rho(1) * h_ave(1) * (b_r - h_l(2) - b_l)
-                
-                momentum_transfer(2) = 0.d0
-                flux_transfer_r = 0.d0
-                flux_transfer_l = 0.d0
-            endif
+        if (dry_state_r(2).and.(.not.dry_state_l(2)).and.(rare == 0)) then
+            ! Wall boundary conditions
+            h_r(2) = h_l(2)
+            hu_r(2) = -hu_l(2)
+            u_r(2) = -u_l(2)
+            
+            ! Top layer eta(2) = b_r - h_l(2) - b_l
+            momentum_transfer(1) = g * rho(1) * h_ave(1) * (b_r - h_l(2) - b_l)
+            
+            momentum_transfer(2) = 0.d0
+            flux_transfer_r = 0.d0
+            flux_transfer_l = 0.d0
         ! Left state dry, right wet
-        else if (dry_state_l(2).and.(.not.dry_state_r(2))) then
-            ! Inundation
-            if (rare == 2) then
-                stop "Inundation of left state not implemented."
-            ! Bathymetry prevents inundation
-            else
-                ! Wall boundary conditions
-                h_l(2) = h_r(2)
-                hu_l(2) = -hu_r(2)
-                u_l(2) = -u_r(2)
-                
-                ! Top layer eta(2) = h_r(2) + b_r - b_l
-                momentum_transfer(1) = g * rho(1) * h_ave(1) * (b_r + h_r(2) - b_l)
-                
-                momentum_transfer(2) = 0.d0
-                flux_transfer_r = 0.d0
-                flux_transfer_l = 0.d0
-            endif
-        ! Fully wet bottom layer
+        else if (dry_state_l(2).and.(.not.dry_state_r(2)).and.(rare == 0)) then
+            ! Wall boundary conditions
+            h_l(2) = h_r(2)
+            hu_l(2) = -hu_r(2)
+            u_l(2) = -u_r(2)
+            
+            ! Top layer eta(2) = h_r(2) + b_r - b_l
+            momentum_transfer(1) = g * rho(1) * h_ave(1) * (b_r + h_r(2) - b_l)
+            
+            momentum_transfer(2) = 0.d0
+            flux_transfer_r = 0.d0
+            flux_transfer_l = 0.d0
+        ! Fully wet bottom layer or inundation
         else
             momentum_transfer(1) =   g * rho(1) * h_ave(1) * (h_r(2) - h_l(2) + b_r - b_l)
             momentum_transfer(2) = - g * rho(1) * h_ave(1) * (h_r(2) - h_l(2)) + g * rho(2) * h_ave(2) * (b_r - b_l)
@@ -308,7 +296,6 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         wind_speed = 0.5d0 * (w_l + w_r)
         tau = wind_drag(wind_speed) * rho_air * wind_speed
         delta(2) = delta(2) - tau * wind_speed
-
 
         ! ====================================================================
         ! Solve system, solution is stored in delta
@@ -354,35 +341,29 @@ subroutine linear_eigen(h_l,h_r,u_l,u_r,b_l,b_r,rare,s,eig_vec)
     implicit none
     
     double precision, intent(in) :: h_l(2),h_r(2),u_l(2),u_r(2),b_l,b_r
-    logical, intent(in) :: rare
+    integer, intent(in) :: rare
     double precision, intent(inout) :: s(4),eig_vec(4,4)
     
     ! Locals
     double precision :: alpha(4),gamma_l,gamma_r
         
-    if (rare == 1) then
-        stop "Inundation not handled here"
-    else if (rare == 2) then
-        stop "Inundation to left not handled."
-    else
-        gamma_l = h_l(2) / h_l(1)
-        gamma_r = h_r(2) / h_r(1)
+    gamma_l = h_l(2) / h_l(1)
+    gamma_r = h_r(2) / h_r(1)
 
-        alpha(1) = 0.5d0*(gamma_l-1.d0+sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
-        alpha(2) = 0.5d0*(gamma_l-1.d0-sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
-        alpha(3) = 0.5d0*(gamma_r-1.d0-sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
-        alpha(4) = 0.5d0*(gamma_r-1.d0+sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
+    alpha(1) = 0.5d0*(gamma_l-1.d0+sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
+    alpha(2) = 0.5d0*(gamma_l-1.d0-sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
+    alpha(3) = 0.5d0*(gamma_r-1.d0-sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
+    alpha(4) = 0.5d0*(gamma_r-1.d0+sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
 
-        s(1) = -sqrt(g*h_l(1)*(1+alpha(1)))
-        s(2) = -sqrt(g*h_l(1)*(1+alpha(2)))
-        s(3) = sqrt(g*h_r(1)*(1+alpha(3)))
-        s(4) = sqrt(g*h_r(1)*(1+alpha(4)))
-    
-        eig_vec(1,:) = 1.d0
-        eig_vec(2,:) = s(:)
-        eig_vec(3,:) = alpha
-        eig_vec(4,:) = s(:)*alpha(:)
-    endif
+    s(1) = u_l(1) - sqrt(g*h_l(1)*(1+alpha(1)))
+    s(2) = u_l(2) - sqrt(g*h_l(1)*(1+alpha(2)))
+    s(3) = u_r(2) + sqrt(g*h_r(1)*(1+alpha(3)))
+    s(4) = u_r(2) + sqrt(g*h_r(1)*(1+alpha(4)))
+
+    eig_vec(1,:) = 1.d0
+    eig_vec(2,:) = s(:)
+    eig_vec(3,:) = alpha
+    eig_vec(4,:) = s(:)*alpha(:)
     
 end subroutine linear_eigen
 
@@ -394,7 +375,7 @@ subroutine velocity_eigen(h_l,h_r,u_l,u_r,b_l,b_r,rare,s,eig_vec)
     
     ! I/O
     double precision, intent(in) :: h_l(2),h_r(2),u_l(2),u_r(2),b_l,b_r
-    logical, intent(in) :: rare
+    integer, intent(in) :: rare
     double precision, intent(inout) :: s(4),eig_vec(4,4)
     
     ! Locals
@@ -435,7 +416,7 @@ subroutine exact_eigen(h_l,h_r,u_l,u_r,b_l,b_r,rare,s,eig_vec)
     
     ! I/O
     double precision, intent(in) :: h_l(2),h_r(2),u_l(2),u_r(2),b_l,b_r
-    logical, intent(in) :: rare
+    integer, intent(in) :: rare
     double precision, intent(inout) :: s(4),eig_vec(4,4)
     
     ! Local
@@ -444,7 +425,6 @@ subroutine exact_eigen(h_l,h_r,u_l,u_r,b_l,b_r,rare,s,eig_vec)
     double precision :: A(4,4),h_ave(2),u_ave(2)
     double precision :: real_evalues(4),imag_evalues(4)
     double precision :: empty,work(1,lwork)
-    
     
     ! Solve eigenvalue problem
     h_ave(:) = 0.5d0 * (h_l(:) + h_r(:))
@@ -485,7 +465,7 @@ subroutine single_layer_eigen(h_l,h_r,u_l,u_r,b_l,b_r,rare,s,eig_vec)
     
     ! I/O
     double precision, intent(in) :: h_l(2),h_r(2),u_l(2),u_r(2),b_l,b_r
-    logical, intent(in) :: rare
+    integer, intent(in) :: rare
     double precision, intent(inout) :: s(4),eig_vec(4,4)
     
     s(1) = u_l(1) - sqrt(g*h_l(1))

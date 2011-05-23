@@ -33,6 +33,13 @@ def setplot(plotdata):
 
     problem_data = Data(os.path.join(plotdata.outdir,'problem.data'))
 
+    bathy_ref_lines = []
+    if problem_data.bathy_type == 1:
+        bathy_ref_lines.append(problem_data.bathy_location)
+    elif problem_data.bathy_type == 2:
+        bathy_ref_lines.append(problem_data.x0)
+        bathy_ref_lines.append(problem_data.x1)
+    
     def jump_afteraxes(current_data):
         # Plot position of jump on plot
         mpl.hold(True)
@@ -74,19 +81,27 @@ def setplot(plotdata):
     # Window Settings
     xlimits = [0.0,1.0]
     xlimits_zoomed = [0.45,0.55]
+    ylimits_momentum = [-0.004,0.004]
     
-    # External wave
-    if problem_data.wave_family == 4:
-        ylimits_velocities = [-0.6,0.6]
-        ylimits_depth = [-1.0,0.3]
-        ylimits_depth_zoomed = [-1.0,0.4]
-        ylimits_velocities_zoomed = [-0.1,0.75]
-    # internal wave
-    elif problem_data.wave_family == 3:
-        ylimits_velocities = [-0.1,0.1] 
-        ylimits_velocities_zoomed = ylimits_velocities
+    # Idealized waves
+    if problem_data.init_type == 1:
+        # External wave
+        if problem_data.wave_family == 4:
+            ylimits_velocities = [-0.6,0.6]
+            ylimits_depth = [-1.0,0.3]
+            ylimits_depth_zoomed = [-1.0,0.4]
+            ylimits_velocities_zoomed = [-0.1,0.75]
+        # internal wave
+        elif problem_data.wave_family == 3:
+            ylimits_velocities = [-0.1,0.1] 
+            ylimits_velocities_zoomed = ylimits_velocities
+            ylimits_depth = [-1.0,0.2]
+            ylimits_depth_zoomed = ylimits_depth
+    elif problem_data.init_type == 5 or problem_data.init_type == 6:
         ylimits_depth = [-1.0,0.2]
         ylimits_depth_zoomed = ylimits_depth
+        ylimits_velocities = [-0.75,0.75]
+        ylimits_velocities_zoomed = ylimits_velocities
     
     # ========================================================================
     #  Fill plot
@@ -204,8 +219,10 @@ def setplot(plotdata):
         # Kappa
         kappa_line = ax2.plot(x,cd.q[:,5],color='r',label="Kappa")
         ax2.plot(x,np.ones(x.shape),'r--')
+        
+        for ref_line in bathy_ref_lines:
+            ax1.plot([ref_line,ref_line],ylimits_velocities,'k--')
 
-        ax1.plot([problem_data.bathy_location,problem_data.bathy_location],ylimits_velocities,'k--')
         ax1.legend((bottom_layer,top_layer,kappa_line),('Bottom Layer','Top Layer',"Kappa"),loc=4)
         ax1.set_title('Layer Velocities and Kappa')
         ax1.set_ylabel('Velocities (m/s)')
@@ -304,6 +321,29 @@ def setplot(plotdata):
     # plotitem.show = True
     
     # ========================================================================
+    #  Momentum
+    # ========================================================================
+    plotfigure = plotdata.new_plotfigure(name="momentum",figno=134)
+    plotfigure.show = True
+    
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.title = "Momentum"
+    plotaxes.xlimits = xlimits
+    plotaxes.ylimits = ylimits_momentum
+    
+    # Top layer
+    plotitem = plotaxes.new_plotitem(plot_type='1d')
+    plotitem.plot_var = 1
+    plotitem.plotstyle = 'b-'
+    plotitem.show = True
+    
+    # Bottom layer 
+    plotitem = plotaxes.new_plotitem(plot_type='1d')
+    plotitem.plot_var = 3
+    plotitem.plotstyle = 'k-'
+    plotitem.show = True
+    
+    # ========================================================================
     #  h-values
     # ========================================================================
     plotfigure = plotdata.new_plotfigure(name='depths',figno=2)
@@ -312,7 +352,7 @@ def setplot(plotdata):
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(2,1,1)'
     plotaxes.title = 'Depths'
-    plotaxes.xlimits = [0.0,1.0]
+    plotaxes.xlimits = xlimits
     plotaxes.afteraxes = jump_afteraxes
     # plotaxes.ylimits = [-1.0,0.5]
     # plotaxes.xlimits = [0.45,0.55]
