@@ -35,7 +35,7 @@ if __name__ == '__main__':
             for test in sys.argv[1:]:
                 tests_to_be_run.append(tests[int(test)])
             
-        test_runs.run_tests(tests,parallel=True)
+        test_runs.run_tests(tests_to_be_run,parallel=True)
 
     else:
         test_runs.print_tests(tests)
