@@ -10,8 +10,8 @@ run_data = setrun.setrun()
 ml_data = setrun.set_multilayer_data()
 
 # Default parameters
-run_type = 1
-ml_data.inundation_method = 1
+run_type = 2
+ml_data.inundation_method = 2
 ml_data.eigen_method = 2
 
 if len(sys.argv) < 2:

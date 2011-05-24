@@ -26,7 +26,7 @@ CLAW_SOURCES = \
 	b4step1.f90 \
 	bc1.f \
 	setaux.f90 \
-    src1.f
+    src1.f90
 	
 CLAW_LIB = $(CLAW)/clawpack/1d/lib
 	

@@ -105,8 +105,6 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
                 fwave(i,:,mw) = eig_vec(:,mw) * beta(mw)
             end forall
             cycle
-        else
-            rare = 0
         endif
         
         ! ====================================================================
@@ -148,10 +146,6 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
                 s(i,4) = u_r(1) + sqrt(g*h_r(1))
                 eig_vec(:,4) = [1.d0,s(i,4),0.d0,0.d0]
             else if (inundation_method == 4) then
-                inundation_height = [h_r(1),0.d0]
-                call exact_eigen(h_l,inundation_height,u_l,u_r,b_l,b_r,0,lambda,eig_vec)
-                s(i,:) = lambda                
-            else if (inundation_method == 5) then
                 inundation_height = [h_r(1),dry_tolerance]
                 call exact_eigen(h_l,inundation_height,u_l,u_r,b_l,b_r,0,lambda,eig_vec)
                 s(i,:) = lambda
@@ -159,6 +153,10 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
                 ! Correction for the fast waves
                 s(i,2) = u_r(1) + sqrt(g*h_r(1))
                 eig_vec(:,2) = [1.d0,s(i,2),0.d0,0.d0]
+            else if (inundation_method == 5) then
+                inundation_height = [h_r(1),0.d0]
+                call exact_eigen(h_l,inundation_height,u_l,u_r,b_l,b_r,0,lambda,eig_vec)
+                s(i,:) = lambda                
             endif   
         else if (dry_state_l(2).and.(.not.dry_state_r(2)).and.(h_r(2) + b_r > b_l)) then
             rare = 2
@@ -171,7 +169,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
                 s(i,:) = lambda
 
                 ! Corrections to internal wave
-                s(i,2) = u_r(2) + 2.d0 * sqrt(g*(1.d0-r)*h_r(2))
+                s(i,2) = u_r(2) - 2.d0 * sqrt(g*(1.d0-r)*h_r(2))
                 alpha(2) = r * g * h_r(2) / ((s(i,2) - u_r(2))**2 - g * h_r(2))
                 eig_vec(:,2) = [1.d0,s(i,2),alpha(2),alpha(2)*s(i,2)]
                 
@@ -197,12 +195,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
                 s(i,1) = u_r(1) - sqrt(g*h_r(1))
                 eig_vec(:,1) = [1.d0,s(i,1),0.d0,0.d0]
             else if (inundation_method == 4) then
-                ! Use the LAPACK solver
-                inundation_height = [h_l(1),0.d0]
-                call exact_eigen(inundation_height,h_r,u_l,u_r,b_l,b_r,0,lambda,eig_vec)
-                s(i,:) = lambda
-            else if (inundation_method == 5) then
-                ! Use the LAPACK solver with no correction
+                ! LAPACK solver with corrective wave and small wet layer
                 inundation_height = [h_r(1),dry_tolerance]
                 call exact_eigen(h_l,inundation_height,u_l,u_r,b_l,b_r,0,lambda,eig_vec)
                 s(i,:) = lambda
@@ -210,8 +203,12 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
                 ! Correction for the fast waves
                 s(i,1) = u_l(1) - sqrt(g*h_l(1))
                 eig_vec(:,1) = [1.d0,s(i,1),0.d0,0.d0]
+            else if (inundation_method == 5) then
+                ! Use the LAPACK solver with no correction
+                inundation_height = [h_l(1),0.d0]
+                call exact_eigen(inundation_height,h_r,u_l,u_r,b_l,b_r,0,lambda,eig_vec)
+                s(i,:) = lambda
             endif              
-            
         else
             if (eigen_method == 1) then
                 call linear_eigen(h_hat_l,h_hat_r,u_l,u_r,b_l,b_r,rare,lambda,eig_vec)

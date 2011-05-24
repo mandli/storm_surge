@@ -420,6 +420,7 @@ def set_multilayer_data():
     
     # Algorithm Parameters
     data.eigen_method = 2
+    data.inundation_method = 2
     data.richardson_tolerance = 0.95
     data.wave_tolerance = [0.1,0.5]
     data.dry_limit = True
@@ -471,6 +472,6 @@ if __name__ == '__main__':
     multilayer_data.write()    
     
     # Write out topography and qinit data files if needed
-    topo_data.write_topo_file('./topo.data',bathy_type='new_bathy2',
+    topo_data.write_topo_file('./topo.data',bathy_type='new_bathy1',
                                         plot=False,force=False)
     

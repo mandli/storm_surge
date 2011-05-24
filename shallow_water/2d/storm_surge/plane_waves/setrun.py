@@ -87,7 +87,7 @@ def setrun(claw_pkg='geoclaw'):
     clawdata.meqn = 6
 
     # Number of auxiliary variables in the aux array (initialized in setaux)
-    clawdata.maux = 8
+    clawdata.maux = 10
     
     # Index of aux array corresponding to capacity function, if there is one:
     clawdata.mcapa = 0
@@ -246,7 +246,7 @@ def setrun(claw_pkg='geoclaw'):
     #   'center',  'capacity', 'xleft', or 'yleft'  (see documentation).
 
     clawdata.auxtype = ['center','center','center','center','center','center',
-                        'center','center']
+                        'center','center','center','center']
 
 
     clawdata.tol = -1.0     # negative ==> don't use Richardson estimator
@@ -403,7 +403,8 @@ def set_multilayer_data():
     data.rho = [0.90,1.0]
     
     # Algorithm Parameters
-    data.eigen_method = 4
+    data.eigen_method = 2
+    data.inundation_method = 2
     data.richardson_tolerance = 0.95
     data.wave_tolerance = [0.1,0.1]
     data.dry_limit = True

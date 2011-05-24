@@ -53,7 +53,7 @@ def setplot(plotdata):
         
     def eta_2(current_data):
         r"""Middle surface"""
-        h_2 = current_data.q[:,2]
+        h_2 = current_data.q[:,2] 
         return h_2 + bathy(current_data)
         
     def u_1(current_data):
@@ -257,20 +257,46 @@ def setplot(plotdata):
     plotaxes = fill_items(plotaxes)
     
     # ========================================================================
-    #  Full plot
+    #  Zoomed Full plot
     # ========================================================================
     plotfigure = plotdata.new_plotfigure(name='bathy',figno=102)
     plotfigure.show = True
     
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.title = 'Bathymetry'
-    plotaxes.xlimits = xlimits
     if prob_data.bathy_type == 1:
         plotaxes.ylimits = [prob_data.bathy_right,10.0 ]
+        plotaxes.xlimits = xlimits
     elif prob_data.bathy_type == 2:
-        plotaxes.ylimits = [prob_data.basin_depth + 10.0,prob_data.shelf_depth + 200.0]
+        # m = (prob_data.basin_depth - prob_data.shelf_depth) / (prob_data.x0 - prob_data.x1)
+        # z = m * (x - prob_data.x0) + prob_data.basin_depth
+        plotaxes.ylimits = [prob_data.eta_2-2,prob_data.eta_2+2]
+        plotaxes.xlimits = [-32750,-32550]
     
     fill_items(plotaxes)
+    
+    # ========================================================================
+    # Zoomed Depths  
+    # ========================================================================
+    plotfigure = plotdata.new_plotfigure(name='depth',figno=103)
+    plotfigure.show = True
+    
+    def zoom_depth_afteraxes(cd):
+        mpl.hold(True)
+        mpl.plot([-33000,-32500],[0,0],'k--')
+        mpl.hold(False)
+
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.title = "Bottom Depth at Inundation point"
+    plotaxes.afteraxes = zoom_depth_afteraxes
+    if prob_data.bathy_type == 2:
+        plotaxes.ylimits = [-10,10]
+        plotaxes.xlimits = [-33000,-32500]
+    
+    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
+    plotitem.plot_var = 2
+    plotitem.color = 'b'
+    plotitem.plotstyle = 'o'
     
     # ========================================================================
     #  Velocities
