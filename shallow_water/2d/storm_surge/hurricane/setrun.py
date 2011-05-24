@@ -473,5 +473,5 @@ if __name__ == '__main__':
     
     # Write out topography and qinit data files if needed
     topo_data.write_topo_file('./topo.data',bathy_type='new_bathy1',
-                                        plot=False,force=False)
+                                        plot=True,force=False)
     

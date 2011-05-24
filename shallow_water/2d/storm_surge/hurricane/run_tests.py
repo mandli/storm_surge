@@ -26,6 +26,8 @@ class TwoLayerBaseTest(test_runs.TestML2D):
     def __init__(self,velocity=5.0,angle=0.0,eye=(0.0,0.0),mxnest=5):
         super(TwoLayerBaseTest,self).__init__()
         
+        # Create topography
+        
         self.type = "storm_surge"
         self.name = "multi_layer"
         self.setplot = "setplot"
@@ -35,6 +37,13 @@ class TwoLayerBaseTest(test_runs.TestML2D):
         self.R_eye_init = eye
         
         self.prefix = "ml_angle%s_m%s" % (int(angle * 180.0 / np.pi),mxnest)
+        
+    def write_data_objects(self):
+        super(TwoLayerBaseTest,self).write_data_objects()
+        
+        import topo_data
+        topo_data.write_topo_file('topo.data',bathy_type='new_bathy1',
+                                        plot=False,force=False)
         
 tests = []
 
