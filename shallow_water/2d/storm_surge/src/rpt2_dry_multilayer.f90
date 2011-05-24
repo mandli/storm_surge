@@ -161,17 +161,13 @@ subroutine rpt2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,aux1,aux2,aux3,imp,asdq,bmasdq
         ! Two-layers with no dry states in the vicinity
         ! Compute eigenvector matrix - Linearized system
         if (eigen_method == 1) then
-            call linearized_eigen(h_hat,h_hat,hv,hv,hu,hu,v,v,u,u,t_index, &
-                n_index,s,eig_vec)
+            call linearized_eigen(h_hat,h_hat,v,v,u,u,t_index,n_index,s,eig_vec)
         else if (eigen_method == 2) then
-            call linearized_eigen(h,h,hv,hv,hu,hu,v,v,u,u,t_index, &
-                n_index,s,eig_vec)
+            call linearized_eigen(h,h,v,v,u,u,t_index,n_index,s,eig_vec)
         else if (eigen_method == 3) then
-            call vel_diff_eigen(h,h,hv,hv,hu,hu,v,v,u,u,t_index, &
-                n_index,s,eig_vec)
+            call vel_diff_eigen(h,h,v,v,u,u,t_index,n_index,s,eig_vec)
         else if (eigen_method == 4) then
-            call lapack_eigen(h,h,hv,hv,hu,hu,v,v,u,u,t_index,n_index,s, &
-                eig_vec)
+            call lapack_eigen(h,h,v,v,u,u,t_index,n_index,s,eig_vec)
         else
             print "(a,i2,a)","Eigenstructure method ",eigen_method, &
                   " requested not available."

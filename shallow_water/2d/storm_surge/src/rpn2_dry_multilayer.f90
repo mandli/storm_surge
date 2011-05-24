@@ -307,21 +307,21 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         ! ====================================================================
         ! Static linearized eigensolver
         if (eigen_method == 1) then
-            call linearized_eigen(h_hat_l,h_hat_r,hu_l,hu_r,hv_l,hv_r,u_l, &
+            call linearized_eigen(h_hat_l,h_hat_r,u_l, &
                 u_r,v_l,v_r,n_index,t_index,lambda,eig_vec)
             s(i,:) = lambda
         ! Dynamic linearized eigensolver
         else if (eigen_method == 2) then
             if (dry_state_r(2).and.(.not.dry_state_l(2))) then
                 temp_depth = [h_r(1),0.d0]
-                call linearized_eigen(h_l,temp_depth,hu_l,hu_r,hv_l,hv_r, &
+                call linearized_eigen(h_l,temp_depth, &
                     u_l,u_r,v_l,v_r,n_index,t_index,lambda,eig_vec)
             else if (dry_state_l(2).and.(.not.dry_state_r(2))) then
                 temp_depth = [h_l(1),0.d0]
-                call linearized_eigen(temp_depth,h_r,hu_l,hu_r,hv_l,hv_r, &
+                call linearized_eigen(temp_depth,h_r, &
                     u_l,u_r,v_l,v_r,n_index,t_index,lambda,eig_vec)
             else
-                call linearized_eigen(h_l,h_r,hu_l,hu_r,hv_l,hv_r,u_l,u_r, &
+                call linearized_eigen(h_l,h_r,u_l,u_r, &
                     v_l,v_r,n_index,t_index,lambda,eig_vec)
             endif
             s(i,:) = lambda
@@ -329,14 +329,14 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         else if (eigen_method == 3) then
             if (dry_state_r(2).and.(.not.dry_state_l(2))) then
                 temp_depth = [h_r(1),0.d0]
-                call vel_diff_eigen(h_l,temp_depth,hu_l,hu_r,hv_l,hv_r, &
+                call vel_diff_eigen(h_l,temp_depth, &
                     u_l,u_r,v_l,v_r,n_index,t_index,lambda,eig_vec)
             else if (dry_state_l(2).and.(.not.dry_state_r(2))) then
                 temp_depth = [h_l(1),0.d0]
-                call vel_diff_eigen(temp_depth,h_r,hu_l,hu_r,hv_l,hv_r, &
+                call vel_diff_eigen(temp_depth,h_r, &
                     u_l,u_r,v_l,v_r,n_index,t_index,lambda,eig_vec)
             else
-                call vel_diff_eigen(h_l,h_r,hu_l,hu_r,hv_l,hv_r,u_l,u_r, &
+                call vel_diff_eigen(h_l,h_r,u_l,u_r, &
                     v_l,v_r,n_index,t_index,lambda,eig_vec)
             endif
             s(i,:) = lambda
@@ -345,20 +345,15 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             ! Only one side is dry, use linearized eigen solver
             if (dry_state_r(2).and.(.not.dry_state_l(2))) then
                 temp_depth = [h_r(1),0.d0]
-                call linearized_eigen(h_l,temp_depth,hu_l,hu_r,hv_l,hv_r, &
+                call linearized_eigen(h_l,temp_depth, &
                     u_l,u_r,v_l,v_r,n_index,t_index,lambda,eig_vec)
             else if (dry_state_l(2).and.(.not.dry_state_r(2))) then
                 temp_depth = [h_l(1),0.d0]
-                call linearized_eigen(temp_depth,h_r,hu_l,hu_r,hv_l,hv_r, &
+                call linearized_eigen(temp_depth,h_r, &
                     u_l,u_r,v_l,v_r,n_index,t_index,lambda,eig_vec)
-            ! Bottom layer completely dry
-            else if (dry_state_l(2).and.dry_state_r(2)) then
-                stop "This should not happen!"
-                call single_layer_eigen(h_l,h_r,hu_l,hu_r,hv_l,hv_r,u_l,u_r, &
-                    v_l,v_r,n_index,t_index,s,eig_vec)
             ! Both sides wet
             else
-                call lapack_eigen(h_l,h_r,hu_l,hu_r,hv_l,hv_r,u_l,u_r,v_l, &
+                call lapack_eigen(h_l,h_r,u_l,u_r,v_l, &
                             v_r,n_index,t_index,lambda,eig_vec)
             endif
             s(i,:) = lambda

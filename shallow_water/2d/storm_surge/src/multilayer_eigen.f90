@@ -10,8 +10,7 @@
 !                     http://www.opensource.org/licenses/
 ! ============================================================================
 
-subroutine linearized_eigen(h_l,h_r,hu_l,hu_r,hv_l,hv_r,u_l,u_r,v_l,v_r, &
-                            n_index,t_index,s,eig_vec)
+subroutine linearized_eigen(h_l,h_r,u_l,u_r,v_l,v_r,n_index,t_index,s,eig_vec)
 
     use multilayer_module, only: r
     use geoclaw_module, only: grav
@@ -19,8 +18,7 @@ subroutine linearized_eigen(h_l,h_r,hu_l,hu_r,hv_l,hv_r,u_l,u_r,v_l,v_r, &
     implicit none
     
     ! Input
-    double precision, dimension(2), intent(in) :: h_l,h_r,hu_l,hu_r,hv_l,hv_r
-    double precision, dimension(2), intent(in) :: u_l,u_r,v_l,v_r
+    double precision, dimension(2), intent(in) :: h_l,h_r,u_l,u_r,v_l,v_r
     integer, intent(in) :: n_index,t_index
     
     ! Output
@@ -65,8 +63,7 @@ subroutine linearized_eigen(h_l,h_r,hu_l,hu_r,hv_l,hv_r,u_l,u_r,v_l,v_r, &
 
 end subroutine linearized_eigen
 
-subroutine vel_diff_eigen(h_l,h_r,hu_l,hu_r,hv_l,hv_r,u_l,u_r,v_l,v_r, &
-                            n_index,t_index,s,eig_vec)
+subroutine vel_diff_eigen(h_l,h_r,u_l,u_r,v_l,v_r,n_index,t_index,s,eig_vec)
 
     use multilayer_module, only: one_minus_r,r
     use geoclaw_module, only: grav
@@ -74,8 +71,7 @@ subroutine vel_diff_eigen(h_l,h_r,hu_l,hu_r,hv_l,hv_r,u_l,u_r,v_l,v_r, &
     implicit none
     
     ! Input
-    double precision, dimension(2), intent(in) :: h_l,h_r,hu_l,hu_r,hv_l,hv_r
-    double precision, dimension(2), intent(in) :: u_l,u_r,v_l,v_r
+    double precision, dimension(2), intent(in) :: h_l,h_r,u_l,u_r,v_l,v_r
     integer, intent(in) :: n_index,t_index
     
     ! Output
@@ -109,8 +105,7 @@ subroutine vel_diff_eigen(h_l,h_r,hu_l,hu_r,hv_l,hv_r,u_l,u_r,v_l,v_r, &
 end subroutine vel_diff_eigen
 
 
-subroutine lapack_eigen(h_l,h_r,hu_l,hu_r,hv_l,hv_r,u_l,u_r,v_l,v_r, &
-                            n_index,t_index,s,eig_vec)
+subroutine lapack_eigen(h_l,h_r,u_l,u_r,v_l,v_r,n_index,t_index,s,eig_vec)
 
     use multilayer_module, only: r
     use geoclaw_module, only: drytolerance,grav
@@ -118,8 +113,7 @@ subroutine lapack_eigen(h_l,h_r,hu_l,hu_r,hv_l,hv_r,u_l,u_r,v_l,v_r, &
     implicit none
     
     ! Input
-    double precision, dimension(2), intent(in) :: h_l,h_r,hu_l,hu_r,hv_l,hv_r
-    double precision, dimension(2), intent(in) :: u_l,u_r,v_l,v_r
+    double precision, dimension(2), intent(in) :: h_l,h_r,u_l,u_r,v_l,v_r
     integer, intent(in) :: n_index,t_index
     
     ! Output
@@ -192,16 +186,14 @@ end subroutine lapack_eigen
 !   Note that this routine puts the result in the upper 3x3 matrix, the rest
 !   is left as zeros.
 ! ============================================================================
-subroutine single_layer_eigen(h_l,h_r,hu_l,hu_r,hv_l,hv_r,u_l,u_r,v_l,v_r, &
-                            n_index,t_index,s,eig_vec)
+subroutine sl_eigen(h_l,h_r,u_l,u_r,v_l,v_r,n_index,t_index,s,eig_vec)
 
     use geoclaw_module, only: grav
 
     implicit none
     
     ! Input
-    double precision, dimension(2), intent(in) :: h_l,h_r,hu_l,hu_r,hv_l,hv_r
-    double precision, dimension(2), intent(in) :: u_l,u_r,v_l,v_r
+    double precision, dimension(2), intent(in) :: h_l,h_r,u_l,u_r,v_l,v_r
     integer, intent(in) :: n_index,t_index
     
     ! Output
@@ -217,4 +209,4 @@ subroutine single_layer_eigen(h_l,h_r,hu_l,hu_r,hv_l,hv_r,u_l,u_r,v_l,v_r, &
     eig_vec(n_index,1:3) = [s(1),0.d0,s(3)]
     eig_vec(t_index,1:3) = [v_l(1),1.d0,v_r(1)]
     
-end subroutine single_layer_eigen
+end subroutine sl_eigen
