@@ -21,6 +21,7 @@ class MultilayerData(data.Data):
         
         # Algorithm parameters
         self.add_attribute('eigen_method',4)
+        self.add_attribute('inundation_method',2)
         self.add_attribute('richardson_tolerance',0.95)
         self.add_attribute('wave_tolerance',[1e-1,2e-1])
         self.add_attribute('dry_limit',False)
@@ -57,6 +58,7 @@ class MultilayerData(data.Data):
         data.data_write(out_file,self,'rho','(Densities of layers)')
         data.data_write(out_file,self,None)
         data.data_write(out_file,self,'eigen_method','(Method for calculating eigenspace)')
+        data.data_write(out_file,self,'inundation_method','(Method for calculating inundation eigenspace)')
         data.data_write(out_file,self,'richardson_tolerance','(Tolerance for Richardson number)')
         data.data_write(out_file,self,'wave_tolerance','(Tolerance for wave height refinement)')
         data.data_write(out_file,self,'dry_limit','(Turn off limiting when near a dry state)')
