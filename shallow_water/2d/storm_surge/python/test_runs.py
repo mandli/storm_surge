@@ -40,7 +40,7 @@ def run_tests(tests,max_processes=None,parallel=True,verbose=False,
         base_path = os.getcwd()
     base_path = os.path.expanduser(base_path)
     
-    poll_interval = 15.0
+    poll_interval = 5.0
     if max_processes is None:
         if os.environ.has_key('OMP_NUM_THREADS'):
             max_processes = int(os.environ['OMP_NUM_THREADS'])
@@ -186,7 +186,7 @@ class TestML1D(Test):
         self.run_data = setrun.setrun()
         self.ml_data = setrun.set_multilayer_data()
         
-        self.type = "ml_2d"
+        self.type = "ml_1d"
                                             
     def __str__(self):
         output = super(TestML1D,self).__str__()
