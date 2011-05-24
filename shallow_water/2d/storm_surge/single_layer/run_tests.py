@@ -14,17 +14,37 @@ Runs tests for angles relative to a continental shelf
 #                     http://www.opensource.org/licenses/
 # ============================================================================
 
-import test_suites
+import os
+import sys
+
+import numpy as np
+
+import test_runs
+
+class SingleLayerBaseTest(test_runs.TestML2D):
+    
+    def __init__(self,velocity=5.0,angle=0.0,eye=(0.0,0.0),mxnest=5):
+        super(SingleLayerBaseTest,self).__init__()
+        
+        self.type = "storm_surge"
+        self.name = "single_layer"
+        self.setplot = "setplot"
+        
+        self.run_data.clawdata.mxnest = -mxnest
+        self.hurricane_velocity = (velocity * np.cos(angle),velocity * np.sin(angle))
+        self.R_eye_init = eye
+        
+        self.prefix = "sl_angle%s_m%s" % (int(angle * 180.0 / np.pi),mxnest)
 
 tests = []
 
 # Single Layer Tests
-tests.append(test_suites.SingleLayerBaseTest(5.0,0.0,(0.0,0.0),5))
-tests.append(test_suites.SingleLayerBaseTest(5.0,0.25*np.pi,(200e3,100e3),5))
-tests.append(test_suites.SingleLayerBaseTest(5.0,-0.25*np.pi,(200e3,-100e3),5))
-tests.append(test_suites.SingleLayerBaseTest(5.0,-0.50*np.pi,(425e3,100e3),5))
-tests.append(test_suites.SingleLayerBaseTest(5.0, 0.50*np.pi,(425e3,-100e3),5))
-tests.append(test_suites.SingleLayerBaseTest(0.0,0.0,(0.0,0.0),5))
+tests.append(SingleLayerBaseTest(5.0,0.0,(0.0,0.0),5))
+tests.append(SingleLayerBaseTest(5.0,0.25*np.pi,(200e3,100e3),5))
+tests.append(SingleLayerBaseTest(5.0,-0.25*np.pi,(200e3,-100e3),5))
+tests.append(SingleLayerBaseTest(5.0,-0.50*np.pi,(425e3,100e3),5))
+tests.append(SingleLayerBaseTest(5.0, 0.50*np.pi,(425e3,-100e3),5))
+tests.append(SingleLayerBaseTest(0.0,0.0,(0.0,0.0),5))
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:

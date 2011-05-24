@@ -33,6 +33,8 @@ class ShelfBaseTest(test_runs.TestML2D):
         self.name = "shelf"
         
         self.ml_data.eigen_method = eigen_method
+        
+        self.prefix = "ml_e%s" % eigen_method
 
 # Eigenmethod tests
 for method in [1,2,3,4]:

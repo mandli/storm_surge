@@ -36,6 +36,8 @@ class BubbleBaseTest(test_runs.TestML2D):
         self.run_data.clawdata.my = 100
         
         self.ml_data.eigen_method = eigen_method
+        
+        self.prefix = "ml_e%s" % eigen_method
 
 # Eigen method tests               
 for method in [1,2,3,4]:

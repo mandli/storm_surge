@@ -45,6 +45,8 @@ class IdealizedBaseTest(test_runs.TestML2D):
             self.ml_data.epsilon = 0.1
         else:
             self.ml_data.epsilon = 0.04
+            
+        self.prefix = "ml_e%s" % eigen_method
 
 # Method test
 for family in [3,4]:
