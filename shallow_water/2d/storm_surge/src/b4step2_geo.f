@@ -82,7 +82,7 @@ c     # set hu = hv = 0 in all these cells
                   h(layer) = q(i,j,m+1)
                   if (h(layer) > drytolerance) then
                       u(layer) = q(i,j,m+2) / q(i,j,m+1)
-                      v(layer) = q(i,j,m+3)/q(i,j,m+1)
+                      v(layer) = q(i,j,m+3)/ q(i,j,m+1)
                   else
                       dry_state(layer) = .true.
                       u(layer) = 0.d0
@@ -93,12 +93,12 @@ c     # set hu = hv = 0 in all these cells
               aux(i,j,9) = (u(1) - u(2))**2 / (g*one_minus_r*sum(h))
               if ((aux(i,j,9) > richardson_tolerance)
      &          .and.(.not.dry_state(2))) then
-                  print 100,i,j,aux(i,j,7)
+                  print 100,i,j,aux(i,j,9)
               endif
               aux(i,j,10) = (v(1) - v(2))**2 / (g*one_minus_r*sum(h))
               if ((aux(i,j,10) > richardson_tolerance)
      &          .and.(.not.dry_state(2))) then
-                  print 100,i,j,aux(i,j,8)
+                  print 100,i,j,aux(i,j,10)
               endif
           enddo
       enddo
