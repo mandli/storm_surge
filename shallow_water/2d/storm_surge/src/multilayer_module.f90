@@ -21,7 +21,7 @@ module multilayer_module
     double precision :: r,one_minus_r
     
     ! Algorithm parameters
-    integer :: eigen_method
+    integer :: eigen_method,inundation_method
     double precision :: richardson_tolerance
     double precision, allocatable :: wave_tol(:)
     logical :: dry_limit
@@ -69,7 +69,7 @@ contains
         dry_limit = .true.
     
         ! Physics parameters
-        read(13,*) layers
+        read(13,"(i3)") layers
         allocate(rho(layers))
         allocate(eta(layers))
         allocate(wave_tol(layers))
@@ -84,7 +84,8 @@ contains
         read(13,*)
         
         ! Algorithmic parameters
-        read(13,"(i2)") eigen_method
+        read(13,"(i1)") eigen_method
+        read(13,"(i1)") inundation_method
         read(13,"(d16.8)") richardson_tolerance
         read(13,*) wave_tol
         read(13,*) dry_limit
