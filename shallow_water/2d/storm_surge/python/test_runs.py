@@ -28,7 +28,7 @@ from pyclaw.plotters.plotclaw import plotclaw
 
 def print_tests(tests):
     for (i,test) in enumerate(tests):
-        print "====== Test #%s ===========================" % i
+        print "====== Test #%s ============================" % (i)
         print str(test)
 
 def run_tests(tests,max_processes=None,parallel=True,verbose=False,
@@ -140,7 +140,7 @@ class Test(object):
         self.setplot = "setplot"
         
     def __str__(self):
-        output = "Test %s:" % self.name
+        output = "Test %s: %s" % (self.name,self.prefix)
         output += "\n  Setplot: %s" % self.setplot
         return output
         
