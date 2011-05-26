@@ -16,9 +16,10 @@ subroutine src2(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
     
     ! Locals
     integer :: i,j
-    double precision :: h,g,coeff,hu,hv,gamma,dgamma,tol,w,ycell,cor,hu0,hv0
-    double precision :: a11,a12,a21,a22,ct,xc,yc,cd,tau,wind_speed
-    double precision :: P_atmos_x,P_atmos_y,u,v
+    double precision :: w,ycell,cor,hu0,hv0
+    double precision :: a11,a12,a21,a22,ct,xc,yc,cd
+    double precision :: h(2),g,coeff,tol,speed,D
+    double precision :: tau,wind_speed,P_atmos_x,P_atmos_y
     
     integer :: mn,n
 
@@ -30,50 +31,48 @@ subroutine src2(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
     tol = 1.d-30  ! To prevent divide by zero in gamma
 
     ! friction--------------------------------------------------------
-    if (coeffmanning > 0.d0 .and. frictiondepth > 0.d0) then
+    if (coeffmanning > 0.d0) then
         do i=1,mx
             do j=1,my
-                h = q(i,j,1) / rho(1) + q(i,j,4) / rho(2)
+                ! Check to see which layer we are doing this on
+                h(1) = q(i,j,1) / rho(1)
+                h(2) = q(i,j,4) / rho(2)
                 
-                if (h < tol) then
-                    q(i,j,5) = 0.d0
-                    q(i,j,6) = 0.d0
+                ! Bottom layer wet, apply to bottom layer
+                if (h(2) > tol) then
+                    ! Extract speed of bottom layer
+                    speed = sqrt(q(i,j,5)**2 + q(i,j,6)**2) / q(i,j,4)
+                                        
+                    ! Calculate drag coefficient 
+                    D = coeff**2 * g * sum(h)**(-7/3) * speed
+                    
+                    ! Exactly integrate and modify bottom layer momentum
+                    q(i,j,5) = q(i,j,5) * exp(-D*dt)
+                    q(i,j,6) = q(i,j,6) * exp(-D*dt)
+                    
+                ! Only top layer wet, apply to top layer only
+                else if (h(1) > tol) then
+                    ! Set bottom layer momentum to zero
+                    q(i,j,5:6) = 0.d0
+                    
+                    ! Extract speed of top layer
+                    speed = sqrt(q(i,j,2)**2 + q(i,j,3)**2) / q(i,j,1)
+                    
+                    ! Calculate drag coefficient
+                    D = coeff**2 * g * sum(h)**(-7/3) * speed
+                    
+                    ! Exactly integrate and modify top layer momentum
+                    q(i,j,2) = q(i,j,2) * exp(-D*dt)
+                    q(i,j,3) = q(i,j,3) * exp(-D*dt)
+                    
+                ! Neither layer wet, set momentum to zero
                 else
-                    u = q(i,j,5) / q(i,j,4)
-                    v = q(i,j,6) / q(i,j,4)
-                    gamma = sqrt(u**2 + v**2) * g * coeff**2 / (h**(7/3))
-                    dgamma = 1.d0 + dt * gamma
-                    q(i,j,5) = q(i,j,5) / dgamma
-                    q(i,j,6) = q(i,j,6) / dgamma
+                    q(i,j,2:3) = 0.d0
+                    q(i,j,5:6) = 0.d0
                 endif
             enddo
         enddo
     endif
-
-!     if (coeffmanning.gt.0.d0.and.frictiondepth.gt.0.d0) then
-!         do i=1,mx
-!             do j=1,my
-!                 h = q(i,j,1) / rho(1) + q(i,j,4) / rho(2)
-!                 if (h.le.frictiondepth) then
-!                     ! Apply friction source term only in shallower water
-!                     hu=q(i,j,5) / rho(2)
-!                     hv=q(i,j,6) / rho(2)
-!     
-!                     if (h.lt.tol) then
-!                         q(i,j,5)=0.d0
-!                         q(i,j,6)=0.d0
-!                     else
-!                         gamma= dsqrt(hu**2 + hv**2)*(g*coeff**2)/(h**(7/3))
-!                         dgamma=1.d0 + dt*gamma
-!                         hu = hu / dgamma
-!                         hv = hv / dgamma
-!                         q(i,j,5) = hu * rho(2)
-!                         q(i,j,6) = hv * rho(2)
-!                     endif
-!                 endif
-!             enddo
-!         enddo
-!     endif
     ! ----------------------------------------------------------------
 
     ! coriolis--------------------------------------------------------

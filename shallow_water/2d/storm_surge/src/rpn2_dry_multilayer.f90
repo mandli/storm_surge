@@ -405,7 +405,7 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             else if (dry_state_r(2)) then
                 print *,"right dry"
             endif
-            print *,h_r(1),h_r(1)
+            print *,h_r(1),h_l(1)
             print *,h_r(2),h_l(2)
             print *,hu_r(2),hu_l(2)
             print *,hv_r(2),hv_l(2)

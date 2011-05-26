@@ -559,14 +559,17 @@ def setplot(plotdata):
     xlimits_zoomed = xlimits
     ylimits = [amrdata.ylower,amrdata.yupper]
     eta = [multilayer_data.eta[0],multilayer_data.eta[1]]
-    # top_surface_limits = [eta[0]-0.1,eta[0]+0.1]
-    top_surface_limits = None
-    # internal_surface_limits = [eta[1]-1.0,eta[1]+1.0]
-    internal_surface_limits = None
-    # top_speed_limits = [0.0,2.0]
-    top_speed_limits = None
-    # internal_speed_limits = [0.0,0.01]
-    internal_speed_limits = None
+    top_surface_limits = [eta[0]-0.1,eta[0]+0.1]
+    # top_surface_limits = None
+    internal_surface_limits = [eta[1]-1.0,eta[1]+1.0]
+    # internal_surface_limits = None
+    top_speed_limits = [0.0,2.0]
+    # top_speed_limits = None
+    internal_speed_limits = [0.0,0.01]
+    # internal_speed_limits = None
+    
+    top_depth_limits = [0.0,eta[0]-eta[1]]
+    bottom_depth_limits = [0.0,2800]
     
     surface_zoomed = [eta[0] - 0.5,eta[0]+0.5]
     internal_zoomed = [eta[1] - 5.0,eta[1] + 5.0]
@@ -624,7 +627,7 @@ def setplot(plotdata):
     plotaxes.xlimits = xlimits
     plotaxes.ylimits = ylimits
     plotaxes.afteraxes = pcolor_afteraxes
-    add_layer_depth(plotaxes,1)
+    add_layer_depth(plotaxes,1,bounds=top_depth_limits)
     add_land(plotaxes)
     
     # Bottom surface
@@ -635,7 +638,7 @@ def setplot(plotdata):
     plotaxes.xlimits = xlimits
     plotaxes.ylimits = ylimits
     plotaxes.afteraxes = pcolor_afteraxes
-    add_layer_depth(plotaxes,2)
+    add_layer_depth(plotaxes,2,bounds=bottom_depth_limits)
     add_land(plotaxes)
     
     # ========================================================================
@@ -908,7 +911,7 @@ def setplot(plotdata):
     #  Profile Plots
     # ========================================================================
     plotfigure = plotdata.new_plotfigure(name='profile', figno=4)
-    plotfigure.show = True
+    plotfigure.show = False
     
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.title = 'Profiles'
@@ -927,7 +930,7 @@ def setplot(plotdata):
     #  Combined Profile Plot
     # ========================================================================
     plotfigure = plotdata.new_plotfigure(name='combined_surface',figno=130)
-    plotfigure.show = True
+    plotfigure.show = False
     plotfigure.kwargs = {'figsize':(6,6)}
     
     def top_afteraxes(cd):
@@ -987,8 +990,16 @@ def setplot(plotdata):
     plotaxes.xlimits = xlimits
     plotaxes.title = "Bathymetry Profile"
     
-    add_land(plotaxes,bounds=bathy_limits,plot_type='profile')
+    plotitem = plotaxes.new_plotitem(plot_type='2d_imshow')
+    plotitem.plot_var = b
+    plotitem.add_colorbar = True
+    plotitem.amr_imshow_show = [1,1,1]
+    plotitem.amr_gridlines_show = [0,0,0]
+    plotitem.amr_gridedges_show = [1,1,1]
+    plotitem.imshow_cmin = -3000
+    plotitem.imshow_cmax = 100
     
+    # add_land(plotaxes,bounds=bathy_limits,plot_type='pcolor')
     
     # ========================================================================
     # Figure for grids alone

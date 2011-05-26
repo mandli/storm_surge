@@ -88,7 +88,10 @@ subroutine qinit(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
                 endif
             ! Inundation test
             else if (init_type == 5) then
-                stop "Not implemented"
+                x_p = (x - init_location(1)) * cos(angle) &
+                    + (y - init_location(2)) * sin(angle)
+                deta = epsilon * exp(-(x_p/sigma)**2)
+                q(i,j,1) = q(i,j,1) + rho(1) * deta
             endif
             
         enddo

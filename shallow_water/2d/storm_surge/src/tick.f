@@ -88,7 +88,7 @@ c
 c  ------ start of coarse grid integration loop. ------------------
 c
 C  20   if (ncycle .ge. nstop .or. time .ge. tfinal) goto 999
- 20   if (time .ge. tfinal) goto 999
+  20   if (time .ge. tfinal) goto 999
       if (nextout  .le. nout) then
          outtime       = tout(nextout)
       else

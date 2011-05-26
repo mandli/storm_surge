@@ -46,7 +46,7 @@ class MultilayerData(data.Data):
         self.add_attribute('x2',480e3)
         self.add_attribute('basin_depth',-3000.0)
         self.add_attribute('shelf_depth',-100.0)
-        self.add_attribute('beach_slope',0.05)
+        self.add_attribute('beach_slope',0.008)
         self.add_attribute('h',100)
     
     def write(self,out_file='./multilayer.data',datasource="setrun.py"):
@@ -66,10 +66,10 @@ class MultilayerData(data.Data):
         data.data_write(out_file,self,'eta','(Top surface of each layer)')
         data.data_write(out_file,self,'init_type','(Type of initial condition)')
         data.data_write(out_file,self,'epsilon','(Perturbation strength)')
-        if 1 <= self.init_type and self.init_type <= 3 :
+        if 1 <= self.init_type and self.init_type <= 3 or self.init_type == 5:
             data.data_write(out_file,self,'init_location','(Location for perturbation)')
             data.data_write(out_file,self,'wave_family','(Wave family of the perturbation)')
-            if 2 <= self.init_type and self.init_type <= 3:
+            if 2 <= self.init_type and self.init_type <= 3 or self.init_type == 5:
                 data.data_write(out_file,self,'angle','(Angle of direction of travel from x-axis)')
                 data.data_write(out_file,self,'sigma','(Gaussian width')
         data.data_write(out_file,self,None)
@@ -87,7 +87,6 @@ class MultilayerData(data.Data):
             data.data_write(out_file,self,'basin_depth','(Depth of basin)')
             data.data_write(out_file,self,'shelf_depth','(Depth of shelf)')
             data.data_write(out_file,self,'beach_slope','(Slope of beach)')
-            data.data_write(out_file,self,'h','(Height of mid-slope jump near eta(2))')
         else:
             print "Invalid bathy_type %s requested, aborting." % self.bathy_type
             out_file.close()

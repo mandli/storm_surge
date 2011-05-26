@@ -157,9 +157,8 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
 !         endif
 
         ! ====================================================================
-        ! Dry state Handling
-        ! ====================================================================
-        ! Single layer case
+        !  Top layer only
+        ! ====================================================================            
         if (dry_state_l(2).and.dry_state_r(2)) then
             wall = 1.d0
             
@@ -410,39 +409,29 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         ! Compute jump in fluxes
         ! Dry state, bottom layer to right
         if(dry_state_r(2).and.(.not.dry_state_l(2)).and.(.not.rare(1))) then
-            if (h_l(2) + b_l > b_r) then
-                print *,"h_l(2) + b_l = ",h_l(2) + b_l," > b_r = ",b_r
-                stop "Inundation of lower layer not handled, right dry."
-            else 
-                h_r(2) = h_l(2)
-                hu_r(2) = -hu_l(2)
-                u_r(2) = -u_l(2)
-                hv_r(2) = hv_l(2)
-                v_r(2) = v_l(2)
-            
-                flux_transfer_r = 0.d0
-                flux_transfer_l = 0.d0
-                momentum_transfer(1) = g * rho(1) * h_ave(1) * (b_r - h_l(2) - b_l)
-                momentum_transfer(2) = 0.d0
-            endif
+            h_r(2) = h_l(2)
+            hu_r(2) = -hu_l(2)
+            u_r(2) = -u_l(2)
+            hv_r(2) = hv_l(2)
+            v_r(2) = v_l(2)
+        
+            flux_transfer_r = 0.d0
+            flux_transfer_l = 0.d0
+            momentum_transfer(1) = g * rho(1) * h_ave(1) * (b_r - h_l(2) - b_l)
+            momentum_transfer(2) = 0.d0
         ! ====================================================================
         ! Dry state, bottom layer to left
         else if(dry_state_l(2).and.(.not.dry_state_r(2)).and.(.not.rare(2))) then    
-            if (h_r(2) + b_r > b_l) then
-                print *,"h_r(2) + b_r = ",h_r(2) + b_r," > b_l = ",b_l
-                stop "Inundation of lower layer not handled, left dry."
-            else
-                h_l(2) = h_r(2)
-                hu_l(2) = -hu_r(2)
-                u_l(2) = -u_r(2)
-                hv_l(2) = hv_r(2)
-                v_l(2) = v_r(2)
-            
-                flux_transfer_r = 0.d0
-                flux_transfer_l = 0.d0
-                momentum_transfer(1) = g * rho(1) * h_ave(1) * (b_r + h_r(2) - b_l)
-                momentum_transfer(2) = 0.d0
-            endif
+            h_l(2) = h_r(2)
+            hu_l(2) = -hu_r(2)
+            u_l(2) = -u_r(2)
+            hv_l(2) = hv_r(2)
+            v_l(2) = v_r(2)
+        
+            flux_transfer_r = 0.d0
+            flux_transfer_l = 0.d0
+            momentum_transfer(1) = g * rho(1) * h_ave(1) * (b_r + h_r(2) - b_l)
+            momentum_transfer(2) = 0.d0
         ! ====================================================================
         ! Full two layer case
         else
@@ -489,14 +478,20 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         if (.not.(info == 0)) then
             if (dry_state_l(2)) then
                 print *,"left dry"
-            else if (dry_state_r(2)) then
+            endif
+            if (dry_state_r(2)) then
                 print *,"right dry"
             endif
-            print *,h_r(1),h_r(1)
-            print *,h_r(2),h_l(2)
-            print *,hu_r(2),hu_l(2)
-            print *,hv_r(2),hv_l(2)
-            
+            print *,"        left            |             right"
+            print *,"====================================================="
+            print *,h_l(1),h_r(1)
+            print *,hu_l(1),hu_r(1)
+            print *,hv_l(1),hv_r(1)
+            print *,h_l(2),h_r(2)
+            print *,hu_l(2),hu_r(2)
+            print *,hv_l(2),hv_r(2)
+            print *,b_l,b_r
+            print *,""
             print "(a,i2)","In normal solver: ixy=",ixy
             print "(a,i3)","  Error solving R beta = delta,",info
             print "(a,i3,a,i3)","  Location: ",icom," ",jcom
@@ -562,7 +557,7 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
                         print *,"f = ",fwave(i,m,mw)
                         print *,"amdq = ",(amdq(i,m))
                         print *,"apdq = ",(apdq(i,m))
-                        stop
+                        stop "Flux non-zero going into a wall, aborting calculation."
                     endif
                 enddo
                 apdq(i,4:6) = 0.d0

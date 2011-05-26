@@ -5,8 +5,6 @@ c
      .                svdflx,qc1d,lenbc,lratiox,lratioy,hx,hy,
      .                maux,aux,auxc1d,delt,mptr)
 
-       use multilayer_module, only: rho
-
        implicit double precision (a-h, o-z)
 
        include "call.i"
@@ -60,7 +58,8 @@ c      # interpolation based on surface eta?
       return
 
 c  ---------------------------------------------------------------
-       
+
+
        if (qprint) write(dbugunit,*)" working on grid ",mptr
        tgrid = rnode(timemult, mptr)
        nc = mjtot-2*nghost
@@ -110,7 +109,7 @@ c                # from the cell corresponding  to q
          do i=2,nc
             write(dbugunit,4101) i,qr(i-1,1),ql(i,1)
           enddo
- 4101      format(i3,10d16.8)
+ 4101      format(i3,4e16.6)
          if (maux .gt. 0) then
              write(dbugunit,*) 'side 1, auxr:'
              do i=2,nc
@@ -259,13 +258,7 @@ c                # preserves conservation in incompressible flow:
        if (qprint) then
          write(dbugunit,*) 'side 3, ql and qr:'
          do i=1,nc
-            write(dbugunit,"(i3)") i
-            write(dbugunit,"(a,6d16.8)") "  ",(ql(i,m)/rho(1),m=1,3),
-     &              (ql(i,m)/rho(2),m=4,6)
-            write(dbugunit,"(a,6d16.8)") "  ",(qr(i,m)/rho(1),m=1,3),
-     &              (qr(i,m)/rho(2),m=4,6)
-C             write(dbugunit,4101) i,(ql(i,m),m=1,nvar)
-C             write(dbugunit,"(a,10d16.8)"),"     ",(qr(i,m),m=1,nvar)
+            write(dbugunit,4101) i,ql(i,1),qr(i,1)
             enddo
        endif
        call rpn2(1,max1dp1-2*nghost,nvar,mwaves,nghost,nc+1-2*nghost,
@@ -354,9 +347,14 @@ c
  499   continue
 
 c      # for source terms:
-c       if (method(5) .ne. 0) then
-c           call src1d(nvar,nghost,lenbc,qc1d,maux,auxc1d,tgrid,delt)
-c           endif
-c
+c      # This is commented out for now --- updating the momenumtum due
+c      # to friction/Coriolis source terms affects the resulting mass flux
+c      # and leads to loss of conservation when src1d is used.
+c      # It would be better to incorporate these source terms into the
+c      # the f-wave formulation?
+c      if (method(5) .ne. 0) then
+c          call src1d(nvar,nghost,lenbc,qc1d,maux,auxc1d,tgrid,delt)
+c          endif
+
        return
        end

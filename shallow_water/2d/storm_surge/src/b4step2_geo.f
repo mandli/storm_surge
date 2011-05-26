@@ -89,17 +89,21 @@ c     # set hu = hv = 0 in all these cells
                       v(layer) = 0.d0
                   endif
               enddo
-              
-              aux(i,j,9) = (u(1) - u(2))**2 / (g*one_minus_r*sum(h))
-              if ((aux(i,j,9) > richardson_tolerance)
-     &          .and.(.not.dry_state(2))) then
-                  print 100,i,j,aux(i,j,9)
-              endif
-              aux(i,j,10) = (v(1) - v(2))**2 / (g*one_minus_r*sum(h))
-              if ((aux(i,j,10) > richardson_tolerance)
-     &          .and.(.not.dry_state(2))) then
-                  print 100,i,j,aux(i,j,10)
-              endif
+              if (sum(h) > drytolerance) then
+                  aux(i,j,9)=(u(1) - u(2))**2 / (g*one_minus_r*sum(h))
+                  if ((aux(i,j,9) > richardson_tolerance)
+     &                  .and.(.not.dry_state(2))) then
+                      print 100,i,j,aux(i,j,9)
+                  endif
+                  aux(i,j,10)=(v(1) - v(2))**2 / (g*one_minus_r*sum(h))
+                  if ((aux(i,j,10) > richardson_tolerance)
+     &                  .and.(.not.dry_state(2))) then
+                      print 100,i,j,aux(i,j,10)
+                  endif
+               else
+                   aux(i,j,9) = 0.d0
+                   aux(i,j,10) = 0.d0
+               endif
           enddo
       enddo
       endif

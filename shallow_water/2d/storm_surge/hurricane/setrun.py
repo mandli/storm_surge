@@ -270,7 +270,7 @@ def setrun(claw_pkg='geoclaw'):
     # Restart parameters
     clawdata.restart = False
     clawdata.checkpt_iousr = -3
-    clawdata.tchk = [0.0,0.666e5,0.69e5]
+    clawdata.tchk = [0.0,28800,3.78e4]
 
     # More AMR parameters can be set -- see the defaults in pyclaw/data.py
 
@@ -308,14 +308,15 @@ def setgeo(rundata):
     geodata.maxleveldeep = 4
     geodata.ifriction = 1
     geodata.coeffmanning = 0.025
-    geodata.frictiondepth = 20.0
+    # geodata.frictiondepth = 20.0
+    geodata.frictiondepth = 10e10
 
     # == settopo.data values ==
     geodata.topofiles = []
     # for topography, append lines of the form
     #   [topotype, minlevel, maxlevel, t1, t2, fname]
     # geodata.topofiles.append([2, 1, 1, 0., 1.e10, 'bowl.topotype2'])
-    geodata.topofiles.append([1, 1, 5, 0., 1e10, 'topo.data'])
+    geodata.topofiles.append([1, 1, 5, -RAMP_UP_TIME, 1e10, 'topo.data'])
     
     # == setdtopo.data values ==
     geodata.dtopofiles = []
@@ -369,12 +370,12 @@ def set_hurricane_data(ramp_up_time=RAMP_UP_TIME):
     data.momentum_refinement = False
     data.max_speed_nest = 5
     # data.speed_nest = [1.0,2.0,3.0,4.0,5.0]
-    # data.speed_nest = [0.5,1.0,2.0,3.0,4.0,5.0]
-    data.speed_nest = [0.25,0.5,1.0,2.0,3.0,4.0]
+    data.speed_nest = [0.5,1.0,2.0,3.0,4.0,5.0]
+    # data.speed_nest = [0.25,0.5,1.0,2.0,3.0,4.0]
     
     # Hurricane location based refinement
-    data.max_R_nest = 4
-    data.R_refine = [60.0e3,50e3,40e3,30e3]
+    data.max_R_nest = 3
+    data.R_refine = [60.0e3,40e3,30e3]
         
     # Wind strength based refinement
     data.max_wind_nest = 0
@@ -472,6 +473,6 @@ if __name__ == '__main__':
     multilayer_data.write()    
     
     # Write out topography and qinit data files if needed
-    topo_data.write_topo_file('./topo.data',bathy_type='new_bathy1',
-                                        plot=True,force=False)
+    topo_data.write_topo_file('./topo.data',bathy_type='simple_shelf',
+                                        plot=True,force=True)
     

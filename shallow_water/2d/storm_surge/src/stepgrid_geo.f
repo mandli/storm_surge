@@ -26,7 +26,7 @@ c      This version of stepgrid, stepgrid_geo.f allows output on
 c      fixed grids specified in setfixedgrids.data
 c :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-      use multilayer_module, only: rho,layers
+      use multilayer_module, only: rho, layers
       use geoclaw_module
 
       implicit double precision (a-h,o-z)

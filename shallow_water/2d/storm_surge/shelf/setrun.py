@@ -66,8 +66,8 @@ def setrun(claw_pkg='geoclaw'):
     clawdata.ndim = ndim
     
     # Lower and upper edge of computational domain:
-    clawdata.xlower = -400000.0
-    clawdata.xupper = 0.0
+    clawdata.xlower = -200e3
+    clawdata.xupper = 500e3
     
     clawdata.ylower = -300e3
     clawdata.yupper = 300e3
@@ -75,8 +75,8 @@ def setrun(claw_pkg='geoclaw'):
 
     # Number of grid cells:
     # clawdata.mx = 70
-    clawdata.mx = 500
-    clawdata.my = 60
+    clawdata.mx = 140
+    clawdata.my = 120
     # clawdata.my = 120
     # clawdata.mx = 100
     # clawdata.my = 100
@@ -302,7 +302,7 @@ def setgeo(rundata):
     # for topography, append lines of the form
     #   [topotype, minlevel, maxlevel, t1, t2, fname]
     # geodata.topofiles.append([2, 1, 1, 0., 1.e10, 'bowl.topotype2'])
-    # geodata.topofiles.append([1, 1, 5, 0., 1e10, 'topo.data'])
+    geodata.topofiles.append([1, 1, 5, 0., 1e10, 'topo.data'])
     
     # == setdtopo.data values ==
     geodata.dtopofiles = []
@@ -405,7 +405,8 @@ def set_multilayer_data():
     data.rho = [1025.0,1028.0]
     
     # Algorithm Parameters
-    data.eigen_method = 1
+    data.eigen_method = 2
+    data.inundation_method = 2
     data.richardson_tolerance = 0.95
     data.wave_tolerance = [0.1,0.1]
     data.dry_limit = True
@@ -414,16 +415,20 @@ def set_multilayer_data():
     # data.eta = [0.0,-5000.0]
     data.eta = [0.0,-300.0]
     data.init_type = 5
-    data.init_location = [300e3,50e3]
-    data.wave_family = wave_family
+    data.init_location = [0,0]
+    data.wave_family = 4
+    data.angle = 0
     data.epsilon = 0.4
-    data.sigma = 0.02
+    data.sigma = 20e3
     
     # Bathy settings
-    data.bathy_type = 1
-    data.bathy_location = -30e3
-    data.bathy_left = -4000
-    data.bathy_right = -200
+    data.bathy_type = 3
+    data.beach_slope = 0.008
+    data.x0 = 350e3
+    data.x1 = 450e3
+    data.x2 = 480e3
+    data.basin_depth = -4000
+    data.shelf_depth = -100
     
     return data
     
@@ -446,6 +451,8 @@ if __name__ == '__main__':
     multilayer_data.write()    
     
     # Write out topography and qinit data files if needed
-    topo_data.write_topo_file('./topo.data',bathy_type='flat',
-                                        plot=False,force=False)
+    topo_data.write_topo_file('./topo.data',bathy_type='simple_shelf',
+                                        plot=True,force=False)
+
+    
     

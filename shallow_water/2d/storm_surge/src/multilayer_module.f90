@@ -95,10 +95,10 @@ contains
         read(13,*) eta
         read(13,*) init_type
         read(13,*) epsilon
-        if (1 <= init_type .and. init_type <= 3) then  
+        if (1 <= init_type .and. init_type <= 3 .or. init_type == 5) then  
             read(13,*) init_location
             read(13,*) wave_family
-            if(2 <= init_type .and. init_type <= 3) then
+            if(2 <= init_type .and. init_type <= 3 .or. init_type == 5) then
                 read(13,*) angle
                 read(13,*) sigma
             endif
@@ -106,33 +106,8 @@ contains
         
         ! Bathymetry
         read(13,*) bathy_type
-        if (bathy_type == 0) then
-            ! Probably should check here that mtopo is nonzero
-            continue
-        else if (bathy_type == 1) then
-            read(13,*) bathy_location
-            read(13,*) bathy_left
-            read(13,*) bathy_right
-        else if (bathy_type == 2 .or. bathy_type == 3) then
-            read(13,*) x0
-            read(13,*) x1
-            read(13,*) x2
-            read(13,*) basin_depth
-            read(13,*) shelf_depth
-            read(13,*) beach_slope
-            read(13,*) step_height
-            
-            ! Calculated values
-            if (layers > 1) then
-                A = basin_depth - eta(2) + 0.5d0 * step_height
-                B = shelf_depth - eta(2) - 0.5d0 * step_height
-                eta_int = (A*x1 - B*x0) / (A-B)
-                shelf_slope = A / (x0 - eta_int)
-            else
-                eta_int = 0.5d0 * (x0 + x1)
-                shelf_slope = (basin_depth - shelf_depth) / (x0 - x1)
-            endif
-        endif
+        ! We don't use any of these values so we can just stop reading the
+        ! file at this point
         
         close(13)
 
