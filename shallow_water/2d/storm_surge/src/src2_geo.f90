@@ -33,20 +33,22 @@ subroutine src2(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
     if (coeffmanning.gt.0.d0.and.frictiondepth.gt.0.d0) then
         do i=1,mx
             do j=1,my
-                h=q(i,j,1)
+                h = q(i,j,1) / rho(1) + q(i,j,4) / rho(2)
                 if (h.le.frictiondepth) then
                     ! Apply friction source term only in shallower water
-                    hu=q(i,j,2)
-                    hv=q(i,j,3)
+                    hu=q(i,j,5) / rho(2)
+                    hv=q(i,j,6) / rho(2)
     
                     if (h.lt.tol) then
-                        q(i,j,2)=0.d0
-                        q(i,j,3)=0.d0
+                        q(i,j,5)=0.d0
+                        q(i,j,6)=0.d0
                     else
                         gamma= dsqrt(hu**2 + hv**2)*(g*coeff**2)/(h**(7/3))
                         dgamma=1.d0 + dt*gamma
-                        q(i,j,2)= q(i,j,2)/dgamma
-                        q(i,j,3)= q(i,j,3)/dgamma
+                        hu = hu / dgamma
+                        hv = hv / dgamma
+                        q(i,j,5) = hu * rho(2)
+                        q(i,j,6) = hv * rho(2)
                     endif
                 endif
             enddo

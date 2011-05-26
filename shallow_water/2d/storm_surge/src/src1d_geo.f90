@@ -38,20 +38,22 @@ subroutine src1d(meqn,mbc,mx1d,q1d,maux,aux1d,t,dt)
 
     if ((coeffmanning > 0.d0).and.(frictiondepth > 0.d0)) then
         do i=1,mx1d
-            h=q1d(i,1)
+            h = q1d(i,1) / rho(1) + q1d(i,4) / rho(2)
             if (h.lt.frictiondepth) then
             ! Apply friction source term only in shallower water
-                hu=q1d(i,2)
-                hv=q1d(i,3)
+                hu = q1d(i,5) / rho(2)
+                hv = q1d(i,6) / rho(2)
 
                 if (h.lt.tol) then
-                    q1d(i,2)=0.d0
-                    q1d(i,3)=0.d0
+                    q1d(i,5)=0.d0
+                    q1d(i,6)=0.d0
                 else
                     gamma= dsqrt(hu**2 + hv**2)*(g*coeff**2)/(h**(7/3))
                     dgamma=1.d0 + dt*gamma
-                    q1d(i,2)= q1d(i,2)/dgamma
-                    q1d(i,3)= q1d(i,3)/dgamma
+                    hu = hu / dgamma
+                    hv = hv / dgamma
+                    q1d(i,5) = hu * rho(2)
+                    q1d(i,6) = hv * rho(2)
                 endif
             endif
         enddo
