@@ -54,9 +54,10 @@ CLAW_SOURCES = \
 	$(MULTILAYER_SRC)/rpt2_dry_multilayer.f90 \
 	$(MULTILAYER_SRC)/multilayer_eigen.f90 \
 	$(MULTILAYER_SRC)/tick.f \
-	$(MULTILAYER_SRC)/stepgrid_geo.f \
-	$(MULTILAYER_SRC)/filval_geo.f \
+	$(MULTILAYER_SRC)/filval.f90 \
+	$(MULTILAYER_SRC)/stepgrid_noupdate.f \
 	
+	# $(MULTILAYER_SRC)/stepgrid_geo.f \
 	# $(MULTILAYER_SRC)/flux2fw.f \
 	# $(MULTILAYER_SRC)/qad_geo.f
     # $(GEOLIB)/filval_geo.f \
