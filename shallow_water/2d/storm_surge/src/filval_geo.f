@@ -7,7 +7,7 @@ c
      3                  mptr,ilo,ihi,jlo,jhi,aux,naux,locflip,
      4                  sp_over_h)
 
-      use multilayer_module, only: rho,eta
+      use multilayer_module, only: rho,eta,layers
       use geoclaw_module
 
       implicit double precision (a-h,o-z)
@@ -17,7 +17,7 @@ c
       dimension   val(mitot,mjtot,nvar), valc(mic,mjc,nvar)
       dimension   aux(mitot,mjtot,naux), auxc(mic,mjc,naux)
 
-      double precision coarseval(3)
+      double precision coarseval(3,layers)
 C       logical fineflag(3)
       logical fineflag(nvar)
 
@@ -88,42 +88,48 @@ c     #prepare slopes - use min-mod limiters
       do j=2, mjc-1
       do i=2, mic-1
          fineflag(1) = .false.
+         
 *        !interpolate eta to find depth---------------------------------------
          do ii=-1,1
-             if (valc(i+ii,j,1) <= toldry) then
-                 coarseval(2+ii,1) = eta(1)
-             else
-                 coarseval(2+ii,1) = valc(i+ii,j,1) / rho(1)
-     &              + valc(i+ii,j,4) / rho(2) + auxc(i+ii,j,1)
-             endif
-         
-         do ii=-1,1
-            coarseval(2+ii) = valc(i+ii,j,1) / rho(1) 
-     &                          + valc(i+ii,j,4) / rho(2)
-     &                          + auxc(i+ii,j,1)
-            if (valc(i+ii,j,1).le.toldry) then
-               coarseval(2+ii)=sealevel
-               endif
-            enddo
-         s1p=coarseval(3)-coarseval(2)
-         s1m=coarseval(2)-coarseval(1)
-         slopex=dmin1(dabs(s1p),dabs(s1m))*dsign(1.d0,
-     &      coarseval(3)-coarseval(1))
+            if (valc(i+ii,j,4) > toldry) then
+                coarseval(2+ii,2) = valc(i+ii,j,4) / rho(2) + auxc(i+ii,j,1)
+                coarseval(2+ii,1) = valc(i+ii,j,1) / rho(1) + coarseval(2+ii,2)
+            else
+                coarseval(2+ii,2) = eta(2)
+                if (valc(i+ii,j,1) > toldry) then
+                    coarseval(2+ii,1) = valc(i+ii,j,1) / rho(1) + auxc(i+ii,j,1)
+                else
+                    coarseval(2+ii,1) = eta(1)
+                endif
+            endif
+         enddo
+            
+         s1p=coarseval(3,1)-coarseval(2,1)
+         s1m=coarseval(2,1)-coarseval(1,1)
+         slopex=dmin1(dabs(s1p),dabs(s1m))*dsign(1.d0,coarseval(3,1)-coarseval(1,1))
          if (s1m*s1p.le.0.d0) slopex=0.d0
+
          do jj=-1,1
-            coarseval(2+jj) = valc(i,j+jj,1) / rho(1)
-     &                          + valc(i,j+jj,4) / rho(2)
-     &                          + auxc(i,j+jj,1)
-            if (valc(i,j+jj,1).le.toldry) then
-               coarseval(2+jj)=sealevel
-               endif
-            enddo
-         s1p=coarseval(3)-coarseval(2)
-         s1m=coarseval(2)-coarseval(1)
-         slopey=dmin1(dabs(s1p),dabs(s1m))*dsign(1.d0,
-     &      coarseval(3)-coarseval(1))
+             if (valc(i,j+jj,2) > toldry) then
+                 coarseval(2+jj,2) = valc(i,j+jj,4) / rho(2) + auxc(i,j+jj,1)
+                 coarseval(2+jj,1) = valc(i,j+jj,1) / rho(1) + coarseval(2+jj,2)
+             else
+                 coarseval(2+jj,2) = eta(2)
+                 if (valc(i,j+jj,1) > toldry) then
+                     coarseval(2+jj,1) = valc(i,j+jj,1) + auxc(i,j+jj,1)
+                 else
+                     coarseval(2+jj,1) = eta(1)
+                 endif
+            endif
+         enddo
+
+         s1p=coarseval(3,1)-coarseval(2,1)
+         s1m=coarseval(2,1)-coarseval(1,1)
+         slopey=dmin1(dabs(s1p),dabs(s1m))*dsign(1.d0,coarseval(3,1)-coarseval(1,1))
          if (s1m*s1p.le.0.d0) slopey=0.d0
-*       !interp. from coarse cells to fine grid to find depth
+         
+         
+c       !interp. from coarse cells to fine grid to find depth
          finemass = 0.d0
          do ico = 1,lratiox
             do jco = 1,lratioy
@@ -133,7 +139,6 @@ c     #prepare slopes - use min-mod limiters
                ifine = (i-2)*lratiox + nghost + ico
                val(ifine,jfine,1) = coarseval(2)
      &            + xoff*slopex + yoff*slopey
-               
                val(ifine,jfine,1)=max(0.d0,
      &            val(ifine,jfine,1)-aux(ifine,jfine,1))
                finemass = finemass + val(ifine,jfine,1)
