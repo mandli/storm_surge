@@ -94,20 +94,33 @@ contains
         ! Initial conditions
         read(13,*) eta
         read(13,*) init_type
-        read(13,*) epsilon
-        if (1 <= init_type .and. init_type <= 3 .or. init_type == 5) then  
-            read(13,*) init_location
-            read(13,*) wave_family
-            if(2 <= init_type .and. init_type <= 3 .or. init_type == 5) then
-                read(13,*) angle
+        if (init_type > 0) then
+            read(13,*) epsilon
+            if (init_type <= 2 .or. init_type == 5) then  
+                read(13,*) init_location
+                read(13,*) wave_family
+                if(init_type == 2 .or. init_type == 5) then
+                    read(13,*) angle
+                    read(13,*) sigma
+                endif
+            else if (init_type == 3) then
+                read(13,*) init_location
                 read(13,*) sigma
             endif
         endif
+        read(13,*)
         
         ! Bathymetry
         read(13,*) bathy_type
-        ! We don't use any of these values so we can just stop reading the
-        ! file at this point
+        ! Do not need any of these as bathy files should be created outside of
+        ! here
+!         if (bathy_type == 1) then
+!             read(13,*) bathy_location
+!             read(13,*) bathy_left
+!             read(13,*) bathy_right
+!         else if (bathy_type == 2) then
+!             stop "Bathy type 2 no longer implemented."
+!         endif
         
         close(13)
 

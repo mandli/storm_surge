@@ -300,7 +300,7 @@ def setgeo(rundata):
     # for topography, append lines of the form
     #   [topotype, minlevel, maxlevel, t1, t2, fname]
     # geodata.topofiles.append([2, 1, 1, 0., 1.e10, 'bowl.topotype2'])
-    # geodata.topofiles.append([1, 1, 5, 0., 1e10, 'topo.data'])
+    geodata.topofiles.append([2, 1, 5, 0., 1e10, 'topo.data'])
     
     # == setdtopo.data values ==
     geodata.dtopofiles = []
@@ -324,12 +324,8 @@ def setgeo(rundata):
     # == setgauges.data values ==
     geodata.gauges = []
     # for gauges append lines of the form  [gaugeno, x, y, tstart, tend]
-    # N_gauges = 21
-    # for i in xrange(0,N_gauges):
-    #     x = -80.0 * (23e3 / 180) + 500e3 - 5e3  # 1 km off shore
-    #     y = 550e3 / (N_gauges + 1) * (i+1) + -275e3       # Start 25 km inside domain
-    #     geodata.gauges.append([i, x, y, 0.0, 1e10])
-    #     print "Gauge %s: (%s,%s)" % (i,x/1e3,y/1e3)
+    # N_gauges = 5
+    # Put gauges along perpendicular to wave 
 
     # == setfixedgrids.data values ==
     geodata.fixedgrids = []
@@ -420,7 +416,7 @@ def set_multilayer_data():
     data.sigma = 0.02
     
     # Bathy settings
-    data.bathy_type = 1
+    data.bathy_type = 0
     data.bathy_location = 0.6
     data.bathy_left = -1.0
     data.bathy_right = -0.2
@@ -446,6 +442,6 @@ if __name__ == '__main__':
     multilayer_data.write()    
     
     # Write out topography and qinit data files if needed
-    topo_data.write_topo_file('./topo.data',bathy_type='flat',
-                                        plot=False,force=False)
+    # topo_data.write_topo_file('./topo.data',bathy_type='jump',
+    #                                     plot=False,force=False)
     

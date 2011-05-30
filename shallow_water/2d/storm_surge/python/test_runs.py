@@ -123,12 +123,12 @@ def run_tests(tests,max_processes=None,parallel=True,verbose=False,
                     stderr=log_file).wait()
     
     # Wait to exit while processes are still going
-    while len(process_queue) > 0:
-        for process in process_queue:
-            if process.poll() == 0:
-                process_queue.remove(process)
-                print "Number of processes currently:",len(process_queue)
-        time.sleep(poll_interval)
+    # while len(process_queue) > 0:
+    #     for process in process_queue:
+    #         if process.poll() == 0:
+    #             process_queue.remove(process)
+    #             print "Number of processes currently:",len(process_queue)
+    #     time.sleep(poll_interval)
 
 
 class Test(object):

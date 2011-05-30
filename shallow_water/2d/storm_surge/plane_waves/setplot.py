@@ -33,7 +33,32 @@ def setplot(plotdata):
     hurricane_data = Data(os.path.join(plotdata.outdir,'hurricane.data'))
     multilayer_data = Data(os.path.join(plotdata.outdir,'multilayer.data'))
     
-    ref_lines = [multilayer_data.bathy_location]
+    def transform_c2p(x,y,x0,y0,theta):
+        return ((x+x0)*np.cos(theta) - (y+y0)*np.sin(theta),
+                (x+x0)*np.sin(theta) + (y+y0)*np.cos(theta))
+
+    def transform_p2c(x,y,x0,y0,theta):
+        return ( x*np.cos(theta) + y*np.sin(theta) - x0,
+                -x*np.sin(theta) + y*np.cos(theta) - y0)
+        
+    
+    if multilayer_data.bathy_type == 1:
+        x = [0.0,0.0]
+        y = [0.0,1.0]
+        x1,y1 = transform_c2p(x[0],y[0],multilayer_data.bathy_location,
+                                    0.0,multilayer_data.bathy_angle)
+        x2,y2 = transform_c2p(x[1],y[1],multilayer_data.bathy_location,
+                                    0.0,multilayer_data.bathy_angle)
+        
+        m = (y1 - y2) / (x1 - x2)
+        x[0] = (amrdata.ylower - y1) / m + x1
+        y[0] = amrdata.ylower
+        x[1] = (amrdata.yupper - y1) / m + x1
+        y[1] = amrdata.yupper
+        ref_lines = [((x[0],y[0]),(x[1],y[1]))]
+    else:
+        ref_lines = []
+    print ref_lines
     
     plotdata.clearfigures()
     plotdata.clear_frames = False
@@ -46,6 +71,7 @@ def setplot(plotdata):
     # ========================================================================
     def pcolor_afteraxes(current_data):
         bathy_ref_lines(current_data)
+        gauge_locations(current_data)
         
     def contour_afteraxes(current_data):
         # gauge_locations(current_data)
@@ -60,18 +86,22 @@ def setplot(plotdata):
     def profile_afteraxes(current_data):
         pass
         
-    def bathy_ref_lines(current_data,direction="x"):
+    def bathy_ref_lines(current_data):
         plt.hold(True)
-        if direction == 'x':
-            y = ylimits
-            for ref_line in ref_lines:
-                plt.plot([ref_line,ref_line],y,'y--',linewidth=1)
-        elif direction == 'y':
-            x = xlimits
-            for ref_line in ref_lines:
-                plt.plot(x,[ref_line,ref_line],'y--',linewidth=1)
+        for ref_line in ref_lines:
+            x1 = ref_line[0][0]
+            y1 = ref_line[0][1]
+            x2 = ref_line[1][0]
+            y2 =  ref_line[1][1]
+            plt.plot([x1,x2],[y1,y2],'y--',linewidth=1)
         plt.hold(False)
         
+    def gauge_locations(current_data,gaugenos='all'):
+        from pyclaw.plotters import gaugetools
+        plt.hold(True)
+        gaugetools.plot_gauge_locations(current_data.plotdata, \
+             gaugenos=gaugenos, format_string='kx', add_labels=True)
+        plt.hold(False)
     # ========================================================================
     #  Data extraction routines
     #     0    1     2     3    4     5      6     7      8      9
@@ -526,7 +556,7 @@ def setplot(plotdata):
     #  Depths
     # ========================================================================
     plotfigure = plotdata.new_plotfigure(name='Depths', figno=42)
-    plotfigure.show = False
+    plotfigure.show = True
     plotfigure.kwargs = {'figsize':(14,4)}
     
     # Top surface
@@ -927,6 +957,31 @@ def setplot(plotdata):
     # plotitem.pcolor_cmax = 80.0
     # plotitem.add_colorbar = False
     # plotitem.amr_gridlines_show = [0,0,0]
+    
+    # ========================================================================
+    #  Figures for gauges
+    # ========================================================================
+    plotfigure = plotdata.new_plotfigure(name='Surface & topo', figno=300, \
+                    type='each_gauge')
+    plotfigure.show = True
+    plotfigure.clf_each_gauge = True
+
+    # Set up for axes in this figure:
+    plotaxes = plotfigure.new_plotaxes()
+    # plotaxes.xlimits = [0.0,40.0*3600.0]
+    # plotaxes.ylimits = [0,150.0]
+    # plotaxes.ylimits = [-3.0, 3.0]
+    plotaxes.title = 'Surface'
+
+    # Plot surface as blue curve:
+    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
+    plotitem.plot_var = eta1
+    plotitem.plotstyle = 'r-'
+
+    # Plot topo as green curve:
+    # plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
+    # plotitem.plot_var = gaugetopo
+    # plotitem.plotstyle = 'g+'
     
     #-----------------------------------------
     

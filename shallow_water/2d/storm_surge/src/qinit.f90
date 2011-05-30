@@ -19,7 +19,7 @@ subroutine qinit(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
     ! Locals
     integer :: i,j
 !     double precision :: x,y,xim,xip,yjm,yjp,xc,yc,dq,total_depth
-    double precision :: x,y,xmid,g,m,x_p,y_p
+    double precision :: x,y,xmid,g,m,x_c,y_c
     double precision :: eigen_vector(6),gamma,lambda,alpha,h_1,h_2,deta
 
     g = grav
@@ -41,7 +41,7 @@ subroutine qinit(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
             endif
             
             ! Test perturbations - these only work in the x-direction
-            if (init_type == 1 .or. init_type == 2 .or. init_type == 3) then
+            if (init_type == 1 .or. init_type == 2) then
                 ! Calculate wave family for perturbation
                 gamma = aux(i,j,8) / aux(i,j,7)
                 select case(wave_family)
@@ -70,13 +70,18 @@ subroutine qinit(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
                         q(i,j,4:5) = q(i,j,4:5) + rho(2) * epsilon * eigen_vector(4:5)
                     endif
                 ! Gaussian wave along a direction on requested wave family
-                else if (init_type == 2 .or. init_type == 3) then
-                    x_p = (x - init_location(1)) * cos(angle) &
-                        + (y - init_location(2)) * sin(angle)
-                    deta = epsilon * exp(-(x_p/sigma)**2)
+                else if (init_type == 2) then
+                    ! Transform back to computational coordinates
+                    x_c = x * cos(angle) + y * sin(angle) - init_location(1)
+                    deta = epsilon * exp(-(x_c/sigma)**2)
                     q(i,j,1) = q(i,j,1) + rho(1) * deta
                     q(i,j,4) = q(i,j,4) + rho(2) * alpha * deta
                 endif
+            ! Symmetric gaussian hump
+            else if (init_type == 3) then
+                deta = epsilon * exp(-((x-init_location(1))/sigma)**2)  &
+                               * exp(-((y-init_location(2))/sigma)**2)
+                q(i,j,1) = q(i,j,1) + rho(1) * deta
             ! Shelf conditions from AN paper
             else if (init_type == 4) then
                 alpha = 0.d0
@@ -88,9 +93,9 @@ subroutine qinit(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
                 endif
             ! Inundation test
             else if (init_type == 5) then
-                x_p = (x - init_location(1)) * cos(angle) &
+                x_c = (x - init_location(1)) * cos(angle) &
                     + (y - init_location(2)) * sin(angle)
-                deta = epsilon * exp(-(x_p/sigma)**2)
+                deta = epsilon * exp(-(x_c/sigma)**2)
                 q(i,j,1) = q(i,j,1) + rho(1) * deta
             endif
             

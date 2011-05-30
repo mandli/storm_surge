@@ -40,6 +40,7 @@ class MultilayerData(data.Data):
         self.add_attribute('bathy_location',-50e3)
         self.add_attribute('bathy_left',-4000.0)
         self.add_attribute('bathy_right',-200.0)
+        self.add_attribute('bathy_angle',0.0)
         
         self.add_attribute('x0',350e3)
         self.add_attribute('x1',450e3)
@@ -63,16 +64,22 @@ class MultilayerData(data.Data):
         data.data_write(out_file,self,'wave_tolerance','(Tolerance for wave height refinement)')
         data.data_write(out_file,self,'dry_limit','(Turn off limiting when near a dry state)')
         data.data_write(out_file,self,None)
+        
         data.data_write(out_file,self,'eta','(Top surface of each layer)')
         data.data_write(out_file,self,'init_type','(Type of initial condition)')
-        data.data_write(out_file,self,'epsilon','(Perturbation strength)')
-        if 1 <= self.init_type and self.init_type <= 3 or self.init_type == 5:
-            data.data_write(out_file,self,'init_location','(Location for perturbation)')
-            data.data_write(out_file,self,'wave_family','(Wave family of the perturbation)')
-            if 2 <= self.init_type and self.init_type <= 3 or self.init_type == 5:
-                data.data_write(out_file,self,'angle','(Angle of direction of travel from x-axis)')
+        if self.init_type > 0:
+            data.data_write(out_file,self,'epsilon','(Perturbation strength)')
+            if self.init_type <= 2 or self.init_type == 5:
+                data.data_write(out_file,self,'init_location','(Location for perturbation)')
+                data.data_write(out_file,self,'wave_family','(Wave family of the perturbation)')
+                if 2 == self.init_type or self.init_type == 5:
+                    data.data_write(out_file,self,'angle','(Angle of direction of travel from x-axis)')
+                    data.data_write(out_file,self,'sigma','(Gaussian width')
+            elif self.init_type == 3:
+                data.data_write(out_file,self,'init_location','(Location for perturbation)')
                 data.data_write(out_file,self,'sigma','(Gaussian width')
         data.data_write(out_file,self,None)
+        
         data.data_write(out_file,self,'bathy_type','(Type of bathymetry prescribed)')
         if self.bathy_type == 0:
             pass
@@ -80,6 +87,7 @@ class MultilayerData(data.Data):
             data.data_write(out_file,self,'bathy_location','(Bathymetry jump location)')
             data.data_write(out_file,self,'bathy_left','(Depth to left of bathy_location)')
             data.data_write(out_file,self,'bathy_right','(Depth to right of bathy_location)')
+            data.data_write(out_file,self,'bathy_angle','(Angle from the vertical to put jump)')
         elif self.bathy_type == 2 or self.bathy_type == 3: 
             data.data_write(out_file,self,'x0','(Location of basin end)')
             data.data_write(out_file,self,'x1','(Location of shelf slope end)')
