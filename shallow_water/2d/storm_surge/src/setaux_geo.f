@@ -13,7 +13,7 @@ c     #    aux(i,j,2) = area ratio (capacity function -- set mcapa = 2)
 c     #    aux(i,j,3) = length ratio for edge
 c
 
-      use multilayer_module, only: layers,eta
+      use multilayer_module
       use hurricane_module
       use geoclaw_module
       use topo_module
@@ -53,7 +53,7 @@ c           # for lat-lon grid on sphere:
                aux(i,j,2) = 1.d0
                aux(i,j,3) = 1.d0
 	            endif
-
+	        
             if (mtopofiles.gt.0) then
                topoint=0.d0
                call cellgridintegrate(topoint,xim,xcell,xip,yjm,ycell,
@@ -61,11 +61,10 @@ c           # for lat-lon grid on sphere:
      &	        mxtopo,mytopo,mtopo,i0topo,mtopoorder,
      &	        mtopofiles,mtoposize,topowork)
                aux(i,j,1) = topoint/(dx*dy*aux(i,j,2))
-
             else
-               aux(i,j,1) = 0.d0
-c     	      # or set-up your own topo
-               endif
+                stop "No topography files found!"
+            endif
+            
             enddo
          enddo
          
