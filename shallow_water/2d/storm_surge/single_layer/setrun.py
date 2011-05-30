@@ -295,7 +295,7 @@ def setgeo(rundata):
     geodata.maxleveldeep = 4
     geodata.ifriction = 1
     geodata.coeffmanning = 0.025
-    geodata.frictiondepth = 20.0
+    geodata.frictiondepth = 1e10
 
     # == settopo.data values ==
     geodata.topofiles = []
@@ -415,20 +415,6 @@ def set_multilayer_data():
     # Bathy settings
     data.bathy_type = 0
     
-    # Bathy settings for type == 1
-    data.bathy_location = 450e3
-    data.bathy_left = -4000
-    data.bathy_right = -200
-    
-    # Bathy settings for type == 2 or 3       
-    data.x0 = 350e3
-    data.x1 = 450e3
-    data.x2 = 480e3
-    data.basin_depth = -3000.0
-    data.shelf_depth = -100.0
-    data.beach_slope = 0.025
-    data.h = 100.0
-    
     return data
 
 # =====================
@@ -451,6 +437,6 @@ if __name__ == '__main__':
     
     # Write out topography and qinit data files if needed
     topo_file = './topo.data'
-    topo_data.write_topo_file(topo_file,bathy_type='new_bathy1',
-                                        plot=False,force=False)
+    topo_data.write_topo_file(topo_file,topo_type=1,factor=4,
+                            bathy_type='simple_shelf',plot=True,force=True)
     

@@ -139,8 +139,14 @@ def plot_profiles(profiles=bathy_profiles,topo_type=1,factor=4,verbose=True):
         bathy_func = util.create_topo_func(profile,verbose=verbose)
         N = len(profile)
         factor = 4
-        tt.topo1writer(topo_file,bathy_func,xlower,xupper,ylower,yupper,
+        if topo_type == 1:
+            tt.topo1writer(topo_file,bathy_func,xlower,xupper,ylower,yupper,
                         factor*mx,factor*my)
+        elif topo_type == 2:
+            tt.topo2writer(topo_file,bathy_func,xlower,xupper,ylower,yupper,
+                        factor*mx,factor*my)
+        else:
+            raise Exception("Invalid topo_type %s." % topo_type)
                         
         # Read it back in
         (X,Y,Z) = tt.topofile2griddata(topo_file,topotype=topo_type)

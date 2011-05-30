@@ -34,7 +34,14 @@ class SingleLayerBaseTest(test_runs.TestML2D):
         self.hurricane_velocity = (velocity * np.cos(angle),velocity * np.sin(angle))
         self.R_eye_init = eye
         
-        self.prefix = "sl_angle%s_m%s" % (int(angle * 180.0 / np.pi),mxnest)
+        self.prefix = "sl_angle%s_m%s_v%s" % (int(angle * 180.0 / np.pi),mxnest,int(velocity))
+    
+    def write_data_objects(self):
+        super(SingleLayerBaseTest,self).write_data_objects()
+        
+        import topo_data
+        topo_data.write_topo_file('topo.data',bathy_type='simple_shelf',
+                                        plot=False,force=False)
 
 tests = []
 
