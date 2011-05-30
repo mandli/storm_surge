@@ -108,7 +108,7 @@ c     # set hu = hv = 0 in all these cells
       enddo
       endif
       
-100   format ("Hyperbolicity failed, kappa(",i4,",",i4,") = ",d16.8)
+100   format ("Hyperbolicity may have failed (",i4,",",i4,") = ",d16.8)
 
     
 C     ! These need to be modified to use other aux array locations, 7,8 are 
