@@ -79,12 +79,12 @@ def setrun(claw_pkg='geoclaw'):
         
 
     # Number of grid cells:
-    levels = 1
+    levels = 3
     clawdata.mx = 70
     clawdata.my = 60
-    # clawdata.mx = 70*levels*2
+    clawdata.mx = 70*levels
     # clawdata.mx = 560
-    # clawdata.my = 60*levels*2
+    clawdata.my = 60*levels
     # clawdata.my = 480
     # clawdata.mx = 100
     # clawdata.my = 100
@@ -240,7 +240,7 @@ def setrun(claw_pkg='geoclaw'):
 
 
     # max number of refinement levels:
-    mxnest = 5
+    mxnest = 1
 
     clawdata.mxnest = -mxnest   # negative ==> anisotropic refinement in x,y,t
 
@@ -335,7 +335,7 @@ def setgeo(rundata):
     # to specify regions of refinement append lines of the form
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
     # geodata.regions.append([1, 1, 0.e0, 1.e10, -100.,100., -100.,100.])
-    #geodata.regions.append([5, 5, 0.e0, 1.e10,425e3,475e3,-325e3,325e3])
+    geodata.regions.append([1, 1, -RAMP_UP_TIME, 1.e10,325e3,525e3,-325e3,325e3])
 
     # == setgauges.data values ==
     geodata.gauges = []
@@ -474,5 +474,5 @@ if __name__ == '__main__':
     
     # Write out topography and qinit data files if needed
     topo_data.write_topo_file('./topo.data',bathy_type='simple_shelf',
-                                        plot=True,force=True)
+                                        plot=False,force=True)
     

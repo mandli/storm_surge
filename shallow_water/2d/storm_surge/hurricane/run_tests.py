@@ -42,7 +42,7 @@ class TwoLayerBaseTest(test_runs.TestML2D):
         super(TwoLayerBaseTest,self).write_data_objects()
         
         import topo_data
-        topo_data.write_topo_file('topo.data',bathy_type='new_bathy1',
+        topo_data.write_topo_file('topo.data',bathy_type='simple_shelf',
                                         plot=False,force=False)
         
 tests = []
