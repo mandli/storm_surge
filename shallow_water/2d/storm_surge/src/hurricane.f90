@@ -37,7 +37,7 @@ module hurricane_module
     
     ! Coriolis location for beta-plane approximation
     !  should be read in but not implemented that way yet
-    double precision, parameter :: theta_0 = 0.52359877559829882 
+    double precision :: theta_0
 
 contains
     ! ========================================================================
@@ -101,9 +101,9 @@ contains
         read(13,*) B
         read(13,*) Pn
         read(13,*) Pc
-        
-!         read(13,*) theta_0
-!         theta_0 = theta_0 * pi / 180d0
+        read(13,*)
+        read(13,*) theta_0
+        theta_0 = theta_0 * pi / 180d0
         
         close(13)
 

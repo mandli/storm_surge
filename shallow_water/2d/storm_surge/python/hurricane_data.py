@@ -44,7 +44,10 @@ class HurricaneData(data.Data):
         self.add_attribute('A',23.0)        # Hurricane model fit parameter
         self.add_attribute('B',1.5)     
         self.add_attribute('Pn',1005.0)     # Nominal atmospheric pressure     
-        self.add_attribute('Pc',950.0)      # Pressure in the eye of the hurricane    
+        self.add_attribute('Pc',950.0)      # Pressure in the eye of the hurricane  
+        
+        # Coriolis settings
+        self.add_attribute('theta_0',30.0)  # Center of beta-plane approximation  
         
     def write(self,out_file='./hurricane.data',datasource="setrun.py"):
         """Write out the data file to the path given"""
@@ -83,5 +86,9 @@ class HurricaneData(data.Data):
         data.data_write(out_file,self,'B')     
         data.data_write(out_file,self,'Pn',"(Nominal atmospheric pressure)")
         data.data_write(out_file,self,'Pc',"(Pressure in the eye of the hurricane)")
+        data.data_write(out_file,self,None)
+        
+        # Coriolis beta-plane approximation
+        data.data_write(out_file,self,"theta_0","(Center of beta-plane approximation)")
         
         out_file.close()
