@@ -254,6 +254,10 @@ def setplot(plotdata):
         plt.clabel(C,inline=1)
         plt.hold(False)
         
+    def pressure(cd):
+        # The division by 100.0 is to convert from Pa to millibars
+        return cd.q[:,:,10] / 100.0
+        
     # ========================================================================
     #  Data extraction routines
     #     0    1     2     3    4     5      6     7      8      9
@@ -517,6 +521,57 @@ def setplot(plotdata):
         elif plot_type == 'contour':
             pass
     
+    def add_wind(plotaxes,bounds=None,plot_type='pcolor'):
+        if plot_type == 'pcolor' or plot_type == 'imshow':
+            plotitem = plotaxes.new_plotitem(plot_type='2d_imshow')
+            plotitem.plot_var = wind_speed
+            plotitem.imshow_cmap = plt.get_cmap('PuBu')
+            if bounds is not None:
+                plotitem.imshow_cmin = bounds[0]
+                plotitem.imshow_cmax = bounds[1]
+            plotitem.add_colorbar = True
+            plotitem.amr_imshow_show = [1,1,1]
+            plotitem.amr_gridlines_show = [0,0,0]
+            plotitem.amr_gridedges_show = [1,1,1]
+        elif plot_type == 'contour':
+            plotitem = plotaxes.new_plotitem(plot_type='2d_contour')
+            plotitem.plot_var = wind_speed
+            plotitem.contour_nlevels = hurricane_data.max_wind_nest
+            plotitem.countour_min = hurricane_data.wind_refine[0]
+            plotitem.gridedges_show = 1
+        elif plot_type == 'quiver':
+            plotitem = plotaxes.new_plotitem(plot_type='2d_quiver')
+            plotitem.quiver_var_x = wind_x
+            plotitem.quiver_var_y = wind_y
+            plotitem.amr_quiver_show = [0,0,1]
+            plotitem.amr_quiver_key_show = [True,False,False]
+            plotitem.amr_quiver_key_units = 'm/s'
+            
+    def add_pressure(plotaxes,bounds=None,plot_type='pcolor'):
+        if plot_type == 'pcolor' or plot_type == 'imshow':
+            plotitem = plotaxes.new_plotitem(plot_type='2d_imshow')
+            plotitem.plot_var = pressure
+            plotitem.imshow_cmap = plt.get_cmap('PuBu')
+            if bounds is not None:
+                plotitem.imshow_cmin = bounds[0]
+                plotitem.imshow_cmax = bounds[1]
+            plotitem.add_colorbar = True
+            plotitem.amr_gridlines_show = [0,0,0]
+            plotitem.amr_gridedges_show = [1]
+        elif plot_type == 'contour':
+            pass
+            
+    def add_vorticity(plotaxes,bounds=None,plot_type="pcolor"):
+        if plot_type == 'pcolor' or plot_type == 'imshow':            
+            plotitem = plotaxes.new_plotitem(plot_type='2d_imshow')
+            plotitem.plot_var = 9
+            plotitem.imshow_cmap = plt.get_cmap('PRGn')
+            if bounds is not None:
+                plotitem.imshow_cmin = bounds[0]
+                plotitem.imshow_cmax = bounds[1]
+            plotitem.add_colorbar = True
+            plotitem.amr_gridlines_show = [0,0,0]
+            plotitem.amr_gridedges_show = [1]
     
     # Land
     def add_land(plotaxes,bounds=None,plot_type='pcolor'):
@@ -559,14 +614,14 @@ def setplot(plotdata):
     xlimits_zoomed = xlimits
     ylimits = [amrdata.ylower,amrdata.yupper]
     eta = [multilayer_data.eta[0],multilayer_data.eta[1]]
-    top_surface_limits = [eta[0]-0.1,eta[0]+0.1]
+    top_surface_limits = [eta[0]-0.5,eta[0]+0.5]
     # top_surface_limits = None
-    internal_surface_limits = [eta[1]-1.0,eta[1]+1.0]
+    internal_surface_limits = [eta[1]-7.5,eta[1]+7.5]
     # internal_surface_limits = None
-    top_speed_limits = [0.0,2.0]
-    # top_speed_limits = None
-    internal_speed_limits = [0.0,0.01]
-    # internal_speed_limits = None
+    # top_speed_limits = [0.0,2.0]
+    top_speed_limits = None
+    # internal_speed_limits = [0.0,0.01]
+    internal_speed_limits = None
     
     top_depth_limits = [0.0,eta[0]-eta[1]]
     bottom_depth_limits = [0.0,2800]
@@ -574,6 +629,10 @@ def setplot(plotdata):
     surface_zoomed = [eta[0] - 0.5,eta[0]+0.5]
     internal_zoomed = [eta[1] - 5.0,eta[1] + 5.0]
     bathy_limits = [-3000,100]
+    
+    wind_limits = [0,55]
+    pressure_limits = [954,1002]
+    vorticity_limits = [-1.e-2,1.e-2]
     
     # Single layer test limits
     # top_surface_limits = [eta[0]-2.5,eta[0]+2.5]
@@ -737,175 +796,63 @@ def setplot(plotdata):
     # ========================================================================
     # Hurricane forcing
     # ========================================================================
-    # Pressure field
-    plotfigure = plotdata.new_plotfigure(name='pressure', figno=2)
-    plotfigure.show = hurricane_data.pressure_src and True
-    
-    plotaxes = plotfigure.new_plotaxes()
-    plotaxes.xlimits = xlimits
-    plotaxes.ylimits = ylimits
-    plotaxes.title = "Pressure Field"
-    plotaxes.afteraxes = hurricane_afteraxes
-    plotaxes.scaled = True
-    
-    plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
-    def pressure_var(current_data):
-        return current_data.q[:,:,6] / 100.0
-    plotitem.plot_var = pressure_var
-    plotitem.pcolor_cmap = plt.get_cmap('PuBu')
-    plotitem.pcolor_cmin = 954
-    plotitem.pcolor_cmax = 1002
-    plotitem.add_colorbar = True
-    plotitem.gridlines_show = 0
-    plotitem.gridedges_show = 1
-    plotitem.amr_pcolor_show = [1,0,0]
-    plotitem.amr_grid_bgcolor = ['#ffeeee', '#eeeeff', '#eeffee']
-    
-    plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
-    plotitem.plot_var = geoplot.land
-    plotitem.pcolor_cmap = geoplot.land_colors
-    plotitem.pcolor_cmin = 0.0
-    plotitem.pcolor_cmax = 80.0
-    plotitem.add_colorbar = False
-    plotitem.amr_gridlines_show = [0,0,0]
-
-    # Pressure gradient plots - x
-    plotfigure = plotdata.new_plotfigure(name='pressure_x', figno=30)
-    plotfigure.show = hurricane_data.pressure_src and True
-    
-    plotaxes = plotfigure.new_plotaxes()
-    plotaxes.xlimits = xlimits
-    plotaxes.ylimits = ylimits
-    plotaxes.title = "Pressure Gradient Field - x"
-    plotaxes.afteraxes = hurricane_afteraxes
-    plotaxes.scaled = True
-    
-    plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
-    def pressure_var(current_data):
-        return current_data.q[:,:,7] / 100.0
-    plotitem.plot_var = pressure_var
-    plotitem.pcolor_cmap = plt.get_cmap('PuBu')
-    # plotitem.pcolor_cmin = 954
-    # plotitem.pcolor_cmax = 1002
-    plotitem.add_colorbar = True
-    plotitem.gridlines_show = 0
-    plotitem.gridedges_show = 1
-    plotitem.amr_pcolor_show = [1,0,0]
-    plotitem.amr_grid_bgcolor = ['#ffeeee', '#eeeeff', '#eeffee']
-    
-    # Pressure gradient plots - y
-    plotfigure = plotdata.new_plotfigure(name='pressure_y', figno=31)
-    plotfigure.show = hurricane_data.pressure_src and True
-    
-    plotaxes = plotfigure.new_plotaxes()
-    plotaxes.xlimits = xlimits
-    plotaxes.ylimits = ylimits
-    plotaxes.title = "Pressure Gradient Field - y"
-    plotaxes.afteraxes = hurricane_afteraxes
-    plotaxes.scaled = True
-    
-    plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
-    def pressure_var(current_data):
-        return current_data.q[:,:,8] / 100.0
-    plotitem.plot_var = pressure_var
-    plotitem.pcolor_cmap = plt.get_cmap('PuBu')
-    # plotitem.pcolor_cmin = 954
-    # plotitem.pcolor_cmax = 1002
-    plotitem.add_colorbar = True
-    plotitem.gridlines_show = 0
-    plotitem.gridedges_show = 1
-    plotitem.amr_pcolor_show = [1,0,0]
-    plotitem.amr_grid_bgcolor = ['#ffeeee', '#eeeeff', '#eeffee']
-    
-    # ========================================================================
-    # Wind field
-    plotfigure = plotdata.new_plotfigure(name='wind',figno=3)
-    plotfigure.show = hurricane_data.wind_src
-    # plotfigure.show = True
-        
-    plotaxes = plotfigure.new_plotaxes()
-    plotaxes.xlimits = xlimits
-    plotaxes.ylimits = ylimits
-    plotaxes.title = "Wind Field"
-    plotaxes.afteraxes = hurricane_afteraxes
-    plotaxes.scaled = True
-    
-    # Quiver
-    plotitem = plotaxes.new_plotitem(plot_type='2d_quiver')
-    plotitem.quiver_var_x = 4
-    plotitem.quiver_var_y = 5
-    plotitem.amr_quiver_show = [0,0,1]
-    plotitem.amr_quiver_key_show = [True,False,False]
-    plotitem.amr_quiver_key_units = 'm/s'
-    plotitem.show = False
-    
-    # Pcolor
-    plotitem = plotaxes.new_plotitem(plot_type='2d_imshow')
-    plotitem.plot_var = wind_speed
-    plotitem.imshow_cmap = plt.get_cmap('PuBu')
-    # plotitem.imshow_cmin = 0
-    # plotitem.imshow_cmax = 1
-    plotitem.imshow_cmin = 0
-    plotitem.imshow_cmax = 55
-    plotitem.add_colorbar = True
-    plotitem.amr_imshow_show = [1,1,1]
-    plotitem.amr_gridlines_show = [0,0,0]
-    plotitem.amr_gridedges_show = [1,1,1]
-    plotitem.show = True
-    
-    # Contour
-    plotitem = plotaxes.new_plotitem(plot_type='2d_contour')
-    plotitem.plot_var = wind_speed
-    plotitem.contour_nlevels = hurricane_data.max_wind_nest
-    plotitem.countour_min = hurricane_data.wind_refine[0]
-    plotitem.gridedges_show = 1
-    plotitem.show = False 
-    
-    # Land
-    add_land(plotaxes)
-    
-    # Wind field directions
-    plotfigure = plotdata.new_plotfigure(name='wind variation',figno=23)
+    # Single figure forcing
+    plotfigure = plotdata.new_plotfigure(name='Hurricane Forcing',figno=111)
+    plotfigure.show = True
     plotfigure.kwargs = {'figsize':(14,4)}
-    plotfigure.show = False
     
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(1,2,1)'
     plotaxes.xlimits = xlimits
     plotaxes.ylimits = ylimits
-    plotaxes.title = "Wind x"
+    plotaxes.title = "Wind Forcing"
     plotaxes.afteraxes = hurricane_afteraxes
     plotaxes.scaled = True
     
-    plotitem = plotaxes.new_plotitem(plot_type='2d_imshow')
-    plotitem.plot_var = wind_x
-    plotitem.imshow_cmap = plt.get_cmap('PuBu')
-    # plotitem.imshow_cmin = 0
-    # plotitem.imshow_cmax = 55
-    plotitem.add_colorbar = True
-    plotitem.amr_imshow_show = [1,1,1]
-    plotitem.amr_gridlines_show = [0,0,0]
-    plotitem.amr_gridedges_show = [1,1,1]
-    plotitem.show = True
+    add_wind(plotaxes,bounds=wind_limits)
+    add_land(plotaxes)
     
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(1,2,2)'
+    plotaxes.title = 'Pressure Forcing'
+    plotaxes.scaled = True
     plotaxes.xlimits = xlimits
     plotaxes.ylimits = ylimits
-    plotaxes.title = "Wind y"
     plotaxes.afteraxes = hurricane_afteraxes
-    plotaxes.scaled = True
     
-    plotitem = plotaxes.new_plotitem(plot_type='2d_imshow')
-    plotitem.plot_var = wind_y
-    plotitem.imshow_cmap = plt.get_cmap('PuBu')
-    # plotitem.imshow_cmin = 0
-    # plotitem.imshow_cmax = 55
-    plotitem.add_colorbar = True
-    plotitem.amr_imshow_show = [1,1,1]
-    plotitem.amr_gridlines_show = [0,0,0]
-    plotitem.amr_gridedges_show = [1,1,1]
-    plotitem.show = True
+    add_pressure(plotaxes,bounds=pressure_limits)
+    add_land(plotaxes)
+    # # Pressure field
+    # plotfigure = plotdata.new_plotfigure(name='pressure', figno=2)
+    # plotfigure.show = hurricane_data.pressure_src and True
+    # 
+    # plotaxes = plotfigure.new_plotaxes()
+    # plotaxes.xlimits = xlimits
+    # plotaxes.ylimits = ylimits
+    # plotaxes.title = "Pressure Field"
+    # plotaxes.afteraxes = hurricane_afteraxes
+    # plotaxes.scaled = True
+    # 
+    # add_pressure(plotaxes,bounds=pressure_limits)
+    # add_land(plotaxes)
+    # 
+    # # ========================================================================
+    # # Wind field
+    # plotfigure = plotdata.new_plotfigure(name='wind',figno=3)
+    # plotfigure.show = hurricane_data.wind_src
+    # # plotfigure.show = True
+    #     
+    # plotaxes = plotfigure.new_plotaxes()
+    # plotaxes.xlimits = xlimits
+    # plotaxes.ylimits = ylimits
+    # plotaxes.title = "Wind Field"
+    # plotaxes.afteraxes = hurricane_afteraxes
+    # plotaxes.scaled = True
+    # 
+    # add_wind(plotaxes,bounds=wind_limits)
+    # 
+    # # Land
+    # add_land(plotaxes)
 
     # ========================================================================
     #  Profile Plots
@@ -981,10 +928,10 @@ def setplot(plotdata):
     
         
     # ========================================================================
-    #  Bathy Profile
+    #  Bathy Plot
     # ========================================================================
     plotfigure = plotdata.new_plotfigure(name='bathy_profile',figno=20)
-    plotfigure.show = True
+    plotfigure.show = False
     
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.xlimits = xlimits

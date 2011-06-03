@@ -79,15 +79,9 @@ def setrun(claw_pkg='geoclaw'):
         
 
     # Number of grid cells:
-    levels = 3
-    clawdata.mx = 70
-    clawdata.my = 60
+    levels = 1
     clawdata.mx = 70*levels
-    # clawdata.mx = 560
     clawdata.my = 60*levels
-    # clawdata.my = 480
-    # clawdata.mx = 100
-    # clawdata.my = 100
 
     # ---------------
     # Size of system:
@@ -269,9 +263,9 @@ def setrun(claw_pkg='geoclaw'):
 
     # Restart parameters
     clawdata.restart = False
-    clawdata.checkpt_iousr = -3
-    clawdata.tchk = [0.0,28800,3.78e4]
-
+    clawdata.checkpt_iousr = -4
+    clawdata.tchk = [-0.225e5,0.0,28800,3.78e4]
+    
     # More AMR parameters can be set -- see the defaults in pyclaw/data.py
 
     return rundata
@@ -310,6 +304,7 @@ def setgeo(rundata):
     geodata.coeffmanning = 0.025
     # geodata.frictiondepth = 20.0
     geodata.frictiondepth = 10e10
+    geodata.icoriolis = 1
 
     # == settopo.data values ==
     geodata.topofiles = []
@@ -335,7 +330,7 @@ def setgeo(rundata):
     # to specify regions of refinement append lines of the form
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
     # geodata.regions.append([1, 1, 0.e0, 1.e10, -100.,100., -100.,100.])
-    geodata.regions.append([1, 1, -RAMP_UP_TIME, 1.e10,325e3,525e3,-325e3,325e3])
+    # geodata.regions.append([1, 1, -RAMP_UP_TIME, 1.e10,325e3,525e3,-325e3,325e3])
 
     # == setgauges.data values ==
     geodata.gauges = []
@@ -364,7 +359,7 @@ def set_hurricane_data(ramp_up_time=RAMP_UP_TIME):
     
     # Source terms to be included
     data.wind_src = True
-    data.pressure_src = False
+    data.pressure_src = True
     
     # Momentum based refinement
     data.momentum_refinement = False

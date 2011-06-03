@@ -34,6 +34,10 @@ module hurricane_module
     double precision :: ramp_up_time,hurricane_velocity(2),R_eye_init(2)
     double precision :: rho_air
     double precision, private :: A,B,Pn,Pc
+    
+    ! Coriolis location for beta-plane approximation
+    !  should be read in but not implemented that way yet
+    double precision, parameter :: theta_0 = 0.52359877559829882 
 
 contains
     ! ========================================================================
@@ -51,6 +55,8 @@ contains
     !
     ! ========================================================================
     subroutine set_hurricane_params(data_file)
+
+        use geoclaw_module, only: pi
 
         implicit none
         
@@ -96,6 +102,9 @@ contains
         read(13,*) Pn
         read(13,*) Pc
         
+!         read(13,*) theta_0
+!         theta_0 = theta_0 * pi / 180d0
+        
         close(13)
 
     end subroutine set_hurricane_params
@@ -127,6 +136,8 @@ contains
     ! ========================================================================
     subroutine hurricane_wind(maxmx,maxmy,mbc,mx,my,xlower,ylower,dx,dy,t,wind)
 
+        use geoclaw_module, only: icoriolis,icoordsys
+
         implicit none
 
         ! Input arguments
@@ -138,33 +149,39 @@ contains
     
         ! Local variables
         integer :: i,j
-        double precision :: x,y,C,r,w,R_eye(2)
-    
+        double precision :: x,y,C,r,w,R_eye(2),f
+        
         ! If wind forcing is turned off, then set the aux array to zeros
         if (.not.wind_forcing) then
             wind(:,:,:) = 0.d0
             return
         endif
         
+        ! Initialize f in case we don't need it
+        f = 0.d0
+        
         if (wind_type == 1) then
             ! Hurrican eye location
             R_eye = t * hurricane_velocity + R_eye_init
         
             ! Parameter constant
-            C = 1.d1 * 1.d3**(B/2.d0) * sqrt(A*B*(Pn-Pc)/(rho_air))
-        
-            ! Set the wind
-            do i=1-mbc,mx+mbc
-                x = xlower + (i-0.5d0) * dx - R_eye(1)
-                do j=1-mbc,my+mbc
-                    y = ylower + (j-0.5d0) * dy - R_eye(2)
-        
-                    r = sqrt(x**2+y**2)
+            C = 1d1**2 * A * B * (Pn-Pc) / rho_air
+            
+            ! Set the wind    
+            do j=1-mbc,my+mbc
+                y = ylower + (j-0.5d0) * dy - R_eye(2)
+                ! Coriolis term
+                if (icoriolis == 1) f = coriolis(y)
+                do i=1-mbc,mx+mbc
+                    x = xlower + (i-0.5d0) * dx - R_eye(1)
+                    r = sqrt(x**2+y**2) * 1d-3
                 
-                    if (abs(r) < 10d-3) then
+                    if (abs(r) < 1d1) then
                         wind(i,j,:) = 0.d0
                     else
-                        w = C * sqrt(exp(-1.d3**B*A/r**B)/r**B)
+                        w = sqrt(C * exp(-A/r**B) / r**B + r**2 * f**2 / 4.0) &
+                                 - r * f / 2.d0
+                        r = r * 1d3
                         wind(i,j,1) = -w * y / r
                         wind(i,j,2) =  w * x / r
                     endif
@@ -277,21 +294,53 @@ contains
                 r = sqrt(x**2+y**2)
                 
                 if (abs(r) < 10d-3) then
-                    pressure(i,j) = Pc
+                    pressure(i,j) = Pn
                 else
                     pressure(i,j) = Pc + (Pn-Pc) * exp(-1.d3**B*A/abs(r)**B)
                 endif
-                pressure(i,j) = Pn - pressure(i,j)
             enddo
         enddo
         
         ! Ramp up
         if (t < 0.d0) then
-            pressure = Pn - pressure * exp(-(t/(ramp_up_time*0.45d0))**2)
+            pressure = Pn  + (pressure - Pn) * exp(-(t/(ramp_up_time*0.45d0))**2)
         endif
         
         ! Convert to Pa instead of millibars
         pressure  = pressure * 100.d0 
     end subroutine hurricane_pressure
+    
+    ! ========================================================================
+    !  Calculate the coriolis constant f
+    !   theta should be in radians
+    ! ========================================================================
+    double precision function coriolis(y)
+    
+        use geoclaw_module, only: icoordsys,pi
+    
+        implicit none
+        
+        ! Input
+        double precision, intent(in) :: y
+        
+        ! Locals
+        double precision :: theta
+        
+        ! Angular speed of earth = 2.d0*pi/(86400.d0) 
+        double precision, parameter :: OMEGA = 7.2722052166430395d-05
+        
+        ! Assume beta plane approximation and y is in meters
+        if (icoordsys == 1) then
+            theta = y / 111d3 * pi / 180d0 + theta_0
+            coriolis = 2.d0 * OMEGA * (sin(theta_0) + (theta - theta_0)     &
+                                                    * cos(theta_0))
+        else if (icoordsys == 2) then        
+            theta = pi*y/180.d0
+            coriolis = 2.d0 * OMEGA * sin(theta)
+        else
+            print *,"Unknown coordinate system, unable to calculate coriolis."
+            coriolis = 0.d0
+        endif
+    end function coriolis
     
 end module hurricane_module
