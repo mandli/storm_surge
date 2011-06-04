@@ -51,9 +51,13 @@ CLAW_SOURCES = \
 	$(MULTILAYER_SRC)/valout_geo.f \
 	$(MULTILAYER_SRC)/flux2fw.f \
 	$(MULTILAYER_SRC)/flag2refine_geo.f \
-	$(MULTILAYER_SRC)/rpn2_dry_multilayer.f90 \
+	$(MULTILAYER_SRC)/rpn2_inundation_multilayer.f90 \
 	$(MULTILAYER_SRC)/rpt2_dry_multilayer.f90 \
-	$(MULTILAYER_SRC)/multilayer_eigen.f90
+	$(MULTILAYER_SRC)/multilayer_eigen.f90 \
+	$(MULTILAYER_SRC)/filval_ml.f \
+
+# Replaced src	
+# $(GEOLIB)/filval_geo.f \
 
 DATA_FILES = hurricane.data topo.data multilayer.data
 	
@@ -72,7 +76,6 @@ CLAW_LIBSOURCES = \
 	$(GEOLIB)/fgridout_geo.f \
 	$(GEOLIB)/step2_geo.f \
 	$(GEOLIB)/qad_geo.f \
-	$(GEOLIB)/filval_geo.f \
 	$(GEOLIB)/filpatch_geo.f \
 	$(GEOLIB)/bc2amr_geo.f \
 	$(GEOLIB)/update_geo.f \

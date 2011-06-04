@@ -16,7 +16,6 @@ import pyclaw.util as util
 
 import hurricane_data
 import multilayer_data
-import topo_data
 
 # Ramp up constants
 RAMP_UP_TIME = 12*60**2
@@ -293,9 +292,12 @@ def setgeo(rundata):
     geodata.wavetolerance = 5e-1
     geodata.depthdeep = 2.e2
     geodata.maxleveldeep = 4
-    geodata.ifriction = 1
     geodata.coeffmanning = 0.025
     geodata.frictiondepth = 20e1
+    
+    # Source terms
+    geodata.ifriction = 1
+    geodata.icoriolis = 1
 
     # == settopo.data values ==
     geodata.topofiles = []
@@ -436,6 +438,7 @@ if __name__ == '__main__':
     multilayer_data.write()
     
     # Write out topography and qinit data files if needed
+    import topo_data
     topo_file = './topo.data'
     topo_data.write_topo_file(topo_file,topo_type=1,factor=4,
                             bathy_type='simple_shelf',plot=True,force=True)

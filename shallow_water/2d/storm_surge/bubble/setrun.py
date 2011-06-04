@@ -73,8 +73,8 @@ def setrun(claw_pkg='geoclaw'):
 
     # Number of grid cells:
     # clawdata.mx = 70
-    clawdata.mx = 100
-    clawdata.my = 100
+    clawdata.mx = 50
+    clawdata.my = 50
     # clawdata.my = 120
     # clawdata.mx = 100
     # clawdata.my = 100
@@ -109,7 +109,7 @@ def setrun(claw_pkg='geoclaw'):
     # Note that the time integration stops after the final output time.
     # The solution at initial time t0 is always written in addition.
 
-    clawdata.outstyle = 1
+    clawdata.outstyle = 3
     # Number of hours to simulate
     num_hours = 40
     # Output interval per hour, 1 = every hour, 0.5 = every half hour, etc...
@@ -135,7 +135,7 @@ def setrun(claw_pkg='geoclaw'):
     elif clawdata.outstyle == 3:
         # Output every iout timesteps with a total of ntot time steps:
         iout = 1
-        ntot = 80
+        ntot = 100
         clawdata.iout = [iout, ntot]
     
 
@@ -230,7 +230,7 @@ def setrun(claw_pkg='geoclaw'):
 
 
     # max number of refinement levels:
-    mxnest = 1
+    mxnest = 3
 
     clawdata.mxnest = -mxnest   # negative ==> anisotropic refinement in x,y,t
 
@@ -319,7 +319,8 @@ def setgeo(rundata):
     # to specify regions of refinement append lines of the form
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
     # geodata.regions.append([1, 1, 0.e0, 1.e10, -100.,100., -100.,100.])
-    # geodata.regions.append([1, 2, 0.e0, 1.e10,    0.,100., -100.,100.])
+    # geodata.regions.append([1,3,0e0,1e10,0.6,1.0,0.0,1.0])
+    # geodata.regions.append([1, 1, 0.e0, 1.e10, 0.0,0.5,0.2,0.8])
 
     # == setgauges.data values ==
     geodata.gauges = []
@@ -352,13 +353,13 @@ def set_hurricane_data(ramp_up_time=0.0):
     
     # Momentum based refinement
     data.momentum_refinement = False
-    data.max_speed_nest = 5
+    data.max_speed_nest = 0
     # data.speed_nest = [1.0,2.0,3.0,4.0,5.0]
     # data.speed_nest = [0.5,1.0,2.0,3.0,4.0,5.0]
     data.speed_nest = [0.25,0.5,1.0,2.0,3.0,4.0]
     
     # Hurricane location based refinement
-    data.max_R_nest = 3
+    data.max_R_nest = 0
     data.R_refine = [60.0e3,40e3,20e3]
         
     # Wind strength based refinement
@@ -403,7 +404,8 @@ def set_multilayer_data():
     data.rho = [0.90,1.0]
     
     # Algorithm Parameters
-    data.eigen_method = 1
+    data.eigen_method = 2
+    data.inundation_method = 2
     data.richardson_tolerance = 0.95
     data.wave_tolerance = [0.1,0.1]
     data.dry_limit = True

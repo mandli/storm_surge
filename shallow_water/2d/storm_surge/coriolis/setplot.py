@@ -347,9 +347,12 @@ def setplot(plotdata):
             plotitem = plotaxes.new_plotitem(plot_type='2d_quiver')
             plotitem.quiver_var_x = wind_x
             plotitem.quiver_var_y = wind_y
-            plotitem.amr_quiver_show = [0,0,1]
+            plotitem.amr_quiver_coarsening = [5,10,20,40,80]
+            plotitem.amr_quiver_show = [1,0,0,0,0,0]
+            plotitem.amr_quiver_kwargs = {}
             plotitem.amr_quiver_key_show = [True,False,False]
             plotitem.amr_quiver_key_units = 'm/s'
+            plotitem.amr_quiver_key_kwargs = {}
             
     def add_pressure(plotaxes,bounds=None,plot_type='pcolor'):
         if plot_type == 'pcolor' or plot_type == 'imshow':
@@ -450,35 +453,62 @@ def setplot(plotdata):
     # ========================================================================
     # Hurricane forcing
     # ========================================================================
-    # Pressure field
-    plotfigure = plotdata.new_plotfigure(name='pressure', figno=2)
-    plotfigure.show = hurricane_data.pressure_src
+    # Single figure forcing
+    plotfigure = plotdata.new_plotfigure(name='Hurricane Forcing',figno=111)
+    plotfigure.show = True
+    plotfigure.kwargs = {'figsize':(14,4)}
     
     plotaxes = plotfigure.new_plotaxes()
-    plotaxes.xlimits = [amrdata.xlower,amrdata.xupper]
-    plotaxes.ylimits = [amrdata.ylower,amrdata.yupper]
-    plotaxes.title = "Pressure Field"
+    plotaxes.axescmd = 'subplot(1,2,1)'
+    plotaxes.xlimits = xlimits
+    plotaxes.ylimits = ylimits
+    plotaxes.title = "Wind Forcing"
     plotaxes.afteraxes = hurricane_afteraxes
     plotaxes.scaled = True
+    
+    add_wind(plotaxes,bounds=wind_limits)
+    add_land(plotaxes)
+    
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(1,2,2)'
+    plotaxes.title = 'Pressure Forcing'
+    plotaxes.scaled = True
+    plotaxes.xlimits = xlimits
+    plotaxes.ylimits = ylimits
+    plotaxes.afteraxes = hurricane_afteraxes
     
     add_pressure(plotaxes,bounds=pressure_limits)
     add_land(plotaxes)
     
-    # Wind field
-    plotfigure = plotdata.new_plotfigure(name='wind',figno=3)
-    plotfigure.show = hurricane_data.wind_src
-    
-    plotaxes = plotfigure.new_plotaxes()
-    plotaxes.xlimits = [amrdata.xlower,amrdata.xupper]
-    plotaxes.ylimits = [amrdata.ylower,amrdata.yupper]
-    plotaxes.title = "Wind Field"
-    plotaxes.afteraxes = hurricane_afteraxes
-    plotaxes.scaled = True
-    
-    # add_wind(plotaxes,bounds=wind_limits,plot_type='imshow')
-    # add_wind(plotaxes,bounds=wind_limits,plot_type='contour')
-    add_wind(plotaxes,bounds=wind_limits,plot_type='quiver')
-    add_land(plotaxes)
+    # # Pressure field
+    # plotfigure = plotdata.new_plotfigure(name='pressure', figno=2)
+    # plotfigure.show = hurricane_data.pressure_src and False
+    # 
+    # plotaxes = plotfigure.new_plotaxes()
+    # plotaxes.xlimits = [amrdata.xlower,amrdata.xupper]
+    # plotaxes.ylimits = [amrdata.ylower,amrdata.yupper]
+    # plotaxes.title = "Pressure Field"
+    # plotaxes.afteraxes = hurricane_afteraxes
+    # plotaxes.scaled = True
+    # 
+    # add_pressure(plotaxes,bounds=pressure_limits)
+    # add_land(plotaxes)
+    # 
+    # # Wind field
+    # plotfigure = plotdata.new_plotfigure(name='wind',figno=3)
+    # plotfigure.show = hurricane_data.wind_src and False
+    # 
+    # plotaxes = plotfigure.new_plotaxes()
+    # plotaxes.xlimits = [amrdata.xlower,amrdata.xupper]
+    # plotaxes.ylimits = [amrdata.ylower,amrdata.yupper]
+    # plotaxes.title = "Wind Field"
+    # plotaxes.afteraxes = hurricane_afteraxes
+    # plotaxes.scaled = True
+    # 
+    # # add_wind(plotaxes,bounds=wind_limits,plot_type='imshow')
+    # # add_wind(plotaxes,bounds=wind_limits,plot_type='contour')
+    # add_wind(plotaxes,bounds=wind_limits,plot_type='quiver')
+    # add_land(plotaxes)
 
     # ========================================================================
     #  Profile Plots
@@ -566,7 +596,7 @@ def setplot(plotdata):
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.title = 'Profiles'
     plotaxes.xlimits = xlimits
-    # plotaxes.ylimits = surface_limits
+    plotaxes.ylimits = surface_limits
     plotaxes.afteraxes = profile_afteraxes
     
     profile_plot = PlotProfile(0.0)
