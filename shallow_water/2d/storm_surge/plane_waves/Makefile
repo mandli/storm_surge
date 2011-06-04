@@ -53,7 +53,8 @@ CLAW_SOURCES = \
 	$(MULTILAYER_SRC)/flag2refine_geo.f \
 	$(MULTILAYER_SRC)/rpn2_inundation_multilayer.f90 \
 	$(MULTILAYER_SRC)/rpt2_dry_multilayer.f90 \
-	$(MULTILAYER_SRC)/multilayer_eigen.f90
+	$(MULTILAYER_SRC)/multilayer_eigen.f90 \
+	$(MULTILAYER_SRC)/filval_ml.f 
 
 DATA_FILES = hurricane.data topo.data multilayer.data
 	

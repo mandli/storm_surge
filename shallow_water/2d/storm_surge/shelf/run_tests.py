@@ -27,7 +27,7 @@ tests = []
 
 class ShelfBaseTest(test_runs.TestML2D):
     
-    def __init__(self,eigen_method):
+    def __init__(self,eigen_method,wave_family=4):
         super(ShelfBaseTest,self).__init__()
         
         self.name = "shelf"
