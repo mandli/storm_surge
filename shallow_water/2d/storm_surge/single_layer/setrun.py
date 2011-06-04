@@ -93,7 +93,7 @@ def setrun(claw_pkg='geoclaw'):
     clawdata.meqn = 3
 
     # Number of auxiliary variables in the aux array (initialized in setaux)
-    clawdata.maux = 10
+    clawdata.maux = 8
     
     # Index of aux array corresponding to capacity function, if there is one:
     clawdata.mcapa = 0
@@ -249,7 +249,7 @@ def setrun(claw_pkg='geoclaw'):
     #   'center',  'capacity', 'xleft', or 'yleft'  (see documentation).
 
     clawdata.auxtype = ['center','center','center','center','center','center',
-                        'center','center','center','center']
+                        'center','center']
 
 
     clawdata.tol = -1.0     # negative ==> don't use Richardson estimator
@@ -293,9 +293,12 @@ def setgeo(rundata):
     geodata.wavetolerance = 5e-1
     geodata.depthdeep = 2.e2
     geodata.maxleveldeep = 4
-    geodata.ifriction = 1
     geodata.coeffmanning = 0.025
-    geodata.frictiondepth = 20e1
+    # geodata.frictiondepth = 20e1
+    geodata.frictiondepth = 1e10
+    
+    geodata.icoriolis = 1
+    geodata.ifriction = 1
 
     # == settopo.data values ==
     geodata.topofiles = []
@@ -349,7 +352,7 @@ def set_hurricane_data(ramp_up_time=RAMP_UP_TIME):
     
     # Source terms to be included
     data.wind_src = True
-    data.pressure_src = False
+    data.pressure_src = True
     
     # Momentum based refinement
     data.momentum_refinement = False
@@ -367,7 +370,7 @@ def set_hurricane_data(ramp_up_time=RAMP_UP_TIME):
     # data.wind_refine = [0.001,0.005,0.001]
     data.wind_refine = [20.0,40.0,60.0]
     
-    # Pressure source term tolerance
+    # Pressure source term tolerance for gradient value
     data.pressure_tolerance = 1e-4
     
     # Ramp up time for hurricane

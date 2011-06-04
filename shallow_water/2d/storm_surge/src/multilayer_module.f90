@@ -32,13 +32,10 @@ module multilayer_module
     integer :: init_type,wave_family
     
     ! Simple bathy states
-    integer :: bathy_type = 2
-    double precision :: bathy_location, bathy_left, bathy_right
+    integer :: bathy_type
     
-    ! Complex bathy layout
-    double precision :: x0,x1,x2,shelf_depth,basin_depth,beach_slope
-    ! Calculated parameters
-    double precision :: shelf_slope,eta_int
+    ! Output files
+    integer, parameter :: kappa_file = 42
     
 contains
 
@@ -112,18 +109,40 @@ contains
         
         ! Bathymetry
         read(13,*) bathy_type
-        ! Do not need any of these as bathy files should be created outside of
-        ! here
-!         if (bathy_type == 1) then
-!             read(13,*) bathy_location
-!             read(13,*) bathy_left
-!             read(13,*) bathy_right
-!         else if (bathy_type == 2) then
-!             stop "Bathy type 2 no longer implemented."
-!         endif
         
         close(13)
 
+        ! Open file for writing hyperbolicity warnings
+        open(unit=kappa_file, file='fort.kappa', iostat=ios, &
+                status="unknown", action="write")
+        if ( ios /= 0 ) stop "Error opening file name fort.kappa"
+        
     end subroutine set_multilayer_params
+    
+    function minmod_slope(num_vars,value)
+
+        implicit none
+        integer, intent(in) :: num_vars
+        double precision, intent(in) :: value(num_vars,-1:1)
+        double precision :: minmod_slope(num_vars)
+        
+        integer :: n
+        double precision :: s_p,s_m
+        
+        do n=1,num_vars
+            ! Find minmod slope
+            s_p = value(n,1) - value(n,0)
+            s_m = value(n,0) - value(n,-1)
+            minmod_slope(n) = min(abs(s_p),abs(s_m)) &
+                                * sign(1.d0,value(n,1) - value(n,-1))
+
+            ! Check for sign change
+            if (s_m * s_p <= 0.d0) then
+                minmod_slope(n) = 0.d0
+            endif
+        enddo
+        
+    end function minmod_slope
+    
 
 end module multilayer_module

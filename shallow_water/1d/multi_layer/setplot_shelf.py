@@ -142,7 +142,7 @@ def setplot(plotdata):
     def fixfig(current_data):
         from pylab import xticks,yticks,xlabel,ylabel,savefig,ylim,title
         t = current_data.t
-        add_dashes(current_data)
+        add_bathy_dashes(current_data)
         xticks([-300000,-200000,-100000, -30000],['300','200','100','30','0'],\
           fontsize=15)
         ylim(-0.4,0.6)
@@ -193,7 +193,7 @@ def setplot(plotdata):
     plotitem.show = True 
     
     # ========================================================================
-    #  Fill plot zoom
+    #  Full plot
     # ========================================================================
     def fill_items(plotaxes):
         # Top layer
@@ -230,48 +230,24 @@ def setplot(plotdata):
         plotitem.plotstyle = '-'
         plotitem.show = True
     
-    # Top surface
-    plotfigure = plotdata.new_plotfigure(name='full_zoom',figno=100)
-    plotfigure.show = False
-    
-    plotaxes = plotfigure.new_plotaxes()
-    plotaxes.title = 'Top Surface'
-    plotaxes.xlimits = xlimits_zoomed
-    plotaxes.ylimits = ylimits_surface_zoomed
-    def top_afteraxes(current_data):
-        km_labels(current_data)
-        add_bathy_dashes(current_data)
-    plotaxes.afteraxes = top_afteraxes
-     
-    plotaxes = fill_items(plotaxes)
-
-    # Internal surface
-    plotfigure = plotdata.new_plotfigure(name='internal_zoom',figno=101)
-    plotfigure.show = False
-    plotaxes = plotfigure.new_plotaxes()
-    plotaxes.title = 'Internal Surface'
-    plotaxes.xlimits = xlimits_zoomed
-    plotaxes.ylimits = ylimits_internal_zoomed
-    plotaxes.afteraxes = km_labels
-     
-    plotaxes = fill_items(plotaxes)
-    
     # ========================================================================
-    #  Zoomed Full plot
+    #  Full Plot
     # ========================================================================
     plotfigure = plotdata.new_plotfigure(name='bathy',figno=102)
     plotfigure.show = True
     
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.title = 'Bathymetry'
-    if prob_data.bathy_type == 1:
-        plotaxes.ylimits = [prob_data.bathy_right,10.0 ]
-        plotaxes.xlimits = xlimits
-    elif prob_data.bathy_type == 2:
-        # m = (prob_data.basin_depth - prob_data.shelf_depth) / (prob_data.x0 - prob_data.x1)
-        # z = m * (x - prob_data.x0) + prob_data.basin_depth
-        plotaxes.ylimits = [prob_data.eta_2-2,prob_data.eta_2+2]
-        plotaxes.xlimits = [-32750,-32550]
+    plotaxes.xlimits = xlimits
+    plotaxes.ylimtis = [-4100,100]
+    # if prob_data.bathy_type == 1:
+    #     plotaxes.ylimits = [prob_data.bathy_right,10.0 ]
+    #     plotaxes.xlimits = xlimits
+    # elif prob_data.bathy_type == 2:
+    #     # m = (prob_data.basin_depth - prob_data.shelf_depth) / (prob_data.x0 - prob_data.x1)
+    #     # z = m * (x - prob_data.x0) + prob_data.basin_depth
+    #     plotaxes.ylimits = [prob_data.eta_2-2,prob_data.eta_2+2]
+    #     plotaxes.xlimits = [-32750,-32550]
     
     fill_items(plotaxes)
     

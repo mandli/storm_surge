@@ -610,18 +610,21 @@ def setplot(plotdata):
             raise NotImplementedError("Plot type %s not implemented" % plot_type)
     
     # Axis limits
+    top_surface_range = 1.0
+    bottom_surface_range = 5.0
+    
     xlimits = [amrdata.xlower,amrdata.xupper]
     xlimits_zoomed = xlimits
     ylimits = [amrdata.ylower,amrdata.yupper]
     eta = [multilayer_data.eta[0],multilayer_data.eta[1]]
-    top_surface_limits = [eta[0]-0.5,eta[0]+0.5]
+    top_surface_limits = [eta[0]-top_surface_range,eta[0]+top_surface_range]
     # top_surface_limits = None
-    internal_surface_limits = [eta[1]-7.5,eta[1]+7.5]
+    internal_surface_limits = [eta[1]-bottom_surface_range,eta[1]+bottom_surface_range]
     # internal_surface_limits = None
-    # top_speed_limits = [0.0,2.0]
-    top_speed_limits = None
-    # internal_speed_limits = [0.0,0.01]
-    internal_speed_limits = None
+    top_speed_limits = [0.0,2.0]
+    # top_speed_limits = None
+    internal_speed_limits = [0.0,0.02]
+    # internal_speed_limits = None
     
     top_depth_limits = [0.0,eta[0]-eta[1]]
     bottom_depth_limits = [0.0,2800]
@@ -1173,7 +1176,8 @@ def setplot(plotdata):
 
     plotdata.printfigs = True                # print figures
     plotdata.print_format = 'png'            # file format
-    plotdata.print_framenos = 'all'          # list of frames to print
+    # plotdata.print_framenos = 'all'          # list of frames to print
+    plotdata.print_framenos = [48,88,128,168]
     plotdata.print_fignos = 'all'            # list of figures to print
     plotdata.html = True                    # create html files of plots?
     plotdata.latex = False                   # create latex file of plots?

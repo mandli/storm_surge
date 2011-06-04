@@ -23,7 +23,7 @@ import test_runs
 
 class SingleLayerBaseTest(test_runs.TestML2D):
     
-    def __init__(self,velocity=5.0,angle=0.0,eye=(0.0,0.0),mxnest=5):
+    def __init__(self,velocity=5.0,angle=0.0,eye=(0.0,0.0),coriolis=False,mxnest=5,topo_type=1):
         super(SingleLayerBaseTest,self).__init__()
         
         self.type = "storm_surge"
@@ -31,10 +31,19 @@ class SingleLayerBaseTest(test_runs.TestML2D):
         self.setplot = "setplot"
         
         self.run_data.clawdata.mxnest = -mxnest
-        self.hurricane_velocity = (velocity * np.cos(angle),velocity * np.sin(angle))
-        self.R_eye_init = eye
+        self.hurricane_data.hurricane_velocity = (velocity * np.cos(angle),velocity * np.sin(angle))
+        self.hurricane_data.R_eye_init = eye
+
+        self.prefix = "sl_angle%s_m%s_v%s_c" % (int(angle * 180.0 / np.pi),mxnest,int(velocity))
+
+        if coriolis:
+            self.hurricane_data.icoriolis = 1
+            self.prefix = self.prefix + 'T'
+        else:
+            self.hurricane_data.icoriolis = 0
+            self.prefix = self.prefix + 'F'
         
-        self.prefix = "sl_angle%s_m%s_v%s" % (int(angle * 180.0 / np.pi),mxnest,int(velocity))
+
     
     def write_data_objects(self):
         super(SingleLayerBaseTest,self).write_data_objects()
@@ -46,12 +55,13 @@ class SingleLayerBaseTest(test_runs.TestML2D):
 tests = []
 
 # Single Layer Tests
-tests.append(SingleLayerBaseTest(5.0,0.0,(0.0,0.0),5))
-tests.append(SingleLayerBaseTest(5.0,0.25*np.pi,(200e3,100e3),5))
-tests.append(SingleLayerBaseTest(5.0,-0.25*np.pi,(200e3,-100e3),5))
-tests.append(SingleLayerBaseTest(5.0,-0.50*np.pi,(425e3,100e3),5))
-tests.append(SingleLayerBaseTest(5.0, 0.50*np.pi,(425e3,-100e3),5))
-tests.append(SingleLayerBaseTest(0.0,0.0,(0.0,0.0),5))
+tests.append(SingleLayerBaseTest(5.0,0.0,(0.0,0.0),False))
+tests.append(SingleLayerBaseTest(5.0,0.25*np.pi,(200e3,-100e3),False))
+tests.append(SingleLayerBaseTest(5.0,-0.25*np.pi,(200e3,100e3),False))
+tests.append(SingleLayerBaseTest(5.0,-0.50*np.pi,(425e3,100e3),False))
+tests.append(SingleLayerBaseTest(5.0, 0.50*np.pi,(425e3,-100e3),False))
+tests.append(SingleLayerBaseTest(5.0,0.0,(0.0,0.0),True))
+# tests.append(SingleLayerBaseTest(0.0,0.0,(0.0,0.0),5))
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:

@@ -22,8 +22,8 @@ subroutine src1d(meqn,mbc,mx1d,q1d,maux,aux1d,t,dt)
 
     ! Locals
     integer :: i
-    double precision :: g,coeff,tol,h,hu,hv,gamma,dgamma
-    double precision :: wind_speed,tau,P_atmos_x,P_atmos_y,u,v
+    double precision :: g,coeff,tol,h(2)
+    double precision :: wind_speed,tau,P_atmos_x,P_atmos_y,speed,D
 
     ! Common block
     double precision dtcom,dxcom,dycom,tcom
@@ -36,24 +36,40 @@ subroutine src1d(meqn,mbc,mx1d,q1d,maux,aux1d,t,dt)
     coeff = coeffmanning
     tol = 1.d-30  !# to prevent divide by zero in gamma
 
-    if ((coeffmanning > 0.d0).and.(frictiondepth > 0.d0)) then
+    ! = Friction =============================================================
+    if (coeff > 0.d0) then
         do i=1,mx1d
-            h = q1d(i,1) / rho(1) + q1d(i,4) / rho(2)
-
-            if (h < tol) then
-                q1d(i,5) = 0.d0
-                q1d(i,6) = 0.d0
+            h(1) = q1d(i,1) / rho(1)
+            if (layers > 1) then
+                h(2) = q1d(i,4) / rho(2)
             else
-                u = q1d(i,5) / q1d(i,4)
-                v = q1d(i,6) / q1d(i,4)
-                gamma = sqrt(u**2 + v**2) * g * coeff**2 / (h**(7/3))
-                dgamma = 1.d0 + dt * gamma
-                q1d(i,5) = q1d(i,5) / dgamma
-                q1d(i,6) = q1d(i,6) / dgamma
+                h(2) = 0.d0
             endif
-        enddo
+            
+            if (h(2) > tol) then
+                speed = sqrt(q1d(i,5)**2 + q1d(i,6)**2) / q1d(i,4)
+                D = coeff**2 * g * sum(h)**(-7/3) * speed
+                
+                q1d(i,5) = q1d(i,5) * exp(-D*dt)
+                q1d(i,6) = q1d(i,6) * exp(-D*dt)
+            else if (h(1) > tol) then
+                if (layers > 1) q1d(i,5:6) = 0.d0
+                
+                speed = sqrt(q1d(i,2)**2 + q1d(i,3)**2) / q1d(i,1)
+                
+                D = coeff**2 * g * sum(h)**(-7/3) * speed
+                
+                q1d(i,2) = q1d(i,2) * exp(-D*dt)
+                q1d(i,3) = q1d(i,3) * exp(-D*dt)
+                
+            else
+                q1d(i,2:3) = 0.d0
+                if (layers > 1)  q1d(i,5:6) = 0.d0
+            endif
+        enddo          
     endif
     
+    ! = Wind Forcing =========================================================
     if (wind_forcing) then
         ! Here we have to take into account geoclaw which we use for the 
         ! single layer case.  It needs to divide by the water's density
@@ -79,12 +95,11 @@ subroutine src1d(meqn,mbc,mx1d,q1d,maux,aux1d,t,dt)
             enddo
         endif
     endif
+    ! ========================================================================
     
+    ! == Pressure Forcing ====================================================
     if (pressure_forcing) then
-        do i=1,mx1d
-            q1d(i,2) = q1d(i,2) - dt * aux1d(i,7) * q1d(i,1)
-            q1d(i,3) = q1d(i,3) - dt * aux1d(i,8) * q1d(i,1)
-        enddo
+        stop "Not sure how to proceed, need direction or the right dx or dy."
     endif
 
 end subroutine src1d

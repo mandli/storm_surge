@@ -207,7 +207,7 @@ def set_multilayer_data():
     
     # Algorithm
     prob_data.dry_tolerance = 1e-3
-    prob_data.eigen_method = 4
+    prob_data.eigen_method = 2
     
     # Initial condition
     prob_data.init_type = 1

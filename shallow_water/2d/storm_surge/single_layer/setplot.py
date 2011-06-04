@@ -50,38 +50,19 @@ def setplot(plotdata):
     #  Generic helper functions
     # ========================================================================
     def pcolor_afteraxes(current_data):
-        eye_location(current_data)
-        hour_figure_title(current_data)
-        m_to_km_labels()
-        # wind_contours(current_data)
+        hurricane_afteraxes(current_data)
         bathy_ref_lines(current_data)
+        # gauge_locations(current_data)
         
     def contour_afteraxes(current_data):
-        eye_location(current_data)
-        hour_figure_title(current_data)
-        # gauge_locations(current_data)
-        m_to_km_labels()
-        # plt.hold(True)
-        # pos = -80.0 * (23e3 / 180) + 500e3 - 5e3
-        # plt.plot([pos,pos],[-300e3,300e3],'b',[pos-5e3,pos-5e3],[-300e3,300e3],'y')
-        # plt.hold(False)
-        # wind_contours(current_data)
-        # bathy_ref_lines(current_data)
+        hurricane_afteraxes(current_data)
         
-    def hour_figure_title(current_data):
-        t = current_data.t
-        title = current_data.plotaxes.title
-        plt.title('%s at time t = %s h' % (title,str(t/3600.0)))
-
-    def m_to_km_labels(current_data=None):
-        plt.xlabel('km')
-        plt.ylabel('km')
-        locs,labels = plt.xticks()
-        labels = locs/1.e3
-        plt.xticks(locs,labels)
-        locs,labels = plt.yticks()
-        labels = locs/1.e3
-        plt.yticks(locs,labels)
+    def bathy_ref_lines(current_data):
+        plt.hold(True)
+        y = [amrdata.ylower,amrdata.yupper]
+        for ref_line in ref_lines:
+            plt.plot([ref_line,ref_line],y,'y--')
+        plt.hold(False)
 
     # ========================================================================
     # Gauge functions
@@ -122,27 +103,44 @@ def setplot(plotdata):
     #  Hurricane related helper functions
     # ========================================================================
     # Hurricane eye location
-    def eye_location(current_data):
-        t = current_data.t
+    def eye_location(cd):
+        t = cd.t
         # Hurricane eye
         x = t * hurricane_data.hurricane_velocity[0] + hurricane_data.R_eye_init[0]
         y = t * hurricane_data.hurricane_velocity[1] + hurricane_data.R_eye_init[1]
+        return x,y
         
+    def hour_figure_title(current_data):
+        t = current_data.t
+        title = current_data.plotaxes.title
+        plt.title('%s at time t = %s h' % (title,str(t/3600.0)))
+
+    def m_to_km_labels(current_data=None):
+        plt.xlabel('km')
+        plt.ylabel('km')
+        locs,labels = plt.xticks()
+        labels = locs/1.e3
+        plt.xticks(locs,labels)
+        locs,labels = plt.yticks()
+        labels = locs/1.e3
+        plt.yticks(locs,labels)
+        
+    def hurricane_afteraxes(current_data):
+        x,y = eye_location(current_data)
         plt.hold(True)
         plt.plot(x,y,'rD')
         plt.hold(False)
         
-    def hurricane_afteraxes(current_data):
-        eye_location(current_data)
         hour_figure_title(current_data)
         m_to_km_labels()
+        # wind_contours(current_data) ?
         
-    def bathy_ref_lines(current_data):
-        plt.hold(True)
-        y = [amrdata.ylower,amrdata.yupper]
-        for ref_line in ref_lines:
-            plt.plot([ref_line,ref_line],y,'y--')
-        plt.hold(False)
+        # plt.hold(True)
+        # pos = -80.0 * (23e3 / 180) + 500e3 - 5e3
+        # plt.plot([pos,pos],[-300e3,300e3],'b',[pos-5e3,pos-5e3],[-300e3,300e3],'y')
+        # plt.hold(False)
+        # wind_contours(current_data)
+        # bathy_ref_lines(current_data)
         
     def hurricane_wind(current_data):
         if current_data.level == 1:
@@ -156,8 +154,16 @@ def setplot(plotdata):
             #                 fontproperties={'weight':'bold'})
             plt.hold(False)
             
-    def wind_speed(current_data):
-        return np.sqrt(current_data.q[:,:,4]**2 + current_data.q[:,:,5]**2)
+    def wind_x(cd):
+        return cd.q[:,:,4]
+    def wind_y(cd):
+        return cd.q[:,:,5]
+    def wind_speed(cd):
+        return np.sqrt(wind_x(cd)**2 + wind_y(cd)**2)
+
+    def pressure(cd):
+        # The division by 100.0 is to convert from Pa to millibars
+        return cd.q[:,:,6] / 100.0
         
     def wind_contours(current_data):
         plt.hold(True)
@@ -173,7 +179,7 @@ def setplot(plotdata):
     # ========================================================================
     def b(cd):
         return cd.q[:,:,3] - cd.q[:,:,0]
-    
+        
     def extract_eta(h,eta,DRY_TOL=10**-3):
         index = np.nonzero((np.abs(h) < DRY_TOL) + (h == np.nan))
         eta[index[0],index[1]] = np.nan
@@ -228,10 +234,38 @@ def setplot(plotdata):
         plt.hold(False)
 
     # ========================================================================
+    #  Profile functions
+    # ========================================================================
+    class PlotProfile(object):
+    
+        def __init__(self,slice_value = 0.0):
+            self.slice_value = slice_value
+    
+        def slice_index(self,cd):
+            if cd.grid.y.lower < self.slice_value < cd.grid.y.upper:
+                return int((self.slice_value - cd.grid.y.lower) / cd.dy - 0.5)
+            else:
+                return None
+    
+        def bathy_profile(self,current_data):
+            index = self.slice_index(current_data)
+            if index:
+                return current_data.x[:,index], b(current_data)[:,index]
+            else:
+                return None, None
+        
+        def surface_profile(self,current_data):
+            index = self.slice_index(current_data)
+            if index:
+                return current_data.x[:,index], eta(current_data)[:,index]
+            else:
+                return None, None
+
+    # ========================================================================
     #  Plot items
     # ========================================================================
     def add_surface_elevation(plotaxes,bounds=None,plot_type='pcolor'):
-        if plot_type == 'pcolor':            
+        if plot_type == 'pcolor' or plot_type == 'imshow':            
             plotitem = plotaxes.new_plotitem(plot_type='2d_imshow')
             # plotitem.plotvar = eta
             plotitem.plot_var = geoplot.surface
@@ -242,9 +276,24 @@ def setplot(plotdata):
             plotitem.add_colorbar = True
             plotitem.amr_gridlines_show = [0,0,0]
             plotitem.amr_gridedges_show = [1,1,1]
+        elif plot_type == 'contour':            
+            plotitem = plotaxes.new_plotitem(plot_type='2d_contour')
+            plotitem.plot_var = geoplot.surface
+            if bounds is None:
+                plotitem.contour_levels = [-2.5,-1.5,-0.5,0.5,1.5,2.5]
+            # plotitem.contour_nlevels = 21
+            # plotitem.contour_min = -2.0
+            # plotitem.contour_max = 2.0
+            # plotitem.kwargs = {''}
+            plotitem.amr_contour_show = [1,1,1]
+            plotitem.amr_gridlines_show = [0,0,0]
+            plotitem.amr_gridedges_show = [1,1,1]
+            plotitem.amr_contour_colors = 'k'
+            # plotitem.amr_contour_colors = ['r','k','b']  # color on each level
+            # plotitem.amr_grid_bgcolor = ['#ffeeee', '#eeeeff', '#eeffee']
     
     def add_speed(plotaxes,bounds=None,plot_type='pcolor'):
-        if plot_type == 'pcolor':
+        if plot_type == 'pcolor' or plot_type == 'imshow':
             plotitem = plotaxes.new_plotitem(plot_type='2d_imshow')
             plotitem.plot_var = water_speed
             # plotitem.plot_var = 1
@@ -255,7 +304,79 @@ def setplot(plotdata):
             plotitem.add_colorbar = True
             plotitem.amr_gridlines_show = [0,0,0]
             plotitem.amr_gridedges_show = [1]
-    
+        elif plot_type == 'quiver':
+            plotitem = plotaxes.new_plotitem(plot_type='2d_quiver')
+            plotitem.quiver_var_x = water_u
+            plotitem.quiver_var_y = water_v
+            plotitem.amr_quiver_show = [4,10,10]
+            plotitem.amr_show_key = [True,True,False]
+            plotitem.key_units = 'm/s'
+            
+        elif plot_type == 'contour':
+            plotitem = plotaxes.new_plotitem(plot_type='2d_contour')
+            plotitem.plot_var = water_speed
+            plotitem.kwargs = {'linewidths':1}
+            # plotitem.contour_levels = [1.0,2.0,3.0,4.0,5.0,6.0]
+            plotitem.contour_levels = [0.5,1.5,3,4.5,6.0]
+            plotitem.amr_contour_show = [1,1,1]
+            plotitem.amr_gridlines_show = [0,0,0]
+            plotitem.amr_gridedges_show = [1,1,1]
+            plotitem.amr_contour_colors = 'k'
+            # plotitem.amr_contour_colors = ['r','k','b']  # color on each level
+            # plotitem.amr_grid_bgcolor = ['#ffeeee', '#eeeeff', '#eeffee']
+            
+    def add_wind(plotaxes,bounds=None,plot_type='pcolor'):
+        if plot_type == 'pcolor' or plot_type == 'imshow':
+            plotitem = plotaxes.new_plotitem(plot_type='2d_imshow')
+            plotitem.plot_var = wind_speed
+            plotitem.imshow_cmap = plt.get_cmap('PuBu')
+            if bounds is not None:
+                plotitem.imshow_cmin = bounds[0]
+                plotitem.imshow_cmax = bounds[1]
+            plotitem.add_colorbar = True
+            plotitem.amr_imshow_show = [1,1,1]
+            plotitem.amr_gridlines_show = [0,0,0]
+            plotitem.amr_gridedges_show = [1,1,1]
+        elif plot_type == 'contour':
+            plotitem = plotaxes.new_plotitem(plot_type='2d_contour')
+            plotitem.plot_var = wind_speed
+            plotitem.contour_nlevels = hurricane_data.max_wind_nest
+            plotitem.countour_min = hurricane_data.wind_refine[0]
+            plotitem.gridedges_show = 1
+        elif plot_type == 'quiver':
+            plotitem = plotaxes.new_plotitem(plot_type='2d_quiver')
+            plotitem.quiver_var_x = wind_x
+            plotitem.quiver_var_y = wind_y
+            plotitem.amr_quiver_show = [0,0,1]
+            plotitem.amr_quiver_key_show = [True,False,False]
+            plotitem.amr_quiver_key_units = 'm/s'
+            
+    def add_pressure(plotaxes,bounds=None,plot_type='pcolor'):
+        if plot_type == 'pcolor' or plot_type == 'imshow':
+            plotitem = plotaxes.new_plotitem(plot_type='2d_imshow')
+            plotitem.plot_var = pressure
+            plotitem.imshow_cmap = plt.get_cmap('PuBu')
+            if bounds is not None:
+                plotitem.imshow_cmin = bounds[0]
+                plotitem.imshow_cmax = bounds[1]
+            plotitem.add_colorbar = True
+            plotitem.amr_gridlines_show = [0,0,0]
+            plotitem.amr_gridedges_show = [1]
+        elif plot_type == 'contour':
+            pass
+            
+    def add_vorticity(plotaxes,bounds=None,plot_type="pcolor"):
+        if plot_type == 'pcolor' or plot_type == 'imshow':            
+            plotitem = plotaxes.new_plotitem(plot_type='2d_imshow')
+            plotitem.plot_var = 9
+            plotitem.imshow_cmap = plt.get_cmap('PRGn')
+            if bounds is not None:
+                plotitem.imshow_cmin = bounds[0]
+                plotitem.imshow_cmax = bounds[1]
+            plotitem.add_colorbar = True
+            plotitem.amr_gridlines_show = [0,0,0]
+            plotitem.amr_gridedges_show = [1]
+            
     def add_land(plotaxes,plot_type='pcolor'):
         if plot_type == 'pcolor':
             plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
@@ -267,13 +388,28 @@ def setplot(plotdata):
             plotitem.add_colorbar = False
             plotitem.amr_gridlines_show = [0,0,0]
             plotitem.amr_gridedges_show = [1,1,1]
+        elif plot_type == 'contour':            
+            plotitem = plotaxes.new_plotitem(plot_type='2d_contour')
+            plotitem.plot_var = geoplot.land
+            plotitem.contour_nlevels = 40
+            plotitem.contour_min = 0.0
+            plotitem.contour_max = 100.0
+            plotitem.amr_contour_colors = ['g']  # color on each level
+            plotitem.amr_grid_bgcolor = ['#ffeeee', '#eeeeff', '#eeffee']
+            plotitem.gridlines_show = 0
+            plotitem.gridedges_show = 0
 
     # Limits
     xlimits = [amrdata.xlower,amrdata.xupper]
     ylimits = [amrdata.ylower,amrdata.yupper]
+    multilayer_data.eta = eta
     surface_limits = [-0.5,0.5]
-    speed_limits = [0.0,6.0]
-
+    speed_limits = [0.0,0.1]
+    
+    wind_limits = [0,55]
+    pressure_limits = [954,1002]
+    vorticity_limits = [-1.e-2,1.e-2]
+    
     # ========================================================================
     #  Surface Elevation
     # ========================================================================
@@ -303,32 +439,17 @@ def setplot(plotdata):
     plotaxes.scaled = True
     plotaxes.xlimits = xlimits
     plotaxes.ylimits = ylimits
-    
-    def pcolor_afteraxes(current_data):
-        eye_location(current_data)
-        hour_figure_title(current_data)
-        # bathy_ref_lines(current_data)
-        m_to_km_labels()
     plotaxes.afteraxes = pcolor_afteraxes
 
     # Speed
     add_speed(plotaxes,bounds=speed_limits)
-    
-    # Velocity vectors
-    plotitem = plotaxes.new_plotitem(plot_type='2d_quiver')
-    plotitem.quiver_var_x = water_u
-    plotitem.quiver_var_y = water_v
-    plotitem.amr_quiver_show = [4,10,10]
-    plotitem.amr_show_key = [True,True,False]
-    plotitem.key_units = 'm/s'
-    plotitem.show = False
 
     # Land
     add_land(plotaxes)
     
-    #-----------------------------------------
+    # ========================================================================
     # Hurricane forcing
-    #-----------------------------------------
+    # ========================================================================
     # Pressure field
     plotfigure = plotdata.new_plotfigure(name='pressure', figno=2)
     plotfigure.show = hurricane_data.pressure_src
@@ -340,77 +461,9 @@ def setplot(plotdata):
     plotaxes.afteraxes = hurricane_afteraxes
     plotaxes.scaled = True
     
-    plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
-    def pressure_var(current_data):
-        return current_data.q[:,:,6] / 100.0
-    plotitem.plot_var = pressure_var
-    plotitem.pcolor_cmap = plt.get_cmap('PuBu')
-    plotitem.pcolor_cmin = 954
-    plotitem.pcolor_cmax = 1002
-    plotitem.add_colorbar = True
-    plotitem.gridlines_show = 0
-    plotitem.gridedges_show = 1
-    plotitem.amr_pcolor_show = [1,0,0]
-    plotitem.amr_grid_bgcolor = ['#ffeeee', '#eeeeff', '#eeffee']
+    add_pressure(plotaxes,bounds=pressure_limits)
+    add_land(plotaxes)
     
-    plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
-    plotitem.plot_var = geoplot.land
-    plotitem.pcolor_cmap = geoplot.land_colors
-    plotitem.pcolor_cmin = 0.0
-    plotitem.pcolor_cmax = 80.0
-    plotitem.add_colorbar = False
-    plotitem.amr_gridlines_show = [0,0,0]
-
-    # Pressure gradient plots - x
-    plotfigure = plotdata.new_plotfigure(name='pressure_x', figno=30)
-    plotfigure.show = hurricane_data.pressure_src
-    
-    plotaxes = plotfigure.new_plotaxes()
-    plotaxes.xlimits = [amrdata.xlower,amrdata.xupper]
-    plotaxes.ylimits = [amrdata.ylower,amrdata.yupper]
-    plotaxes.title = "Pressure Gradient Field - x"
-    plotaxes.afteraxes = hurricane_afteraxes
-    plotaxes.scaled = True
-    
-    plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
-    def pressure_var(current_data):
-        return current_data.q[:,:,7] / 100.0
-    plotitem.plot_var = pressure_var
-    plotitem.pcolor_cmap = plt.get_cmap('PuBu')
-    # plotitem.pcolor_cmin = 954
-    # plotitem.pcolor_cmax = 1002
-    plotitem.add_colorbar = True
-    plotitem.gridlines_show = 0
-    plotitem.gridedges_show = 1
-    plotitem.amr_pcolor_show = [1,0,0]
-    plotitem.amr_grid_bgcolor = ['#ffeeee', '#eeeeff', '#eeffee']
-    
-    # Pressure gradient plots - y
-    plotfigure = plotdata.new_plotfigure(name='pressure_y', figno=31)
-    plotfigure.show = hurricane_data.pressure_src and True
-    
-    plotaxes = plotfigure.new_plotaxes()
-    plotaxes.xlimits = [amrdata.xlower,amrdata.xupper]
-    plotaxes.ylimits = [amrdata.ylower,amrdata.yupper]
-    plotaxes.title = "Pressure Gradient Field - y"
-    plotaxes.afteraxes = hurricane_afteraxes
-    plotaxes.scaled = True
-    
-    plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
-    def pressure_var(current_data):
-        return current_data.q[:,:,8] / 100.0
-    plotitem.plot_var = pressure_var
-    plotitem.pcolor_cmap = plt.get_cmap('PuBu')
-    # plotitem.pcolor_cmin = 954
-    # plotitem.pcolor_cmax = 1002
-    plotitem.add_colorbar = True
-    plotitem.gridlines_show = 0
-    plotitem.gridedges_show = 1
-    plotitem.amr_pcolor_show = [1,0,0]
-    plotitem.amr_grid_bgcolor = ['#ffeeee', '#eeeeff', '#eeffee']
-    
-    
-    # ========================================================================
     # Wind field
     plotfigure = plotdata.new_plotfigure(name='wind',figno=3)
     plotfigure.show = hurricane_data.wind_src
@@ -422,62 +475,15 @@ def setplot(plotdata):
     plotaxes.afteraxes = hurricane_afteraxes
     plotaxes.scaled = True
     
-    # Quiver
-    plotitem = plotaxes.new_plotitem(plot_type='2d_quiver')
-    plotitem.quiver_var_x = 4
-    plotitem.quiver_var_y = 5
-    plotitem.amr_quiver_show = [0,0,1]
-    plotitem.amr_quiver_key_show = [True,False,False]
-    plotitem.amr_quiver_key_units = 'm/s'
-    plotitem.show = False
-    
-    # Pcolor
-    plotitem = plotaxes.new_plotitem(plot_type='2d_imshow')
-    plotitem.plot_var = wind_speed
-    plotitem.imshow_cmap = plt.get_cmap('PuBu')
-    plotitem.imshow_cmin = 0
-    plotitem.imshow_cmax = 55
-    plotitem.add_colorbar = True
-    plotitem.amr_imshow_show = [1,1,1]
-    plotitem.amr_gridlines_show = [0,0,0]
-    plotitem.amr_gridedges_show = [1,1,1]
-    plotitem.show = True
-    
-    # Contour
-    plotitem = plotaxes.new_plotitem(plot_type='2d_contour')
-    plotitem.plot_var = wind_speed
-    plotitem.contour_nlevels = hurricane_data.max_wind_nest
-    plotitem.countour_min = hurricane_data.wind_refine[0]
-    plotitem.gridedges_show = 1
-    plotitem.show = False 
-    
-    # Land
+    add_wind(plotaxes,bounds=wind_limits,plot_type='imshow')
+    # add_wind(plotaxes,bounds=wind_limits,plot_type='contour')
+    # add_wind(plotaxes,bounds=wind_limits,plot_type='quiver')
     add_land(plotaxes)
 
     # ========================================================================
     #  Profile Plots
     # ========================================================================
     # Profile variables
-    slice_value = 0.0
-    def slice_index(cd):
-        if cd.grid.y.lower < slice_value < cd.grid.y.upper:
-            return int((slice_value - cd.grid.y.lower) / cd.dy - 0.5)
-        else:
-            return None
-    
-    def bathy_profile(current_data):
-        index = slice_index(current_data)
-        if index:
-            return current_data.x[:,index], b(current_data)[:,index]
-        else:
-            return None, None
-        
-    def surface_profile(current_data):
-        index = slice_index(current_data)
-        if index:
-            return current_data.x[:,index], eta(current_data)[:,index]
-        else:
-            return None, None
             
     def profile_afteraxes(current_data):
         hour_figure_title(current_data)
@@ -496,7 +502,6 @@ def setplot(plotdata):
         plt.hold(True)
         plt.plot(x,0.0,'r+')
         plt.hold(False)
-        
             
     def remove_labels_profile(cd,direction='x'):
         plt.hold(True)
@@ -564,12 +569,13 @@ def setplot(plotdata):
     # plotaxes.ylimits = surface_limits
     plotaxes.afteraxes = profile_afteraxes
     
+    profile_plot = PlotProfile(0.0)
     plotitem = plotaxes.new_plotitem(plot_type="1d_from_2d_data")
-    plotitem.map_2d_to_1d = surface_profile
+    plotitem.map_2d_to_1d = profile_plot.surface_profile
     plotitem.amr_plotstyle = ['-','-.','+','x','.']
     plotitem.color = 'b'#(0.2,0.8,1.0)
     plotitem = plotaxes.new_plotitem(plot_type='1d_from_2d_data')
-    plotitem.map_2d_to_1d = bathy_profile
+    plotitem.map_2d_to_1d = profile_plot.bathy_profile
     plotitem.amr_plotstyle = ['-','-.','+','x','.']  
     plotitem.color = 'k'
         
@@ -595,7 +601,6 @@ def setplot(plotdata):
     plotitem.amr_gridedges_show = [1,1,1]
     plotitem.show = True
     
-    
     # ========================================================================
     # Figure for grids alone
     # ========================================================================
@@ -616,38 +621,6 @@ def setplot(plotdata):
     plotitem.amr_grid_bgcolor = ['blue','red','green','cyan','yellow']
     plotitem.amr_gridlines_show = [1,1,0,0,0,0]   
     plotitem.amr_gridedges_show = 1
-    
-    # ========================================================================
-    #  Scatter plot of surface for radially symmetric
-    # ========================================================================
-    plotfigure = plotdata.new_plotfigure(name='Scatter', figno=12)
-    plotfigure.show = False
-    
-    # Set up for axes in this figure:
-    plotaxes = plotfigure.new_plotaxes()
-    plotaxes.xlimits = [0.,400e3]
-    # plotaxes.ylimits = [-2.5,]
-    plotaxes.title = 'Scatter plot of surface'
-    
-    # Set up for item on these axes:
-    plotitem = plotaxes.new_plotitem(plot_type='1d_from_2d_data')
-    plotitem.plot_var = geoplot.surface
-    def q_vs_radius(current_data):
-        q = current_data.var
-        return current_data.x[:,20],q[:,20]
-    plotitem.map_2d_to_1d = q_vs_radius
-    plotitem.plotstyle = 'o-'
-    plotitem.amr_color=['b','r','g']
-    
-    plotitem = plotaxes.new_plotitem(plot_type='1d_from_2d_data')
-    plotitem.plot_var = geoplot.land
-    def q_vs_radius(current_data):
-        q = current_data.var
-        return current_data.x[:,20],q[:,20]
-    plotitem.map_2d_to_1d = q_vs_radius
-    plotitem.plotstyle = 'o-'
-    plotitem.amr_color=['r','r','g']
-    plotaxes.afteraxes = "pylab.legend(['Level 1','Level 2'])"
     
     # ========================================================================
     # Figures for momentum
@@ -737,32 +710,10 @@ def setplot(plotdata):
     plotaxes.afteraxes = contour_afteraxes
     
     # Surface
-    plotitem = plotaxes.new_plotitem(plot_type='2d_contour')
-    plotitem.plot_var = geoplot.surface
-    plotitem.contour_levels = [-2.5,-1.5,-0.5,0.5,1.5,2.5]
-    # plotitem.contour_nlevels = 21
-    # plotitem.contour_min = -2.0
-    # plotitem.contour_max = 2.0
-    # plotitem.kwargs = {''}
-    plotitem.amr_contour_show = [1,1,1]
-    plotitem.amr_gridlines_show = [0,0,0]
-    plotitem.amr_gridedges_show = [1,1,1]
-    plotitem.amr_contour_colors = 'k'
-    # plotitem.amr_contour_colors = ['r','k','b']  # color on each level
-    # plotitem.amr_grid_bgcolor = ['#ffeeee', '#eeeeff', '#eeffee']
-    plotitem.show = True 
+    add_surface_elevation(plotaxes,plot_type='contour')
     
     # Land
-    plotitem = plotaxes.new_plotitem(plot_type='2d_contour')
-    plotitem.plot_var = geoplot.land
-    plotitem.contour_nlevels = 40
-    plotitem.contour_min = 0.0
-    plotitem.contour_max = 100.0
-    plotitem.amr_contour_colors = ['g']  # color on each level
-    plotitem.amr_grid_bgcolor = ['#ffeeee', '#eeeeff', '#eeffee']
-    plotitem.gridlines_show = 0
-    plotitem.gridedges_show = 0
-    plotitem.show = True
+    add_land(plotaxes,plot_type='contour')
     
     # ========================================================================
     #  Contour plot for speed
@@ -779,30 +730,10 @@ def setplot(plotdata):
     plotaxes.afteraxes = contour_afteraxes
     
     # Surface
-    plotitem = plotaxes.new_plotitem(plot_type='2d_contour')
-    plotitem.plot_var = water_speed
-    plotitem.kwargs = {'linewidths':1}
-    # plotitem.contour_levels = [1.0,2.0,3.0,4.0,5.0,6.0]
-    plotitem.contour_levels = [0.5,1.5,3,4.5,6.0]
-    plotitem.amr_contour_show = [1,1,1]
-    plotitem.amr_gridlines_show = [0,0,0]
-    plotitem.amr_gridedges_show = [1,1,1]
-    plotitem.amr_contour_colors = 'k'
-    # plotitem.amr_contour_colors = ['r','k','b']  # color on each level
-    # plotitem.amr_grid_bgcolor = ['#ffeeee', '#eeeeff', '#eeffee']
-    plotitem.show = True 
+    add_surface_elevation(plotaxes,plot_type="contour")
     
     # Land
-    plotitem = plotaxes.new_plotitem(plot_type='2d_contour')
-    plotitem.plot_var = geoplot.land
-    plotitem.contour_nlevels = 40
-    plotitem.contour_min = 0.0
-    plotitem.contour_max = 100.0
-    plotitem.amr_contour_colors = ['g']  # color on each level
-    plotitem.amr_grid_bgcolor = ['#ffeeee', '#eeeeff', '#eeffee']
-    plotitem.gridlines_show = 0
-    plotitem.gridedges_show = 0
-    plotitem.show = True
+    add_land(plotaxes,plot_type='contour')
     
     # ========================================================================
     #  Vorticity Plot
@@ -817,26 +748,10 @@ def setplot(plotdata):
     plotaxes.afteraxes = pcolor_afteraxes
     
     # Vorticity
-    plotitem = plotaxes.new_plotitem(plot_type='2d_imshow')
-    plotitem.plot_var = 9
-    plotitem.imshow_cmap = plt.get_cmap('PRGn')
-    # plotitem.pcolor_cmap = plt.get_cmap('PuBu')
-    # plotitem.pcolor_cmin = 0.0
-    # plotitem.pcolor_cmax = 6.0
-    plotitem.imshow_cmin = -1.e-2
-    plotitem.imshow_cmax = 1.e-2
-    plotitem.add_colorbar = True
-    plotitem.amr_gridlines_show = [0,0,0]
-    plotitem.amr_gridedges_show = [1]
+    add_vorticity(plotaxes)
 
     # Land
-    plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
-    plotitem.plot_var = geoplot.land
-    plotitem.pcolor_cmap = geoplot.land_colors
-    plotitem.pcolor_cmin = 0.0
-    plotitem.pcolor_cmax = 80.0
-    plotitem.add_colorbar = False
-    plotitem.amr_gridlines_show = [0,0,0]
+    add_land(plotaxes)
     
     
     # ========================================================================

@@ -79,7 +79,7 @@ def setrun(claw_pkg='geoclaw'):
         
 
     # Number of grid cells:
-    levels = 1
+    levels = 3
     clawdata.mx = 70*levels
     clawdata.my = 60*levels
 
@@ -300,10 +300,12 @@ def setgeo(rundata):
     # geodata.wavetolerance = 1e0
     geodata.depthdeep = 2.e2
     geodata.maxleveldeep = 4
-    geodata.ifriction = 1
     geodata.coeffmanning = 0.025
     # geodata.frictiondepth = 20.0
     geodata.frictiondepth = 10e10
+
+    # Source terms
+    geodata.ifriction = 1
     geodata.icoriolis = 1
 
     # == settopo.data values ==
@@ -337,10 +339,17 @@ def setgeo(rundata):
     # for gauges append lines of the form  [gaugeno, x, y, tstart, tend]
     N_gauges = 21
     for i in xrange(0,N_gauges):
-        x = -80.0 * (23e3 / 180) + 500e3 - 5e3  # 1 km off shore
+        x = 480e3 # This is right where the shelf turns into beach, 100 meter of water
+        # x = -80.0 * (23e3 / 180) + 500e3 - 5e3  # 1 km off shore
         y = 550e3 / (N_gauges + 1) * (i+1) + -275e3       # Start 25 km inside domain
         geodata.gauges.append([i, x, y, 0.0, 1e10])
         print "Gauge %s: (%s,%s)" % (i,x/1e3,y/1e3)
+    # for i in xrange(N_gauges,2*N_gauges):
+    #     x = 482e3+100.0 # Dry state line + 500 meters
+    #     # x = -80.0 * (23e3 / 180) + 500e3 - 5e3  # 1 km off shore
+    #     y = 550e3 / (N_gauges + 1) * (i+1) + -275e3       # Start 25 km inside domain
+    #     geodata.gauges.append([i, x, y, 0.0, 1e10])
+    #     print "Gauge %s: (%s,%s)" % (i,x/1e3,y/1e3)
 
     # == setfixedgrids.data values ==
     geodata.fixedgrids = []

@@ -87,13 +87,13 @@ def setplot(plotdata):
     if problem_data.init_type == 1:
         # External wave
         if problem_data.wave_family == 4:
-            ylimits_velocities = [-0.6,0.6]
+            ylimits_velocities = [-0.8,0.8]
             ylimits_depth = [-1.0,0.3]
             ylimits_depth_zoomed = [-1.0,0.4]
             ylimits_velocities_zoomed = [-0.1,0.75]
         # internal wave
         elif problem_data.wave_family == 3:
-            ylimits_velocities = [-0.1,0.1] 
+            ylimits_velocities = [-0.15,0.15] 
             ylimits_velocities_zoomed = ylimits_velocities
             ylimits_depth = [-1.0,0.2]
             ylimits_depth_zoomed = ylimits_depth
@@ -209,7 +209,7 @@ def setplot(plotdata):
         
         # Draw velocity and kappa plot
         ax1 = fig.add_subplot(212)     # the velocity scale
-        ax2 = ax1.twinx()              # the kappa scale
+        # ax2 = ax1.twinx()              # the kappa scale
         
         # Bottom layer velocity
         bottom_layer = ax1.plot(x,u_2(cd),'k-',label="Bottom Layer Velocity")
@@ -217,19 +217,21 @@ def setplot(plotdata):
         top_layer = ax1.plot(x,u_1(cd),'b-',label="Top Layer velocity")#,color=(0.2,0.8,1.0))
         
         # Kappa
-        kappa_line = ax2.plot(x,cd.q[:,5],color='r',label="Kappa")
-        ax2.plot(x,np.ones(x.shape),'r--')
+        # kappa_line = ax2.plot(x,cd.q[:,5],color='r',label="Kappa")
+        # ax2.plot(x,np.ones(x.shape),'r--')
         
         for ref_line in bathy_ref_lines:
             ax1.plot([ref_line,ref_line],ylimits_velocities,'k--')
 
-        ax1.legend((bottom_layer,top_layer,kappa_line),('Bottom Layer','Top Layer',"Kappa"),loc=4)
-        ax1.set_title('Layer Velocities and Kappa')
+        ax1.legend((bottom_layer,top_layer),('Bottom Layer','Top Layer'),loc=4)
+        ax1.set_title('Layer Velocities')
         ax1.set_ylabel('Velocities (m/s)')
-        ax2.set_ylabel('Kappa (1/Ri)')
+        # ax1.legend((bottom_layer,top_layer,kappa_line),('Bottom Layer','Top Layer',"Kappa"),loc=4)
+        # ax1.set_title('Layer Velocities and Kappa')
+        # ax2.set_ylabel('Kappa (1/Ri)')
         ax1.set_xlim((cd.xlower,cd.xupper))
         ax1.set_ylim(ylimits_velocities)
-        ax2.set_ylim((0.0,1.2))
+        # ax2.set_ylim((0.0,1.2))
         
         # mpl.subplots_adjust(hspace=0.1)
     

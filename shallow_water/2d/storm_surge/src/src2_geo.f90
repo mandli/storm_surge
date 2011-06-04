@@ -38,7 +38,7 @@ subroutine src2(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
     tol = 1.d-30  ! To prevent divide by zero in gamma
 
     ! friction--------------------------------------------------------
-    if (coeffmanning > 0.d0) then
+    if (coeffmanning > 0.d0 .and. ifriction == 1) then
         do i=1,mx
             do j=1,my
                 ! Check to see which layer we are doing this on
@@ -171,8 +171,8 @@ subroutine src2(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
                 endif
                 
                 ! Calculate gradient of Pressure
-                P_atmos_x = (aux(i+1,j,6) - aux(i-1,j,6)) / (2.d3*dx)
-                P_atmos_y = (aux(i,j+1,6) - aux(i,j-1,6)) / (2.d3*dy)
+                P_atmos_x = (aux(i+1,j,6) - aux(i-1,j,6)) / (2.d0*dx)
+                P_atmos_y = (aux(i,j+1,6) - aux(i,j-1,6)) / (2.d0*dy)
                 if (abs(P_atmos_x) < pressure_tolerance) then
                     P_atmos_x = 0.d0
                 endif

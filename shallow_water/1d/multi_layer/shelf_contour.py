@@ -45,6 +45,7 @@ def read_data():
     X,T = np.meshgrid(x,t)
     return X,T,eta
 
+bathy_ref_lines = [-130e3,-30e3]
 
 def contour_plot(X,T,eta):
     pylab.figure(1,figsize=[10,8])
@@ -52,10 +53,12 @@ def contour_plot(X,T,eta):
     pylab.subplot(1,2,1)
     # pylab.axes([.1,.1,.6,.8])
     clines = np.linspace(.025,.4,15)
+    # clines = np.linspace(.4,.4,15)
     pylab.contour(X,T,eta[:,:,0].T,clines,colors='r')
     # pylab.contour(X,T,eta,-clines,colors='b',linestyles='solid')
-    pylab.contour(X,T,-eta[:,:,0].T,clines,colors='b')
-    pylab.plot([-30e3,-30e3],[0,2],'k--')
+    pylab.contour(X,T,-eta[:,:,0].T,clines,colors='b--')
+    for ref_line in bathy_ref_lines:
+        pylab.plot([ref_line,ref_line],[0,2],'k--')
     pylab.xticks([-300e3,-200e3,-100e3,-30e3],[300,200,100,30],fontsize=15)
     pylab.yticks(fontsize=15)
     pylab.xlabel("Kilometers offshore",fontsize=15)
@@ -71,12 +74,13 @@ def contour_plot(X,T,eta):
     # pylab.clf()
     pylab.subplot(1,2,2)
     # pylab.axes([.1,.1,.6,.8])
-    clines = np.linspace(.025,5,15)
+    clines = np.linspace(.025,0.5,15)
     pylab.contour(X,T,eta[:,:,1].T - prob_data.eta_2,clines,colors='r')
     # # pylab.contour(X,T,eta[:,:,1].T,colors='r')
     # pylab.contour(X,T,eta,-clines,colors='b',linestyles='solid')
-    pylab.contour(X,T,-(eta[:,:,1].T - prob_data.eta_2),clines,colors='b')
-    pylab.plot([-30e3,-30e3],[0,2],'k--')
+    pylab.contour(X,T,-(eta[:,:,1].T - prob_data.eta_2),clines,colors='b--')
+    for ref_line in bathy_ref_lines:
+        pylab.plot([ref_line,ref_line],[0,2],'k--')
     pylab.xticks([-300e3,-200e3,-100e3,-30e3],[300,200,100,30],fontsize=15)
     pylab.xlim([-200e3,0.0])
     # # pylab.yticks(fontsize=15)

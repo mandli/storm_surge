@@ -48,8 +48,8 @@ CLAW_SOURCES = \
 	$(HURRICANE_SRC)/valout_geo.f \
 	$(HURRICANE_SRC)/setaux_geo.f \
 	./flag2refine_geo.f \
-	./src2_geo.f90 \
-	./src1d_geo.f90 \
+	$(HURRICANE_SRC)/src2_geo.f90 \
+	$(HURRICANE_SRC)/src1d_geo.f90 \
 	$(HURRICANE_SRC)/tick.f
 
 # The source computations must be done locally as the equations solved by

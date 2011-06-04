@@ -26,7 +26,7 @@ c     Also calls movetopo if topography might be moving.
       dimension vel(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc, 2)
       
       integer :: layer,layer_index
-      double precision :: h(2),u(2),v(2),g
+      double precision :: h(2),u(2),v(2),g,kappa
       logical :: dry_state(2)
       
       g = grav
@@ -90,68 +90,42 @@ c     # set hu = hv = 0 in all these cells
                   endif
               enddo
               if (sum(h) > drytolerance) then
-                  aux(i,j,9)=(u(1) - u(2))**2 / (g*one_minus_r*sum(h))
-                  if ((aux(i,j,9) > richardson_tolerance)
+                  kappa=(u(1) - u(2))**2 / (g*one_minus_r*sum(h))
+                  if ((kappa > richardson_tolerance)
      &                  .and.(.not.dry_state(2))) then
-                      print 100,i,j,aux(i,j,9)
+                      write(kappa_file,100) i,j,kappa
+                      print 100,i,j,kappa
                   endif
                   aux(i,j,10)=(v(1) - v(2))**2 / (g*one_minus_r*sum(h))
-                  if ((aux(i,j,10) > richardson_tolerance)
+                  if ((kappa > richardson_tolerance)
      &                  .and.(.not.dry_state(2))) then
-                      print 100,i,j,aux(i,j,10)
+                      write(kappa_file,100),i,j,kappa
+                      print 100,i,j,kappa
                   endif
-               else
-                   aux(i,j,9) = 0.d0
-                   aux(i,j,10) = 0.d0
                endif
           enddo
       enddo
       endif
       
 100   format ("Hyperbolicity may have failed (",i4,",",i4,") = ",d16.8)
-
-    
-C     ! These need to be modified to use other aux array locations, 7,8 are 
-C     ! being used for initial etas
-      ! Calculate gradient of Pressure
-C       aux(:,:,7) = 0.d0
-C       aux(:,:,8) = 0.d0
-C       do i=1,mx
-C          do j=1,my
+       
+       ! Calculate vorticity
+C        aux(:,:,9) = 0.d0
+C        vel = 0.d0
+C        do i=1,mx
+C            do j=1,my
 C                if (abs(q(i,j,1)) > drytolerance) then
-C                    diff_x = aux(i+1,j,6) - aux(i-1,j,6)
-C                    diff_y = aux(i,j+1,6) - aux(i,j-1,6)
-C                    if (abs(diff_x) < pressure_tolerance) then
-C                        aux(i,j,7) = 0.d0
-C                    else
-C                        aux(i,j,7) = (diff_x) / (2.d0 * 1000.d0 * dx)
-C                    endif
-C                    if (abs(diff_y) < pressure_tolerance) then
-C                        aux(i,j,8) = 0.d0
-C                    else
-C                        aux(i,j,8) = (diff_y) / (2.d0 * 1000.d0 * dy)
-C                    endif   
+C                    vel(i,j,1) = q(i,j,2) / q(i,j,1)
+C                    vel(i,j,2) = q(i,j,3) / q(i,j,1)
 C                endif
-C          enddo
-C       enddo
-C       
-C       ! Calculate vorticity
-C       aux(:,:,9) = 0.d0
-C       vel = 0.d0
-C       do i=1,mx
-C           do j=1,my
-C               if (abs(q(i,j,1)) > drytolerance) then
-C                   vel(i,j,1) = q(i,j,2) / q(i,j,1)
-C                   vel(i,j,2) = q(i,j,3) / q(i,j,1)
-C               endif
-C           enddo
-C       enddo
-C       do i=1,mx
-C           do j=1,my
-C               aux(i,j,9) = (vel(i+1,j,2) - vel(i-1,j,2)) / (2.d0*dx) -         
-C      &                     (vel(i,j+1,1) - vel(i,j-1,1)) / (2.d0*dy)
-C           enddo
-C       enddo
+C            enddo
+C        enddo
+C        do i=1,mx
+C            do j=1,my
+C                aux(i,j,9) = (vel(i+1,j,2) - vel(i-1,j,2)) / (2.d0*dx) -         
+C       &                     (vel(i,j+1,1) - vel(i,j-1,1)) / (2.d0*dy)
+C            enddo
+C        enddo
       
       return
       end

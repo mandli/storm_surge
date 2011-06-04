@@ -101,11 +101,21 @@ subroutine src2(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
     if (pressure_forcing) then
         do i=1,mx
             do j=1,my                    
-                q(i,j,2) = q(i,j,2) - dt * aux(i,j,7) * q(i,j,1)
-                q(i,j,3) = q(i,j,3) - dt * aux(i,j,8) * q(i,j,1)
+                ! Calculate gradient of Pressure
+                if (abs(q(i,j,1)) > drytolerance) then
+                    P_atmos_x = (aux(i+1,j,6) - aux(i-1,j,6)) / (2.d3*dx)
+                    P_atmos_y = (aux(i,j+1,6) - aux(i,j-1,6)) / (2.d3*dy)
+                    if (abs(P_atmos_x) < pressure_tolerance) then
+                        P_atmos_x = 0.d0
+                    endif
+                    if (abs(P_atmos_y) < pressure_tolerance) then
+                        P_atmos_y = 0.d0
+                    endif
+                endif
+                q(i,j,2) = q(i,j,2) - dt * P_atmos_x * q(i,j,1)
+                q(i,j,3) = q(i,j,3) - dt * P_atmos_y * q(i,j,1)
             enddo
         enddo
-                
     endif
     ! ----------------------------------------------------------------
 end subroutine src2

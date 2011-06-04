@@ -176,7 +176,7 @@ contains
                     x = xlower + (i-0.5d0) * dx - R_eye(1)
                     r = sqrt(x**2+y**2) * 1d-3
                 
-                    if (abs(r) < 1d1) then
+                    if (abs(r) < 10d-6) then
                         wind(i,j,:) = 0.d0
                     else
                         w = sqrt(C * exp(-A/r**B) / r**B + r**2 * f**2 / 4.0) &
@@ -312,11 +312,15 @@ contains
     
     ! ========================================================================
     !  Calculate the coriolis constant f
-    !   theta should be in radians
+    !   If icoordsys == 1 then
+    !       A beta-plane approximation is used and y should be in meters
+    !   if icoordsys == 2 then
+    !       Grid is in lat-long and y should be in degrees which is converted
+    !       to radians
     ! ========================================================================
     double precision function coriolis(y)
     
-        use geoclaw_module, only: icoordsys,pi
+        use geoclaw_module, only: icoordsys,Rearth,pi
     
         implicit none
         
@@ -328,6 +332,8 @@ contains
         
         ! Angular speed of earth = 2.d0*pi/(86400.d0) 
         double precision, parameter :: OMEGA = 7.2722052166430395d-05
+!         double precision, parameter :: OMEGA = 7.2722052166430395d-01 ! <= fake
+        
         
         ! Assume beta plane approximation and y is in meters
         if (icoordsys == 1) then

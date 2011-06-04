@@ -120,33 +120,53 @@ class ShelfBaseTest(test_runs.TestML1D):
         self.ml_data.init_location = 300e3
         self.ml_data.eta_2 = -300.0
         self.ml_data.epsilon = 0.4
+        self.ml_data.bathy_type = 1
         self.ml_data.bathy_location = -30e3
         self.ml_data.bathy_left = -4000.0
         self.ml_data.bathy_right = -200.0
         self.ml_data.wind_type = 0
         
         self.prefix = "ml_e%s_m%s" % (eigen_method,mx)
+        
+class RealShelfBaseTest(ShelfBaseTest):
+    
+    def __init__(self,eigen_method=2,mx=2000):
+        
+        super(RealShelfBaseTest,self).__init__(eigen_method,mx)
+    
+        self.name = "real_shelf"
+        self.setplot = "setplot_shelf"
+        
+        self.ml_data.inundation_method = 2
+        self.ml_data.bathy_type = 2
+        
+        self.prefix = "ml_e%s_m%s" % (eigen_method,mx)
     
 # Idealized 3 eigen_method test
-for method in [1,2,3,4]:
-    tests.append(IdealizedBaseTest(3,epsilon=0.1,eigen_method=method))
-    
-# Idealized 4 eigen_method test
-for method in [1,2,3,4]:
-    tests.append(IdealizedBaseTest(4,epsilon=0.04,eigen_method=method))
-
-# Idealized 4 break down    
-for method in [1,2,3,4]:
-    tests.append(IdealizedBaseTest(4,eigen_method=method,epsilon=0.1))
-
-# Eigen method tests for oscillatory wind
-for method in [1,2,3,4]:
-    tests.append(OscillatoryWindBaseTest(eigen_method=method))
+# for method in [1,2,3,4]:
+#     tests.append(IdealizedBaseTest(3,epsilon=0.1,eigen_method=method))
+#     
+# # Idealized 4 eigen_method test
+# for method in [1,2,3,4]:
+#     tests.append(IdealizedBaseTest(4,epsilon=0.04,eigen_method=method))
+# 
+# # Idealized 4 break down    
+# for method in [1,2,3,4]:
+#     tests.append(IdealizedBaseTest(4,eigen_method=method,epsilon=0.1))
+# 
+# # Eigen method tests for oscillatory wind
+# for method in [1,2,3,4]:
+#     tests.append(OscillatoryWindBaseTest(eigen_method=method))
     
 # Convergence test for shelf
-for method in [1,2,3,4]:
-    for mx in [100,200,400,800,1200,1600,2000,3000,4000,5000]:
-        tests.append(ShelfBaseTest(mx=mx,eigen_method=method))
+# for method in [1,2,3,4]:
+    # for mx in [100,200,400,800,1200,1600,2000,3000,4000,5000]:
+method = 2
+mx = 2000
+tests.append(ShelfBaseTest(mx=mx,eigen_method=4))
+tests.append(RealShelfBaseTest(mx=mx,eigen_method=method))
+        
+
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:

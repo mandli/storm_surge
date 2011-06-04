@@ -23,7 +23,7 @@ import test_runs
 
 class TwoLayerBaseTest(test_runs.TestML2D):
     
-    def __init__(self,velocity=5.0,angle=0.0,eye=(0.0,0.0),mxnest=5):
+    def __init__(self,velocity=5.0,angle=0.0,eye=(0.0,0.0),coriolis=False,mxnest=1):
         super(TwoLayerBaseTest,self).__init__()
         
         # Create topography
@@ -33,10 +33,17 @@ class TwoLayerBaseTest(test_runs.TestML2D):
         self.setplot = "setplot"
         
         self.run_data.clawdata.mxnest = -mxnest
-        self.hurricane_velocity = (velocity * np.cos(angle),velocity * np.sin(angle))
-        self.R_eye_init = eye
-        
-        self.prefix = "ml_angle%s_m%s" % (int(angle * 180.0 / np.pi),mxnest)
+        self.hurricane_data.hurricane_velocity = (velocity * np.cos(angle),velocity * np.sin(angle))
+        self.hurricane_data.R_eye_init = eye
+            
+        self.prefix = "ml_angle%s_m%s_v%s_c" % (int(angle * 180.0 / np.pi),mxnest,int(velocity))
+
+        if coriolis:
+            self.hurricane_data.icoriolis = 1
+            self.prefix = self.prefix + 'T'
+        else:
+            self.hurricane_data.icoriolis = 0
+            self.prefix = self.prefix + 'F'
         
     def write_data_objects(self):
         super(TwoLayerBaseTest,self).write_data_objects()
@@ -48,12 +55,13 @@ class TwoLayerBaseTest(test_runs.TestML2D):
 tests = []
 
 # Two Layer Tests
-tests.append(TwoLayerBaseTest(5.0,0.0,(0.0,0.0),5))
-tests.append(TwoLayerBaseTest(5.0,0.25*np.pi,(200e3,100e3),5))
-tests.append(TwoLayerBaseTest(5.0,-0.25*np.pi,(200e3,-100e3),5))
-tests.append(TwoLayerBaseTest(5.0,-0.50*np.pi,(425e3,100e3),5))
-tests.append(TwoLayerBaseTest(5.0, 0.50*np.pi,(425e3,-100e3),5))
-tests.append(TwoLayerBaseTest(0.0,0.0,(0.0,0.0),5))
+tests.append(TwoLayerBaseTest(5.0,0.0,(0.0,0.0),False))
+tests.append(TwoLayerBaseTest(5.0,0.25*np.pi,(200e3,-100e3),False))
+tests.append(TwoLayerBaseTest(5.0,-0.25*np.pi,(200e3,100e3),False))
+tests.append(TwoLayerBaseTest(5.0,-0.50*np.pi,(425e3,100e3),False))
+tests.append(TwoLayerBaseTest(5.0, 0.50*np.pi,(425e3,-100e3),False))
+tests.append(TwoLayerBaseTest(5.0,0.0,(0.0,0.0),True))
+# tests.append(TwoLayerBaseTest(0.0,0.0,(0.0,0.0),5))
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:

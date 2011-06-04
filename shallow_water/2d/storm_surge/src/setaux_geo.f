@@ -12,6 +12,11 @@ c     # If icoordsys=2 then lat-lon coordinates on the sphere and
 c     #    aux(i,j,2) = area ratio (capacity function -- set mcapa = 2)
 c     #    aux(i,j,3) = length ratio for edge
 c
+c     # Storm surge related auxillary variables
+c     # aux(i,j,4:5) = wind speed in the x and y directions
+c     # aux(i,j,6) = pressure
+c     # aux(i,j,7:8) = Initial depths
+
 
       use multilayer_module
       use hurricane_module
