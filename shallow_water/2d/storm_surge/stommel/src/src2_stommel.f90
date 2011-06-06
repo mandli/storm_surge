@@ -161,12 +161,8 @@ subroutine src2(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
             do i=1,mx
                 do j=1,my
                     if (q(i,j,1) / rho(1) > drytolerance) then
-                        wind_speed = sqrt(aux(i,j,4)**2 + aux(i,j,5)**2)
-                        if (wind_speed > wind_tolerance) then
-                            tau = wind_drag(wind_speed) * rho_air * wind_speed
-                            q(i,j,2) = q(i,j,2) + dt * tau * aux(i,j,4)
-                            q(i,j,3) = q(i,j,3) + dt * tau * aux(i,j,5)
-                        endif
+                        q(i,j,2) = q(i,j,2) + dt * 0.2 / g
+                        q(i,j,3) = q(i,j,3) + dt * 0.2 / g
                     endif
                 enddo
             enddo
@@ -176,8 +172,8 @@ subroutine src2(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
     !                 if (abs(q(i,j,1)) > drytolerance) then
                         wind_speed = sqrt(aux(i,j,4)**2 + aux(i,j,5)**2)
                         tau = wind_drag(wind_speed) * rho_air * wind_speed
-                        q(i,j,2) = q(i,j,2) + dt * tau * aux(i,j,4) / rho(1)
-                        q(i,j,3) = q(i,j,3) + dt * tau * aux(i,j,5) / rho(1)
+                        q(i,j,2) = q(i,j,2) + dt * 0.2 / (g * rho(1))
+                        q(i,j,3) = q(i,j,3) + dt * 0.2 / (g * rho(1))
     !                 endif
                 enddo
             enddo
