@@ -35,6 +35,9 @@ module hurricane_module
     double precision :: rho_air
     double precision, private :: A,B,Pn,Pc
     
+    double precision, allocatable :: time(:),position(:,:)
+    double precision, allocatable :: max_wind(:),min_pressure(:)
+    
     ! Coriolis location for beta-plane approximation
     !  should be read in but not implemented that way yet
     double precision :: theta_0
@@ -65,6 +68,7 @@ contains
         
         ! Locals
         integer :: ios,i
+        character*150 :: hurricane_track_file_path
         
         ! Open file
         if (present(data_file)) then
@@ -75,16 +79,20 @@ contains
         if ( ios /= 0 ) stop "Error opening file data_file"
         
         ! Read in parameters
+        ! Forcing terms
         read(13,*) wind_forcing
-        read(13,*) wind_type
+        read(13,*) pressure_forcing
+        read(13,*)
+        
+        ! Source term algorithm parameters
+        read(13,*) wind_tolerance
+        read(13,*) pressure_tolerance
+        read(13,*)
+        
+        ! AMR parameters
         read(13,*) max_wind_nest
         allocate(wind_refine(max_wind_nest))
         read(13,*) (wind_refine(i),i=1,max_wind_nest)
-        read(13,*) wind_tolerance
-        read(13,*)
-        read(13,*) pressure_forcing
-        read(13,*) pressure_tolerance
-        read(13,*)
         read(13,*) max_speed_nest
         allocate(speed_refine(max_speed_nest))
         read(13,*) (speed_refine(i),i=1,max_speed_nest)
@@ -93,21 +101,81 @@ contains
         allocate(R_refine(max_R_nest))
         read(13,*) (R_refine(i),i=1,max_R_nest)
         read(13,*)
+        
+        ! Physics
         read(13,*) rho_air
-        read(13,*) ramp_up_time
-        read(13,*) hurricane_velocity
-        read(13,*) R_eye_init
-        read(13,*) A
-        read(13,*) B
-        read(13,*) Pn
-        read(13,*) Pc
-        read(13,*)
         read(13,*) theta_0
         theta_0 = theta_0 * pi / 180d0
+        read(13,*)
+        
+        ! Wind 
+        read(13,*) wind_type
+        ! Read in hurricane track data from file
+        if (wind_type == 0) then
+            read(13,*) hurricane_track_file_path
+            call read_hurricane_track_file(hurricane_track_file_path)
+        ! Idealized hurricane
+        else if (wind_type == 1) then
+            read(13,*) ramp_up_time
+            read(13,*) hurricane_velocity
+            read(13,*) R_eye_init
+            read(13,*) A
+            read(13,*) B
+            read(13,*) Pn
+            read(13,*) Pc
+        ! Stommel wind field
+        else if (wind_type == 2) then
+            read(13,*) A
+        else
+            print *,"Invalid wind type ",wind_type," provided."
+            stop
+        endif
         
         close(13)
 
     end subroutine set_hurricane_params
+    
+    !
+    !
+    subroutine read_hurricane_data_file(file_path)
+
+        implicit none
+    
+        ! Input
+        character*150, intent(in) :: file_path
+    
+        ! Local 
+        integer :: i,ios,num_points
+        integer, parameter :: log_unit = 42
+        integer, parameter :: data_unit = 43
+        character*50 :: line_format
+    
+        ! Line format
+        line_format = "(5d16.8)"
+    
+        ! Open log file
+        open(unit=log_unit, file='./fort.hurricane', iostat=ios, status="unknown", action="write")
+        if ( ios /= 0 ) stop "Error opening file ./fort.hurricane"
+    
+        ! Open hurricane data file
+        open(unit=data_unit, file=file_path, iostat=ios, status="old", action="read")
+        if ( ios /= 0 ) then
+            print *, "Error opening file ", file_path
+            stop
+        endif
+    
+        ! Read header
+        read(data_unit,'(i3)') num_points
+    
+        ! Allocate arrays
+        allocate(time(num_points),position(num_points,2))
+        allocate(max_wind(num_points),min_pressure(num_points))
+    
+        do i=1,num_points
+            read(data_unit,*) time(i),position(i,1),position(i,2),max_wind(i),min_pressure(i)
+        enddo
+    
+    end subroutine read_hurricane_data_file
 
     ! ========================================================================
     !   subroutine hurricane_wind(mbc,mx,my,xlower,ylower,dx,dy,R_eye,wind)
@@ -136,7 +204,7 @@ contains
     ! ========================================================================
     subroutine hurricane_wind(maxmx,maxmy,mbc,mx,my,xlower,ylower,dx,dy,t,wind)
 
-        use geoclaw_module, only: icoriolis,icoordsys
+        use geoclaw_module, only: icoriolis,icoordsys,pi
 
         implicit none
 
@@ -149,7 +217,7 @@ contains
     
         ! Local variables
         integer :: i,j
-        double precision :: x,y,C,r,w,R_eye(2),f
+        double precision :: x,y,C,r,w,R_eye(2),f,L
         
         ! If wind forcing is turned off, then set the aux array to zeros
         if (.not.wind_forcing) then
@@ -187,13 +255,15 @@ contains
                     endif
                 enddo
             enddo
+        ! Stommel wind field
         else if (wind_type == 2) then
-            do i=1-mbc,mx+mbc
-                x = xlower + (i-0.5d0) * dx
-                R_eye = t * hurricane_velocity + R_eye_init
-                do j=1-mbc,my+mbc
-                    wind(i,j,1) = 10.d0 * exp(-((x-R_eye(1))/25d3)**2)
-                enddo
+            ! This corresponds to an effective wind stress of 0.2 in maximum
+            ! amplitude, the division by 1.2 is to account for the variable
+            ! wind speed coefficient
+            L = my*dy
+            do j=1-mbc,my+mbc
+                y = ylower + (j-0.5d0) * dy
+                wind(:,j,1) = -A * cos(pi*y/L)
             enddo
             wind(:,:,2) = 0.d0
         endif
@@ -320,7 +390,7 @@ contains
     ! ========================================================================
     double precision function coriolis(y)
     
-        use geoclaw_module, only: icoordsys,Rearth,pi
+        use geoclaw_module, only: icoordsys,Rearth,pi,icoriolis
     
         implicit none
         
@@ -332,19 +402,25 @@ contains
         
         ! Angular speed of earth = 2.d0*pi/(86400.d0) 
         double precision, parameter :: OMEGA = 7.2722052166430395d-05
-!         double precision, parameter :: OMEGA = 7.2722052166430395d-01 ! <= fake
-        
         
         ! Assume beta plane approximation and y is in meters
-        if (icoordsys == 1) then
-            theta = y / 111d3 * pi / 180d0 + theta_0
-            coriolis = 2.d0 * OMEGA * (sin(theta_0) + (theta - theta_0)     &
-                                                    * cos(theta_0))
-        else if (icoordsys == 2) then        
-            theta = pi*y/180.d0
-            coriolis = 2.d0 * OMEGA * sin(theta)
+        if (icoriolis == 1) then
+            if (icoordsys == 1) then
+                theta = y / 111d3 * pi / 180d0 + theta_0
+                coriolis = 2.d0 * OMEGA * (sin(theta_0) + (theta - theta_0)     &
+                                                        * cos(theta_0))
+            else if (icoordsys == 2) then        
+                theta = pi*y/180.d0
+                coriolis = 2.d0 * OMEGA * sin(theta)
+            else
+                print *,"Unknown coordinate system, unable to calculate coriolis."
+                coriolis = 0.d0
+            endif
+        ! Stommel problem coriolis
+        else if (icoriolis == 2) then
+            ! Seems to correlate with a theta_0 = 43.5 degrees latitude
+            coriolis = 1d-4 + 1d-11 * (y - 500.0d3)
         else
-            print *,"Unknown coordinate system, unable to calculate coriolis."
             coriolis = 0.d0
         endif
     end function coriolis
