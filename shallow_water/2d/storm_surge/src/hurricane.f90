@@ -137,7 +137,7 @@ contains
     
     !
     !
-    subroutine read_hurricane_data_file(file_path)
+    subroutine read_hurricane_track_file(file_path)
 
         implicit none
     
@@ -175,7 +175,7 @@ contains
             read(data_unit,*) time(i),position(i,1),position(i,2),max_wind(i),min_pressure(i)
         enddo
     
-    end subroutine read_hurricane_data_file
+    end subroutine read_hurricane_track_file
 
     ! ========================================================================
     !   subroutine hurricane_wind(mbc,mx,my,xlower,ylower,dx,dy,R_eye,wind)

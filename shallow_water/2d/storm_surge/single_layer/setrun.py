@@ -298,7 +298,7 @@ def setgeo(rundata):
     geodata.frictiondepth = 1e10
     
     geodata.icoriolis = 1
-    geodata.ifriction = 1
+    geodata.ifriction = 2
 
     # == settopo.data values ==
     geodata.topofiles = []

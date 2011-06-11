@@ -48,21 +48,39 @@ def setplot(plotdata):
     
     # ========================================================================
     #  Generic helper functions
-    # ========================================================================
-    def pcolor_afteraxes(current_data):
-        hurricane_afteraxes(current_data)
-        bathy_ref_lines(current_data)
-        # gauge_locations(current_data)
-        
-    def contour_afteraxes(current_data):
-        hurricane_afteraxes(current_data)
-        
+    # ========================================================================        
     def bathy_ref_lines(current_data):
         plt.hold(True)
         y = [amrdata.ylower,amrdata.yupper]
         for ref_line in ref_lines:
             plt.plot([ref_line,ref_line],y,'y--')
         plt.hold(False)
+        
+    def day_figure_title(current_data):
+        t = current_data.t
+        title = current_data.plotaxes.title
+        plt.title('%s at time t = %s days' % (title,str(t/(3600.0*24.0))))
+        
+    def m_to_km_labels(current_data=None):
+        plt.xlabel('km')
+        plt.ylabel('km')
+        locs,labels = plt.xticks()
+        labels = locs/1.e3
+        plt.xticks(locs,labels)
+        locs,labels = plt.yticks()
+        labels = locs/1.e3
+        plt.yticks(locs,labels)
+    
+    def pcolor_afteraxes(current_data):
+        day_figure_title(current_data)
+        m_to_km_labels()
+        bathy_ref_lines(current_data)
+        # gauge_locations(current_data)
+        
+    def contour_afteraxes(current_data):
+        day_figure_title(current_data)
+        m_to_km_labels()
+        bathy_ref_lines(current_data)
 
     # ========================================================================
     # Gauge functions
@@ -83,11 +101,11 @@ def setplot(plotdata):
         
     def gauge_afteraxes(current_data):
         # Change time to hours
-        plt.xlabel('t (hours)')
+        plt.xlabel('t (days)')
         plt.ylabel('m')
         locs,labels = plt.xticks()
         # import pdb; pdb.set_trace()
-        labels = np.trunc(locs/3600.0)
+        labels = np.trunc(locs/(24.0*3600.0))
         # locs = np.linspace(-12.0,40,52)
         # labels = range(-12,41)
         plt.xticks(locs,labels)
@@ -96,82 +114,6 @@ def setplot(plotdata):
         # t = current_data.t
         plt.hold(True)
         plt.plot([0,0],[0,40],'k-')
-        plt.hold(False)
-
-        
-    # ========================================================================
-    #  Hurricane related helper functions
-    # ========================================================================
-    # Hurricane eye location
-    def eye_location(cd):
-        t = cd.t
-        # Hurricane eye
-        x = t * hurricane_data.hurricane_velocity[0] + hurricane_data.R_eye_init[0]
-        y = t * hurricane_data.hurricane_velocity[1] + hurricane_data.R_eye_init[1]
-        return x,y
-        
-    def hour_figure_title(current_data):
-        t = current_data.t
-        title = current_data.plotaxes.title
-        plt.title('%s at time t = %s h' % (title,str(t/3600.0)))
-
-    def m_to_km_labels(current_data=None):
-        plt.xlabel('km')
-        plt.ylabel('km')
-        locs,labels = plt.xticks()
-        labels = locs/1.e3
-        plt.xticks(locs,labels)
-        locs,labels = plt.yticks()
-        labels = locs/1.e3
-        plt.yticks(locs,labels)
-        
-    def hurricane_afteraxes(current_data):
-        x,y = eye_location(current_data)
-        plt.hold(True)
-        plt.plot(x,y,'rD')
-        plt.hold(False)
-        
-        hour_figure_title(current_data)
-        m_to_km_labels()
-        # wind_contours(current_data) ?
-        
-        # plt.hold(True)
-        # pos = -80.0 * (23e3 / 180) + 500e3 - 5e3
-        # plt.plot([pos,pos],[-300e3,300e3],'b',[pos-5e3,pos-5e3],[-300e3,300e3],'y')
-        # plt.hold(False)
-        # wind_contours(current_data)
-        # bathy_ref_lines(current_data)
-        
-    def hurricane_wind(current_data):
-        if current_data.level == 1:
-            t = current_data.t
-            u = current_data.q[:,:,8]
-            v = current_data.q[:,:,9]
-            plt.hold(True)
-            Q = plt.quiver(current_data.x[::3,::3],current_data.y[::3,::3],
-                        u[::3,::3],v[::3,::3])
-            # plt.quiverkey(Q,0.5,0.5,50,r'$50 \frac{m}{s}$',labelpos='W',
-            #                 fontproperties={'weight':'bold'})
-            plt.hold(False)
-            
-    def wind_x(cd):
-        return cd.q[:,:,4]
-    def wind_y(cd):
-        return cd.q[:,:,5]
-    def wind_speed(cd):
-        return np.sqrt(wind_x(cd)**2 + wind_y(cd)**2)
-
-    def pressure(cd):
-        # The division by 100.0 is to convert from Pa to millibars
-        return cd.q[:,:,6] / 100.0
-        
-    def wind_contours(current_data):
-        plt.hold(True)
-        w = wind_speed(current_data)
-        max_w = np.max(np.max(w))
-        levels = [0.0,0.25*max_w,0.5*max_w,0.75*max_w,max_w*0.999]
-        C = plt.contour(current_data.x,current_data.y,w,levels)
-        plt.clabel(C,inline=1)
         plt.hold(False)
         
     # ========================================================================
@@ -232,6 +174,13 @@ def setplot(plotdata):
         label = r"%s m/s" % str(np.ceil(0.5*max_speed))
         plt.quiverkey(Q,0.15,0.95,0.5*max_speed,label,labelpos='W')
         plt.hold(False)
+            
+    def wind_x(cd):
+        return cd.q[:,:,4]
+    def wind_y(cd):
+        return cd.q[:,:,5]
+    def wind_speed(cd):
+        return np.sqrt(wind_x(cd)**2 + wind_y(cd)**2)
 
     # ========================================================================
     #  Profile functions
@@ -325,6 +274,35 @@ def setplot(plotdata):
             # plotitem.amr_contour_colors = ['r','k','b']  # color on each level
             # plotitem.amr_grid_bgcolor = ['#ffeeee', '#eeeeff', '#eeffee']
             
+
+    def add_x_velocity(plotaxes,plot_type='pcolor',bounds=None):
+        if plot_type == 'pcolor' or plot_type == 'imshow':
+            plotitem = plotaxes.new_plotitem(plot_type='2d_imshow')
+            plotitem.plot_var = water_u
+            if bounds is not None:
+                plotitem.imshow_cmin = bounds[0]
+                plotitem.imshow_cmax = bounds[1]
+            plotitem.add_colorbar = True
+            plotitem.imshow_cmap = plt.get_cmap('PiYG')
+            plotitem.amr_gridlines_show = [0,0,0]
+            plotitem.amr_gridedges_show = [1]
+        elif plot_type == 'contour':
+            pass
+    
+    def add_y_velocity(plotaxes,plot_type='pcolor',bounds=None):
+        if plot_type == 'pcolor' or plot_type == 'imshow':
+            plotitem = plotaxes.new_plotitem(plot_type='2d_imshow')
+            plotitem.plot_var = water_v
+            if bounds is not None:
+                plotitem.imshow_cmin = bounds[0]
+                plotitem.imshow_cmax = bounds[1]
+            plotitem.imshow_cmap = plt.get_cmap('PiYG')
+            plotitem.add_colorbar = True
+            plotitem.amr_gridlines_show = [0,0,0]
+            plotitem.amr_gridedges_show = [1]
+        elif plot_type == 'contour':
+            pass
+            
     def add_wind(plotaxes,bounds=None,plot_type='pcolor'):
         if plot_type == 'pcolor' or plot_type == 'imshow':
             plotitem = plotaxes.new_plotitem(plot_type='2d_imshow')
@@ -350,20 +328,6 @@ def setplot(plotdata):
             plotitem.amr_quiver_show = [0,0,1]
             plotitem.amr_quiver_key_show = [True,False,False]
             plotitem.amr_quiver_key_units = 'm/s'
-            
-    def add_pressure(plotaxes,bounds=None,plot_type='pcolor'):
-        if plot_type == 'pcolor' or plot_type == 'imshow':
-            plotitem = plotaxes.new_plotitem(plot_type='2d_imshow')
-            plotitem.plot_var = pressure
-            plotitem.imshow_cmap = plt.get_cmap('PuBu')
-            if bounds is not None:
-                plotitem.imshow_cmin = bounds[0]
-                plotitem.imshow_cmax = bounds[1]
-            plotitem.add_colorbar = True
-            plotitem.amr_gridlines_show = [0,0,0]
-            plotitem.amr_gridedges_show = [1]
-        elif plot_type == 'contour':
-            pass
             
     def add_vorticity(plotaxes,bounds=None,plot_type="pcolor"):
         if plot_type == 'pcolor' or plot_type == 'imshow':            
@@ -403,11 +367,11 @@ def setplot(plotdata):
     xlimits = [amrdata.xlower,amrdata.xupper]
     ylimits = [amrdata.ylower,amrdata.yupper]
     multilayer_data.eta = eta
-    surface_limits = [-0.5,0.5]
-    speed_limits = [0.0,0.1]
+    # surface_limits = [-0.15,0.15]
+    # speed_limits = [0.0,0.1]
+    surface_limits = None
+    speed_limits = None
     
-    wind_limits = [0,55]
-    pressure_limits = [954,1002]
     vorticity_limits = [-1.e-2,1.e-2]
     
     # ========================================================================
@@ -430,8 +394,8 @@ def setplot(plotdata):
     # ========================================================================
     #  Water Speed
     # ========================================================================
-    plotfigure = plotdata.new_plotfigure(name='speed', figno=1)
-    plotfigure.show = True
+    plotfigure = plotdata.new_plotfigure(name='speed', figno=100)
+    plotfigure.show = False
 
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes()
@@ -447,37 +411,51 @@ def setplot(plotdata):
     # Land
     add_land(plotaxes)
     
-    # ========================================================================
-    # Hurricane forcing
-    # ========================================================================
-    # Pressure field
-    plotfigure = plotdata.new_plotfigure(name='pressure', figno=2)
-    plotfigure.show = hurricane_data.pressure_src
-    
+    # X-Velocity
+    plotfigure = plotdata.new_plotfigure(name='velocity_x',figno=101)
+    plotfigure.show = True
+    plotfigure.kwargs = {'figsize':(14,4)}
+
+    # X Velocity
     plotaxes = plotfigure.new_plotaxes()
-    plotaxes.xlimits = [amrdata.xlower,amrdata.xupper]
-    plotaxes.ylimits = [amrdata.ylower,amrdata.yupper]
-    plotaxes.title = "Pressure Field"
-    plotaxes.afteraxes = hurricane_afteraxes
+    plotaxes.axescmd = 'subplot(121)'
+    plotaxes.title = 'X-Velocity'
     plotaxes.scaled = True
-    
-    add_pressure(plotaxes,bounds=pressure_limits)
+    plotaxes.xlimits = xlimits
+    plotaxes.ylimits = ylimits
+    plotaxes.afteraxes = pcolor_afteraxes
+
+    add_x_velocity(plotaxes,bounds=speed_limits)
     add_land(plotaxes)
     
-    # Wind field
-    plotfigure = plotdata.new_plotfigure(name='wind',figno=3)
-    plotfigure.show = hurricane_data.wind_src
+    # Y Velocity
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(122)'
+    plotaxes.title = 'Y-Velocity'
+    plotaxes.scaled = True
+    plotaxes.xlimits = xlimits
+    plotaxes.ylimits = ylimits
+    plotaxes.afteraxes = pcolor_afteraxes
+
+    add_y_velocity(plotaxes,bounds=speed_limits)
+    add_land(plotaxes)
+    
+    
+    # ========================================================================
+    #  Wind speed
+    # ========================================================================
+    plotfigure = plotdata.new_plotfigure(name='wind',figno=2)
+    plotfigure.show = True
     
     plotaxes = plotfigure.new_plotaxes()
-    plotaxes.xlimits = [amrdata.xlower,amrdata.xupper]
-    plotaxes.ylimits = [amrdata.ylower,amrdata.yupper]
-    plotaxes.title = "Wind Field"
-    plotaxes.afteraxes = hurricane_afteraxes
+    plotaxes.title = "Wind"
     plotaxes.scaled = True
+    plotaxes.xlimits = xlimits
+    plotaxes.ylimits = ylimits
+    plotaxes.afteraxes = pcolor_afteraxes
     
-    add_wind(plotaxes,bounds=wind_limits,plot_type='imshow')
-    # add_wind(plotaxes,bounds=wind_limits,plot_type='contour')
-    # add_wind(plotaxes,bounds=wind_limits,plot_type='quiver')
+    # Wind
+    add_wind(plotaxes)
     add_land(plotaxes)
 
     # ========================================================================
@@ -486,7 +464,7 @@ def setplot(plotdata):
     # Profile variables
             
     def profile_afteraxes(current_data):
-        hour_figure_title(current_data)
+        day_figure_title(current_data)
         loc,label = plt.xticks()
         label = loc/1.e3
         plt.xticks(loc,label)
@@ -540,28 +518,15 @@ def setplot(plotdata):
                 plt.xlabel('m/s')
             else:
                 plt.xlabel('m')
-                    
-    def bathy_ref_lines_profile(cd,limits):
-        plt.hold(True)
-        for line in ref_lines:
-            plt.plot([line,line],limits,'k--')
-        plt.hold(False)
-        
-    def eye_location_profile(cd):
-        x = cd.t * hurricane_data.hurricane_velocity[0] + hurricane_data.R_eye_init[0]
-        plt.hold(True)
-        plt.plot(x,0.0,'r+')
-        plt.hold(False)
         
     def profile_afteraxes(current_data):
-        hour_figure_title(current_data)
+        day_figure_title(current_data)
         labels_profile(current_data)
         # bathy_ref_lines_profile(current_data,surface_limits)
-        eye_location_profile(current_data)
     
     
     plotfigure = plotdata.new_plotfigure(name='profile', figno=4)
-    plotfigure.show = True
+    plotfigure.show = False
         
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.title = 'Profiles'
@@ -759,7 +724,7 @@ def setplot(plotdata):
     # ========================================================================
     plotfigure = plotdata.new_plotfigure(name='Surface & topo', figno=300, \
                     type='each_gauge')
-    plotfigure.show = True
+    plotfigure.show = False
     plotfigure.clf_each_gauge = True
 
     # Set up for axes in this figure:

@@ -136,7 +136,7 @@ contains
     ! ========================================================================
     subroutine hurricane_wind(maxmx,maxmy,mbc,mx,my,xlower,ylower,dx,dy,t,wind)
 
-        use geoclaw_module, only: icoriolis,icoordsys
+        use geoclaw_module, only: icoriolis,icoordsys,pi
 
         implicit none
 
@@ -149,7 +149,7 @@ contains
     
         ! Local variables
         integer :: i,j
-        double precision :: x,y,C,r,w,R_eye(2),f
+        double precision :: x,y,C,r,w,R_eye(2),f,L
         
         ! If wind forcing is turned off, then set the aux array to zeros
         if (.not.wind_forcing) then
@@ -157,12 +157,52 @@ contains
             return
         endif
         
-        ! No depedence on coriolis here
+        ! Initialize f in case we don't need it
         f = 0.d0
         
-        ! Stommel wind
         if (wind_type == 1) then
-            return 0.d0
+            ! Hurrican eye location
+            R_eye = t * hurricane_velocity + R_eye_init
+        
+            ! Parameter constant
+            C = 1d1**2 * A * B * (Pn-Pc) / rho_air
+            
+            ! Set the wind    
+            do j=1-mbc,my+mbc
+                y = ylower + (j-0.5d0) * dy - R_eye(2)
+                ! Coriolis term
+                if (icoriolis == 1) f = coriolis(y)
+                do i=1-mbc,mx+mbc
+                    x = xlower + (i-0.5d0) * dx - R_eye(1)
+                    r = sqrt(x**2+y**2) * 1d-3
+                
+                    if (abs(r) < 10d-6) then
+                        wind(i,j,:) = 0.d0
+                    else
+                        w = sqrt(C * exp(-A/r**B) / r**B + r**2 * f**2 / 4.0) &
+                                 - r * f / 2.d0
+                        r = r * 1d3
+                        wind(i,j,1) = -w * y / r
+                        wind(i,j,2) =  w * x / r
+                    endif
+                enddo
+            enddo
+        ! Stommel wind field
+        else if (wind_type == 2) then
+            ! This corresponds to an effective wind stress of 0.2 in maximum
+            ! amplitude, the division by 1.2 is to account for the variable
+            ! wind speed coefficient
+            L = my*dy
+            do j=1-mbc,my+mbc
+                y = ylower + (j-0.5d0) * dy
+                wind(:,j,1) = -A * cos(pi*y/L)
+            enddo
+            wind(:,:,2) = 0.d0
+        endif
+        
+        ! Ramp up
+        if (t < 0.d0) then
+            wind = wind * exp(-(t/(ramp_up_time*0.45d0))**2)
         endif
         
     end subroutine hurricane_wind
@@ -282,7 +322,7 @@ contains
     ! ========================================================================
     double precision function coriolis(y)
     
-        use geoclaw_module, only: icoordsys,Rearth,pi
+        use geoclaw_module, only: icoordsys,Rearth,pi,icoriolis
     
         implicit none
         
@@ -290,12 +330,29 @@ contains
         double precision, intent(in) :: y
         
         ! Locals
-        double precision, parameter :: f0 = 1d-4     ! Coriolis base
-        double precision, parameter :: beta = 1d-11  ! beta correction
-        double precision, parameter :: ym = 500d3    ! middle of domain
+        double precision :: theta
         
-        coriolis = f0 + beta * (y-y_m)
+        ! Angular speed of earth = 2.d0*pi/(86400.d0) 
+        double precision, parameter :: OMEGA = 7.2722052166430395d-05
+!         double precision, parameter :: OMEGA = 7.2722052166430395d-01 ! <= fake
         
+        
+        ! Assume beta plane approximation and y is in meters
+        if (icoriolis == 1) then
+            if (icoordsys == 1) then
+                theta = y / 111d3 * pi / 180d0 + theta_0
+                coriolis = 2.d0 * OMEGA * (sin(theta_0) + (theta - theta_0)     &
+                                                        * cos(theta_0))
+            else if (icoordsys == 2) then        
+                theta = pi*y/180.d0
+                coriolis = 2.d0 * OMEGA * sin(theta)
+            else
+                print *,"Unknown coordinate system, unable to calculate coriolis."
+                coriolis = 0.d0
+            endif
+        else if (icoriolis == 2) then
+            coriolis = 1d-4 + 1d-11 * (y - 500.0d3)
+        endif
     end function coriolis
     
 end module hurricane_module

@@ -54,14 +54,16 @@ class SingleLayerBaseTest(test_runs.TestML2D):
 
 tests = []
 
-# Single Layer Tests
-tests.append(SingleLayerBaseTest(5.0,0.0,(0.0,0.0),False))
-tests.append(SingleLayerBaseTest(5.0,0.25*np.pi,(200e3,-100e3),False))
-tests.append(SingleLayerBaseTest(5.0,-0.25*np.pi,(200e3,100e3),False))
-tests.append(SingleLayerBaseTest(5.0,-0.50*np.pi,(425e3,100e3),False))
-tests.append(SingleLayerBaseTest(5.0, 0.50*np.pi,(425e3,-100e3),False))
-tests.append(SingleLayerBaseTest(5.0,0.0,(0.0,0.0),True))
-# tests.append(SingleLayerBaseTest(0.0,0.0,(0.0,0.0),5))
+# Angle Tests
+# tests.append(SingleLayerBaseTest(5.0,0.0,(0.0,0.0),False))
+# tests.append(SingleLayerBaseTest(5.0,0.25*np.pi,(200e3,-100e3),False))
+# tests.append(SingleLayerBaseTest(5.0,-0.25*np.pi,(200e3,100e3),False))
+# tests.append(SingleLayerBaseTest(5.0,-0.50*np.pi,(425e3,100e3),False))
+# tests.append(SingleLayerBaseTest(5.0, 0.50*np.pi,(425e3,-100e3),False))
+
+# Speed Tests
+for speed in [5.0,10.0,15.0,20.0,30.0]:
+    tests.append(SingleLayerBaseTest(speed,0.0,(0.0,0.0),True))
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:

@@ -16,7 +16,7 @@ subroutine src2(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
     
     ! Locals
     integer :: i,j
-    double precision :: yc
+    double precision :: yc,yupper
     ! Friction
     double precision :: h(2),g,coeff,tol,speed,D
     ! Wind and pressure
@@ -43,10 +43,11 @@ subroutine src2(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
         D = coeff
         do i=1,mx
             do j=1,my
-                h(1) = q(i,j,1) / rho(1)
                 if (layers > 1) then
+                    h(1) = q(i,j,1) / rho(1)
                     h(2) = q(i,j,4) / rho(2)
                 else
+                    h(1) = q(i,j,1)
                     h(2) = 0.d0
                 endif
                 
@@ -114,22 +115,21 @@ subroutine src2(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
     ! ----------------------------------------------------------------
 
     ! coriolis--------------------------------------------------------
-    if (icoriolis == 1) then
+    if (icoriolis > 0) then
         do j=1,my
             yc = ylower + (j-.5d0)*dy
-            ! Beta plane approximation
-            if (icoordsys == 1) then
-                ! Convert from meters to radians
-                fdt = coriolis(yc) * dt
-!                 theta = yc / 111e3  * pi / 180d0 + THETA_0
-!                 fdt = 2.d0 * OMEGA * (sin(THETA_0) + (theta - THETA_0)  &
-!                                         * cos(THETA_0)) * dt
-            ! Correct coriolis value
-            else if (icoordsys == 2) then
-                fdt = coriolis(yc) * dt
-!                 theta = pi*yc/180.d0
-!                 fdt = 2.d0 * OMEGA * sin(theta) * dt
-            endif
+!             ! Beta plane approximation
+!             if (icoordsys == 1) then
+!                 ! Convert from meters to radians
+! !                 theta = yc / 111e3  * pi / 180d0 + THETA_0
+! !                 fdt = 2.d0 * OMEGA * (sin(THETA_0) + (theta - THETA_0)  &
+! !                                         * cos(THETA_0)) * dt
+!             ! Correct coriolis value
+!             else if (icoordsys == 2) then
+! !                 theta = pi*yc/180.d0
+! !                 fdt = 2.d0 * OMEGA * sin(theta) * dt
+!             endif
+            fdt = coriolis(yc) * dt
             do i=1,mx
                 !dq/dt = 2w*sin(latitude)*[0 1 ; -1 0] q = Aq
                 !e^Adt = [a11 a12; a21 a22] + I
@@ -161,8 +161,12 @@ subroutine src2(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
             do i=1,mx
                 do j=1,my
                     if (q(i,j,1) / rho(1) > drytolerance) then
-                        q(i,j,2) = q(i,j,2) + dt * 0.2 / g
-                        q(i,j,3) = q(i,j,3) + dt * 0.2 / g
+                        wind_speed = sqrt(aux(i,j,4)**2 + aux(i,j,5)**2)
+                        if (wind_speed > wind_tolerance) then
+                            tau = wind_drag(wind_speed) * rho_air * wind_speed
+                            q(i,j,2) = q(i,j,2) + dt * tau * aux(i,j,4)
+                            q(i,j,3) = q(i,j,3) + dt * tau * aux(i,j,5)
+                        endif
                     endif
                 enddo
             enddo
@@ -172,8 +176,8 @@ subroutine src2(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
     !                 if (abs(q(i,j,1)) > drytolerance) then
                         wind_speed = sqrt(aux(i,j,4)**2 + aux(i,j,5)**2)
                         tau = wind_drag(wind_speed) * rho_air * wind_speed
-                        q(i,j,2) = q(i,j,2) + dt * 0.2 / (g * rho(1))
-                        q(i,j,3) = q(i,j,3) + dt * 0.2 / (g * rho(1))
+                        q(i,j,2) = q(i,j,2) + dt * tau * aux(i,j,4) / rho(1)
+                        q(i,j,3) = q(i,j,3) + dt * tau * aux(i,j,5) / rho(1)
     !                 endif
                 enddo
             enddo

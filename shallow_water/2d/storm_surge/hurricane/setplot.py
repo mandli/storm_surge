@@ -611,7 +611,9 @@ def setplot(plotdata):
     
     # Axis limits
     top_surface_range = 1.0
-    bottom_surface_range = 5.0
+    bottom_surface_range = 10.0
+    max_speed_top = 2.0
+    max_speed_bottom = 0.05
     
     xlimits = [amrdata.xlower,amrdata.xupper]
     xlimits_zoomed = xlimits
@@ -621,9 +623,9 @@ def setplot(plotdata):
     # top_surface_limits = None
     internal_surface_limits = [eta[1]-bottom_surface_range,eta[1]+bottom_surface_range]
     # internal_surface_limits = None
-    top_speed_limits = [0.0,2.0]
+    top_speed_limits = [0.0,max_speed_top]
     # top_speed_limits = None
-    internal_speed_limits = [0.0,0.02]
+    internal_speed_limits = [0.0,max_speed_bottom]
     # internal_speed_limits = None
     
     top_depth_limits = [0.0,eta[0]-eta[1]]
@@ -1176,8 +1178,8 @@ def setplot(plotdata):
 
     plotdata.printfigs = True                # print figures
     plotdata.print_format = 'png'            # file format
-    # plotdata.print_framenos = 'all'          # list of frames to print
-    plotdata.print_framenos = [48,88,128,168]
+    plotdata.print_framenos = 'all'          # list of frames to print
+    # plotdata.print_framenos = [48,88,128,168]
     plotdata.print_fignos = 'all'            # list of figures to print
     plotdata.html = True                    # create html files of plots?
     plotdata.latex = False                   # create latex file of plots?

@@ -3,7 +3,8 @@
 #
 
 # Path to storm surge specific source
-HURRICANE_SRC = ../src
+HURRICANE_SRC = ../../src
+STOMMEL_SRC = ../src
 
 # Adjust these variables if desired:
 # ----------------------------------
@@ -41,14 +42,14 @@ endif
 # ---------------------------------
 CLAW_SOURCES = \
 	$(HURRICANE_SRC)/multilayer_module.f90 \
-    $(HURRICANE_SRC)/hurricane.f90 \
+    $(STOMMEL_SRC)/stommel.f90 \
 	./qinit_stommel.f90 \
 	$(HURRICANE_SRC)/setprob.f90 \
 	$(HURRICANE_SRC)/b4step2_geo.f \
 	$(HURRICANE_SRC)/valout_geo.f \
 	$(HURRICANE_SRC)/setaux_geo.f \
 	./flag2refine_sl.f \
-	$(HURRICANE_SRC)/src2_geo.f90 \
+	$(STOMMEL_SRC)/src2_stommel.f90 \
 	$(HURRICANE_SRC)/src1d_geo.f90 \
 	$(HURRICANE_SRC)/tick.f
 

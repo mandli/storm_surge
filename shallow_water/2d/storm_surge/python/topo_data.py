@@ -15,62 +15,68 @@ import pyclaw.geotools.topotools as tt
 
 # ============================================================================
 #  Profiles
-# ============================================================================
-# Parameters
-data = Data('./amr2ez.data')
-dx = abs(data.xupper-data.xlower) / (data.mx)
-dy = abs(data.yupper-data.ylower) / (data.my)
-d = min(dx,dy)
-mx = int((data.xupper-data.xlower) / d) + 8
-my = int((data.yupper-data.ylower) / d) + 8
+def generate_profiles():
+    # Parameters
+    data = Data('./amr2ez.data')
+    dx = abs(data.xupper-data.xlower) / (data.mx)
+    dy = abs(data.yupper-data.ylower) / (data.my)
+    d = min(dx,dy)
+    mx = int((data.xupper-data.xlower) / d) + 8
+    my = int((data.yupper-data.ylower) / d) + 8
 
-xlower = data.xlower-d*4.0
-ylower = data.ylower-d*4.0
-xupper = data.xupper+d*4.0
-yupper = data.yupper+d*4.0
+    xlower = data.xlower-d*4.0
+    ylower = data.ylower-d*4.0
+    xupper = data.xupper+d*4.0
+    yupper = data.yupper+d*4.0
 
-beach_slope = 0.05
-basin_depth = -3000
-shelf_depth = -200
-x0 = 350e3
-x1 = 450e3
-x2 = 480e3
+    beach_slope = 0.05
+    basin_depth = -3000
+    shelf_depth = -200
+    x0 = 350e3
+    x1 = 450e3
+    x2 = 480e3
 
-shelf_slope = (basin_depth - shelf_depth) / (x0 - x1)
-y_end = beach_slope * (xupper - 477e3) - 100.0
+    shelf_slope = (basin_depth - shelf_depth) / (x0 - x1)
+    y_end = beach_slope * (xupper - 477e3) - 100.0
+    
+    # Stommel problem depth
+    stommel_depth = -1000
+    
+    # Points and depths for gulf shelf
+    #  1: (25°39'2.85"N, 86° 7'24.77"W)   --   -3228 m   --   0.0 m
+    #  2: (27°53'44.74"N, 88° 0'34.02"W)   --   -2438 m   --   312.17313 km
+    #  3: (28°59'47.14"N, 88°59'53.19"W)   --   -188 m   --    467.59957 km
+    #  4: ( 29° 4'6.90"N,  89° 4'11.39"W)    --   0 m   --   479.10557 km
 
-# Points and depths for gulf shelf
-#  1: (25°39'2.85"N, 86° 7'24.77"W)   --   -3228 m   --   0.0 m
-#  2: (27°53'44.74"N, 88° 0'34.02"W)   --   -2438 m   --   312.17313 km
-#  3: (28°59'47.14"N, 88°59'53.19"W)   --   -188 m   --    467.59957 km
-#  4: ( 29° 4'6.90"N,  89° 4'11.39"W)    --   0 m   --   479.10557 km
-
-bathy_profiles = {"simple_shelf":[(xlower,basin_depth),
-                                  (x0,basin_depth),
-                                  (x1,shelf_depth),
-                                  (x2,shelf_depth),
-                                  (xupper,beach_slope*(xupper-x2)+shelf_depth)],
-                  "shallow_shelf":[(477e3,-100),
-                                   (xupper,y_end)],
-                  "gulf_shelf":[(0.0,-3228),
-                                (312e3,-2438),
-                                (467e3,-188),
-                                (479e3,0.0),
-                                (579e3,300.0)],
-                  "step_shelf1":[(0.0,-2000.0),
-                                 (470e3-0.001,-2000.0),
-                                 (470e3,-200.0),
-                                 (500e3,-200.0)],
-                  "shelf":[(0.0,-3000),
-                           (400e3,-2700),
-                           (450e3,-100),
-                           (500e3,-100)],
-                  "continental_shelf":[(2000e3,-7000),
-                                       (2800e3,-3000),
-                                       (2900e3,-100),
-                                       (3000e3,0.0)],
-                  "flat":[(0.0,-2000),
-                          (400e3,-2000)]}
+    bathy_profiles = {"simple_shelf":[(xlower,basin_depth),
+                                      (x0,basin_depth),
+                                      (x1,shelf_depth),
+                                      (x2,shelf_depth),
+                                      (xupper,beach_slope*(xupper-x2)+shelf_depth)],
+                      "shallow_shelf":[(477e3,-100),
+                                       (xupper,y_end)],
+                      "gulf_shelf":[(0.0,-3228),
+                                    (312e3,-2438),
+                                    (467e3,-188),
+                                    (479e3,0.0),
+                                    (579e3,300.0)],
+                      "step_shelf1":[(0.0,-2000.0),
+                                     (470e3-0.001,-2000.0),
+                                     (470e3,-200.0),
+                                     (500e3,-200.0)],
+                      "shelf":[(0.0,-3000),
+                               (400e3,-2700),
+                               (450e3,-100),
+                               (500e3,-100)],
+                      "continental_shelf":[(2000e3,-7000),
+                                           (2800e3,-3000),
+                                           (2900e3,-100),
+                                           (3000e3,0.0)],
+                      "flat":[(0.0,-1000),
+                              (1000e3,-1000)],
+                      "flat_stommel":[(0.0,stommel_depth),
+                                      (1000e3,stommel_depth)]}
+    return bathy_profiles
 
 # ============================================================================
 #  Topography generation functions 
@@ -87,7 +93,20 @@ def write_topo_file(topo_file,topo_type=1,factor=4,bathy_type=None,plot=False,
                 return
     print "Creating topography file ",topo_file
     
+    # Look at parameters of domain
+    data = Data('./amr2ez.data')
+    dx = abs(data.xupper-data.xlower) / (data.mx)
+    dy = abs(data.yupper-data.ylower) / (data.my)
+    d = min(dx,dy)
+    mx = int((data.xupper-data.xlower) / d) + 8
+    my = int((data.yupper-data.ylower) / d) + 8
 
+    xlower = data.xlower-d*4.0
+    ylower = data.ylower-d*4.0
+    xupper = data.xupper+d*4.0
+    yupper = data.yupper+d*4.0
+    
+    bathy_profiles = generate_profiles()
 
     # Pick out bathymetry profile
     if bathy_type is None:
@@ -118,14 +137,27 @@ def write_topo_file(topo_file,topo_type=1,factor=4,bathy_type=None,plot=False,
 
     # Plotting
     if plot:
-        plot_profiles(profiles={bathy_type:bathy_profile},factor=factor)
+        plot_profiles({bathy_type:bathy_profile},factor=factor)
         
         
-def plot_profiles(profiles=bathy_profiles,topo_type=1,factor=4,verbose=True):
+def plot_profiles(profiles,topo_type=1,factor=4,verbose=True):
     
     import tempfile
     import shutil
     import matplotlib.pyplot as plt
+    
+    # Assume an amr2ez.data file is present
+    data = Data('./amr2ez.data')
+    dx = abs(data.xupper-data.xlower) / (data.mx)
+    dy = abs(data.yupper-data.ylower) / (data.my)
+    d = min(dx,dy)
+    mx = int((data.xupper-data.xlower) / d) + 8
+    my = int((data.yupper-data.ylower) / d) + 8
+
+    xlower = data.xlower-d*4.0
+    ylower = data.ylower-d*4.0
+    xupper = data.xupper+d*4.0
+    yupper = data.yupper+d*4.0
     
     bathy_path = tempfile.mkdtemp()
     grid_size = int(np.ceil(np.sqrt(len(profiles.keys()))))
@@ -177,5 +209,5 @@ def plot_profiles(profiles=bathy_profiles,topo_type=1,factor=4,verbose=True):
 
         
 if __name__ == "__main__":
-    plot_profiles()
+    plot_profiles(generate_profiles())
     # write_bathy_profile('./topo.data',None,plot=True,force=True)

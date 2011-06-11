@@ -19,8 +19,7 @@ import hurricane_data
 import topo_data
 
 # Ramp up constants
-RAMP_UP_TIME = 12*60**2
-# RAMP_UP_TIME = 0
+RAMP_UP_TIME = 0
 
 #------------------------------
 def setrun(claw_pkg='geoclaw'):
@@ -68,20 +67,16 @@ def setrun(claw_pkg='geoclaw'):
     clawdata.ndim = ndim
     
     # Lower and upper edge of computational domain:
-    # Level 1 - 800e3/(80*2) = 5 km
-    # Level 2 - 800e3/(80*2*4) = 1.25 km
-    # Level 3 - 800e3/(80*2*4*2) = 625 m
-    clawdata.xlower = -200e3
-    clawdata.xupper = 500e3
+    clawdata.xlower = 0.0
+    clawdata.xupper = 1000e3
     
-    clawdata.ylower = -300e3
-    clawdata.yupper = 300e3
+    clawdata.ylower = 0.0
+    clawdata.yupper = 1000e3
         
 
     # Number of grid cells:
-    levels = 3
-    clawdata.mx = 70*levels
-    clawdata.my = 60*levels
+    clawdata.mx = 100
+    clawdata.my = 100
 
     # ---------------
     # Size of system:
@@ -102,7 +97,7 @@ def setrun(claw_pkg='geoclaw'):
     # Initial time:
     # -------------
 
-    clawdata.t0 = -RAMP_UP_TIME
+    clawdata.t0 = 0.0
     
     
     # -------------
@@ -115,13 +110,13 @@ def setrun(claw_pkg='geoclaw'):
 
     clawdata.outstyle = 1
     # Number of hours to simulate
-    num_hours = 40
+    num_days = 100
     # Output interval per hour, 1 = every hour, 0.5 = every half hour, etc...
-    step = 0.25
+    step = 1.0
     
     if clawdata.outstyle==1:
-        clawdata.nout = int(num_hours / step) + int(np.ceil(RAMP_UP_TIME / (step*60**2)))
-        clawdata.tfinal = num_hours * 60.0**2
+        clawdata.nout = int(num_days / step)
+        clawdata.tfinal = num_days * 24.0 * 60.0**2
         # # Output nout frames at equally spaced times up to tfinal:
         # clawdata.nout = 48
         # clawdata.tfinal = 60.0**2*clawdata.nout
@@ -221,11 +216,11 @@ def setrun(claw_pkg='geoclaw'):
     #   2 => periodic (must specify this at both boundaries)
     #   3 => solid wall for systems where q(2) is normal velocity
     
-    clawdata.mthbc_xlower = 1
-    clawdata.mthbc_xupper = 1
+    clawdata.mthbc_xlower = 3
+    clawdata.mthbc_xupper = 3
     
-    clawdata.mthbc_ylower = 1
-    clawdata.mthbc_yupper = 1
+    clawdata.mthbc_ylower = 3
+    clawdata.mthbc_yupper = 3
     
 
     # ---------------
@@ -289,7 +284,7 @@ def setgeo(rundata):
 
     # == setgeo.data values ==
     geodata.igravity = 1
-    geodata.gravity = 9.81
+    geodata.gravity = 10.0
     geodata.icoordsys = 1
 
     # == settsunami.data values ==
@@ -300,13 +295,14 @@ def setgeo(rundata):
     # geodata.wavetolerance = 1e0
     geodata.depthdeep = 2.e2
     geodata.maxleveldeep = 4
-    geodata.coeffmanning = 0.025
+    # geodata.coeffmanning = 0.025
+    geodata.coeffmanning = 1e-6
     # geodata.frictiondepth = 20.0
-    geodata.frictiondepth = 10e10
+    geodata.frictiondepth = 1e10
 
     # Source terms
     geodata.ifriction = 1
-    geodata.icoriolis = 1
+    geodata.icoriolis = 2
 
     # == settopo.data values ==
     geodata.topofiles = []
@@ -337,13 +333,13 @@ def setgeo(rundata):
     # == setgauges.data values ==
     geodata.gauges = []
     # for gauges append lines of the form  [gaugeno, x, y, tstart, tend]
-    N_gauges = 21
-    for i in xrange(0,N_gauges):
-        x = 480e3 # This is right where the shelf turns into beach, 100 meter of water
-        # x = -80.0 * (23e3 / 180) + 500e3 - 5e3  # 1 km off shore
-        y = 550e3 / (N_gauges + 1) * (i+1) + -275e3       # Start 25 km inside domain
-        geodata.gauges.append([i, x, y, 0.0, 1e10])
-        print "Gauge %s: (%s,%s)" % (i,x/1e3,y/1e3)
+    # N_gauges = 21
+    # for i in xrange(0,N_gauges):
+    #     x = 480e3 # This is right where the shelf turns into beach, 100 meter of water
+    #     # x = -80.0 * (23e3 / 180) + 500e3 - 5e3  # 1 km off shore
+    #     y = 550e3 / (N_gauges + 1) * (i+1) + -275e3       # Start 25 km inside domain
+    #     geodata.gauges.append([i, x, y, 0.0, 1e10])
+    #     print "Gauge %s: (%s,%s)" % (i,x/1e3,y/1e3)
     # for i in xrange(N_gauges,2*N_gauges):
     #     x = 482e3+100.0 # Dry state line + 500 meters
     #     # x = -80.0 * (23e3 / 180) + 500e3 - 5e3  # 1 km off shore
@@ -368,7 +364,7 @@ def set_hurricane_data(ramp_up_time=RAMP_UP_TIME):
     
     # Source terms to be included
     data.wind_src = True
-    data.pressure_src = True
+    data.pressure_src = False
     
     # Momentum based refinement
     data.momentum_refinement = False
@@ -378,7 +374,7 @@ def set_hurricane_data(ramp_up_time=RAMP_UP_TIME):
     # data.speed_nest = [0.25,0.5,1.0,2.0,3.0,4.0]
     
     # Hurricane location based refinement
-    data.max_R_nest = 3
+    data.max_R_nest = 0
     data.R_refine = [60.0e3,40e3,30e3]
         
     # Wind strength based refinement
@@ -393,24 +389,10 @@ def set_hurricane_data(ramp_up_time=RAMP_UP_TIME):
     data.ramp_up_t = RAMP_UP_TIME
     
     # Type of wind field
-    data.wind_type = 1
+    data.wind_type = 2
     data.wind_tolerance = 1e-6
-    
-    # Path of hurricane, speed in m/s
-    velocity = 5.0
-    angle = 0.0 * np.pi
-    # Speeds of hurricane
-    data.hurricane_velocity = (velocity * np.cos(angle),velocity * np.sin(angle)) 
-    # Initial position of hurricane eye at t = 0
-    data.R_eye_init = (0.0,0.0) 
-
-    # Hurricane parameters
-    # These match Hurricane Tracy
-    data.A = 23.0           # Hurricane model fit parameter
-    data.B = 1.5     
-    data.Pn = 1005.0        # Nominal atmospheric pressure     
-    data.Pc = 950.0         # Pressure in the eye of the hurricane    
-    data.rho_air = 1.15     # Density of air
+    data.A = 0.2 / 1.2
+    data.rho_air = 1.0
     
     return data
     
@@ -421,7 +403,7 @@ def set_multilayer_data():
     data.layers = 2
     # data.rho = [1.0,0.0]
     data.rho = [1025.0,0.0]
-    data.rho[1] = data.rho[0] / 0.90
+    data.rho[1] = data.rho[0] / 0.98
     
     # Algorithm Parameters
     data.eigen_method = 2
@@ -431,30 +413,11 @@ def set_multilayer_data():
     data.dry_limit = True
     
     # Initial conditions
-    # data.eta = [0.0,-5000.0]
-    data.eta = [0.0,-300.0]
+    data.eta = [0.0,-200.0]
     data.init_type = 0
-    data.init_location = [300e3,0.0]
-    data.wave_family = 4
-    data.epsilon = 1.0
-    data.sigma = 25e3
     
     # Bathy settings
     data.bathy_type = 0
-    
-    # Bathy settings for type == 1
-    data.bathy_location = 450e3
-    data.bathy_left = -4000
-    data.bathy_right = -200
-    
-    # Bathy settings for type == 2 and 3   
-    data.x0 = 350e3
-    data.x1 = 450e3
-    data.x2 = 480e3
-    data.basin_depth = -3000.0
-    data.shelf_depth = -100.0
-    data.beach_slope = 0.05
-    data.h = 100.0
     
     return data
     
@@ -477,6 +440,6 @@ if __name__ == '__main__':
     multilayer_data.write()    
     
     # Write out topography and qinit data files if needed
-    topo_data.write_topo_file('./topo.data',bathy_type='simple_shelf',
-                                        plot=False,force=True)
+    topo_data.write_topo_file('./topo.data',topo_type=1,factor=4,
+                                bathy_type='flat_stommel',plot=False,force=True)
     

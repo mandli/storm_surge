@@ -421,7 +421,7 @@ def set_multilayer_data():
     data.layers = 2
     # data.rho = [1.0,0.0]
     data.rho = [1025.0,0.0]
-    data.rho[1] = data.rho[0] / 0.90
+    data.rho[1] = data.rho[0] / 0.95
     
     # Algorithm Parameters
     data.eigen_method = 2

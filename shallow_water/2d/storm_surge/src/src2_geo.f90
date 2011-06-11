@@ -38,71 +38,99 @@ subroutine src2(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
     tol = 1.d-30  ! To prevent divide by zero in gamma
 
     ! friction--------------------------------------------------------
-    if (coeffmanning > 0.d0 .and. ifriction == 1) then
-        do i=1,mx
-            do j=1,my
-                ! Check to see which layer we are doing this on
-                h(1) = q(i,j,1) / rho(1)
-                if (layers > 1) then
-                    h(2) = q(i,j,4) / rho(2)
-                else
-                    h(2) = 0.d0
-                endif
+    if (coeffmanning > 0.d0 .and. ifriction > 1) then
+        ! Constant coefficient of friction
+        if (ifriction == 1) then
+            D = coeff
+            do i=1,mx
+                do j=1,my
+                    ! Check to see which layer we are doing this on
+                    if (layers > 1) then
+                        h(1) = q(i,j,1) / rho(1)
+                        h(2) = q(i,j,4) / rho(2)
+                    else
+                        h(1) = q(i,j,1)
+                        h(2) = 0.d0
+                    endif
             
-                ! Bottom layer wet, apply to bottom layer
-                if (h(2) > tol) then
-                    ! Extract speed of bottom layer
-                    speed = sqrt(q(i,j,5)**2 + q(i,j,6)**2) / q(i,j,4)
-                                    
-                    ! Calculate drag coefficient 
-                    D = coeff**2 * g * sum(h)**(-7/3) * speed
+                    ! Bottom layer wet, apply to bottom layer
+                    if (h(2) > tol) then
+                        ! Exactly integrate and modify bottom layer momentum
+                        q(i,j,5) = q(i,j,5) * exp(-D*dt)
+                        q(i,j,6) = q(i,j,6) * exp(-D*dt)
                 
-                    ! Exactly integrate and modify bottom layer momentum
-                    q(i,j,5) = q(i,j,5) * exp(-D*dt)
-                    q(i,j,6) = q(i,j,6) * exp(-D*dt)
+                    ! Only top layer wet, apply to top layer only
+                    else if (h(1) > tol) then
+                        ! Set bottom layer momentum to zero
+                        if (layers > 1) q(i,j,5:6) = 0.d0
+                        
+                        ! Exactly integrate and modify top layer momentum
+                        q(i,j,2) = q(i,j,2) * exp(-D*dt)
+                        q(i,j,3) = q(i,j,3) * exp(-D*dt)
                 
-                ! Only top layer wet, apply to top layer only
-                else if (h(1) > tol) then
-                    ! Set bottom layer momentum to zero
-                    if (layers > 1) q(i,j,5:6) = 0.d0
-                
-                    ! Extract speed of top layer
-                    speed = sqrt(q(i,j,2)**2 + q(i,j,3)**2) / q(i,j,1)
-                
-                    ! Calculate drag coefficient
-                    D = coeff**2 * g * sum(h)**(-7/3) * speed
-                
-                    ! Exactly integrate and modify top layer momentum
-                    q(i,j,2) = q(i,j,2) * exp(-D*dt)
-                    q(i,j,3) = q(i,j,3) * exp(-D*dt)
-                
-                ! Neither layer wet, set momentum to zero
-                else
-                    q(i,j,2:3) = 0.d0
-                    if (layers > 1) q(i,j,5:6) = 0.d0
-                endif
+                    ! Neither layer wet, set momentum to zero
+                    else
+                        q(i,j,2:3) = 0.d0
+                        if (layers > 1) q(i,j,5:6) = 0.d0
+                    endif
+                enddo
             enddo
-        enddo
+        ! Manning-N friction
+        else if (ifriction == 2) then
+            do i=1,mx
+                do j=1,my
+                    ! Check to see which layer we are doing this on
+                    if (layers > 1) then
+                        h(1) = q(i,j,1) / rho(1)
+                        h(2) = q(i,j,4) / rho(2)
+                    else
+                        h(1) = q(i,j,1)
+                        h(2) = 0.d0
+                    endif
+            
+                    ! Bottom layer wet, apply to bottom layer
+                    if (h(2) > tol) then
+                        ! Extract speed of bottom layer
+                        speed = sqrt(q(i,j,5)**2 + q(i,j,6)**2) / q(i,j,4)
+                                    
+                        ! Calculate drag coefficient 
+                        D = coeff**2 * g * sum(h)**(-7/3) * speed
+                
+                        ! Exactly integrate and modify bottom layer momentum
+                        q(i,j,5) = q(i,j,5) * exp(-D*dt)
+                        q(i,j,6) = q(i,j,6) * exp(-D*dt)
+                
+                    ! Only top layer wet, apply to top layer only
+                    else if (h(1) > tol) then
+                        ! Set bottom layer momentum to zero
+                        if (layers > 1) q(i,j,5:6) = 0.d0
+                
+                        ! Extract speed of top layer
+                        speed = sqrt(q(i,j,2)**2 + q(i,j,3)**2) / q(i,j,1)
+                
+                        ! Calculate drag coefficient
+                        D = coeff**2 * g * sum(h)**(-7/3) * speed
+                        
+                        ! Exactly integrate and modify top layer momentum
+                        q(i,j,2) = q(i,j,2) * exp(-D*dt)
+                        q(i,j,3) = q(i,j,3) * exp(-D*dt)
+                
+                    ! Neither layer wet, set momentum to zero
+                    else
+                        q(i,j,2:3) = 0.d0
+                        if (layers > 1) q(i,j,5:6) = 0.d0
+                    endif
+                enddo
+            enddo
+        endif
     endif
     ! ----------------------------------------------------------------
 
     ! coriolis--------------------------------------------------------
-    if (icoriolis == 1) then
+    if (icoriolis > 0) then
         do j=1,my
             yc = ylower + (j-.5d0)*dy
-            ! Beta plane approximation
-            if (icoordsys == 1) then
-                ! Convert from meters to radians
-                fdt = coriolis(yc) * dt
-!                 theta = yc / 111e3  * pi / 180d0 + THETA_0
-!                 fdt = 2.d0 * OMEGA * (sin(THETA_0) + (theta - THETA_0)  &
-!                                         * cos(THETA_0)) * dt
-            ! Correct coriolis value
-            else if (icoordsys == 2) then
-                fdt = coriolis(yc) * dt
-!                 theta = pi*yc/180.d0
-!                 fdt = 2.d0 * OMEGA * sin(theta) * dt
-            endif
+            fdt = coriolis(yc) * dt
             do i=1,mx
                 !dq/dt = 2w*sin(latitude)*[0 1 ; -1 0] q = Aq
                 !e^Adt = [a11 a12; a21 a22] + I

@@ -80,9 +80,9 @@ class HurricaneData(data.Data):
         data.data_write(out_file,self,None)
         
         data.data_write(out_file,self,"wind_type",'(Type of wind field)')
-        if wind_type == 0:
+        if self.wind_type == 0:
             data.data_write(out_file,self,"hurricane_track_file",'(Data file containing track)')
-        elif wind_type == 1:
+        elif self.wind_type == 1:
             data.data_write(out_file,self,"ramp_up_t","(Ramp up time for wind field)")
             data.data_write(out_file,self,'hurricane_velocity',"(Speed of moving wind field)")
             data.data_write(out_file,self,'R_eye_init',"(Initial position of wind field)")
@@ -90,7 +90,7 @@ class HurricaneData(data.Data):
             data.data_write(out_file,self,'B')     
             data.data_write(out_file,self,'Pn',"(Nominal atmospheric pressure)")
             data.data_write(out_file,self,'Pc',"(Pressure in the eye of the hurricane)")
-        elif wind_type == 2:
+        elif self.wind_type == 2:
             data.data_write(out_file,self,'A',"(Wind maximum amplitude)")
 
         data.data_write(out_file,self,None)

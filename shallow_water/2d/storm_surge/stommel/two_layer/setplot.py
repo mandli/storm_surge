@@ -51,14 +51,14 @@ def setplot(plotdata):
     # ========================================================================
     def pcolor_afteraxes(current_data):
         eye_location(current_data)
-        hour_figure_title(current_data)
+        days_figure_title(current_data)
         m_to_km_labels()
         # wind_contours(current_data)
         bathy_ref_lines(current_data)
         
     def contour_afteraxes(current_data):
         eye_location(current_data)
-        hour_figure_title(current_data)
+        days_figure_title(current_data)
         # gauge_locations(current_data)
         m_to_km_labels()
         # plt.hold(True)
@@ -69,7 +69,7 @@ def setplot(plotdata):
         # bathy_ref_lines(current_data)
         
     def profile_afteraxes(current_data):
-        hour_figure_title(current_data)
+        days_figure_title(current_data)
         loc,label = plt.xticks()
         label = loc/1.e3
         plt.xticks(loc,label)
@@ -138,15 +138,15 @@ def setplot(plotdata):
         plt.hold(False)
         
     def profile_afteraxes(current_data):
-        hour_figure_title(current_data)
+        days_figure_title(current_data)
         labels_profile(current_data)
         bathy_ref_lines_profile(current_data,[-2000,0])
         eye_location_profile(current_data)
         
-    def hour_figure_title(current_data):
+    def days_figure_title(current_data):
         t = current_data.t
         title = current_data.plotaxes.title
-        plt.title('%s at time t = %3.2f h' % (title,t/3600.0))
+        plt.title('%s at time t = %3.1f days' % (title,t/(3600.0*24.0)))
 
     def m_to_km_labels(current_data=None):
         plt.xlabel('km')
@@ -209,7 +209,7 @@ def setplot(plotdata):
         
     def hurricane_afteraxes(current_data):
         eye_location(current_data)
-        hour_figure_title(current_data)
+        days_figure_title(current_data)
         m_to_km_labels()
         
     def bathy_ref_lines(current_data,direction="x"):
@@ -617,14 +617,14 @@ def setplot(plotdata):
     xlimits_zoomed = xlimits
     ylimits = [amrdata.ylower,amrdata.yupper]
     eta = [multilayer_data.eta[0],multilayer_data.eta[1]]
-    top_surface_limits = [eta[0]-top_surface_range,eta[0]+top_surface_range]
-    # top_surface_limits = None
-    internal_surface_limits = [eta[1]-bottom_surface_range,eta[1]+bottom_surface_range]
-    # internal_surface_limits = None
-    top_speed_limits = [0.0,2.0]
-    # top_speed_limits = None
-    internal_speed_limits = [0.0,0.02]
-    # internal_speed_limits = None
+    # top_surface_limits = [eta[0]-top_surface_range,eta[0]+top_surface_range]
+    top_surface_limits = None
+    # internal_surface_limits = [eta[1]-bottom_surface_range,eta[1]+bottom_surface_range]
+    internal_surface_limits = None
+    # top_speed_limits = [0.0,2.0]
+    top_speed_limits = None
+    # internal_speed_limits = [0.0,0.02]
+    internal_speed_limits = None
     
     top_depth_limits = [0.0,eta[0]-eta[1]]
     bottom_depth_limits = [0.0,2800]
@@ -633,7 +633,8 @@ def setplot(plotdata):
     internal_zoomed = [eta[1] - 5.0,eta[1] + 5.0]
     bathy_limits = [-3000,100]
     
-    wind_limits = [0,55]
+    # wind_limits = [0,55]
+    wind_limits = None
     pressure_limits = [954,1002]
     vorticity_limits = [-1.e-2,1.e-2]
     
@@ -885,7 +886,7 @@ def setplot(plotdata):
     
     def top_afteraxes(cd):
         remove_labels_profile(cd)
-        hour_figure_title(cd)
+        days_figure_title(cd)
         eye_location_profile(cd)
         bathy_ref_lines_profile(cd,top_surface_limits)
         
@@ -908,7 +909,7 @@ def setplot(plotdata):
     
     def internal_surf_afteraxes(cd):
         labels_profile(cd)
-        hour_figure_title(cd)
+        days_figure_title(cd)
         eye_location_profile(cd)
         bathy_ref_lines_profile(cd,internal_surface_limits)
     
@@ -1176,10 +1177,9 @@ def setplot(plotdata):
 
     plotdata.printfigs = True                # print figures
     plotdata.print_format = 'png'            # file format
-    # plotdata.print_framenos = 'all'          # list of frames to print
-    plotdata.print_framenos = [48,88,128,168]
+    plotdata.print_framenos = 'all'          # list of frames to print
     plotdata.print_fignos = 'all'            # list of figures to print
-    plotdata.html = True                    # create html files of plots?
+    plotdata.html = True                     # create html files of plots?
     plotdata.latex = False                   # create latex file of plots?
     plotdata.latex_figsperline = 2           # layout of plots
     plotdata.latex_framesperline = 1         # layout of plots
