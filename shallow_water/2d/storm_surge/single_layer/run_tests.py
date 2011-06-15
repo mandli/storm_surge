@@ -23,25 +23,28 @@ import test_runs
 
 class SingleLayerBaseTest(test_runs.TestML2D):
     
-    def __init__(self,velocity=5.0,angle=0.0,eye=(0.0,0.0),coriolis=False,mxnest=5,topo_type=1):
+    def __init__(self,velocity=5.0,angle=0.0,eye=(0.0,0.0),mxnest=5,
+                    mx=70,my=60,bathy_type='simple_shelf',friction=True):
         super(SingleLayerBaseTest,self).__init__()
         
         self.type = "storm_surge"
         self.name = "single_layer"
         self.setplot = "setplot"
         
+        self.run_data.clawdata.mx = mx
+        self.run_data.clawdata.my = my
         self.run_data.clawdata.mxnest = -mxnest
         self.hurricane_data.hurricane_velocity = (velocity * np.cos(angle),velocity * np.sin(angle))
         self.hurricane_data.R_eye_init = eye
 
-        self.prefix = "sl_angle%s_m%s_v%s_c" % (int(angle * 180.0 / np.pi),mxnest,int(velocity))
-
-        if coriolis:
-            self.hurricane_data.icoriolis = 1
-            self.prefix = self.prefix + 'T'
+        if friction:
+            self.run_data.geodata.ifriction = 2
         else:
-            self.hurricane_data.icoriolis = 0
-            self.prefix = self.prefix + 'F'
+            self.run_data.geodata.ifriction = 0
+
+        self.bathy_type = bathy_type
+
+        self.prefix = "sl_angle%s_m%s_v%s_dof%s" % (int(angle * 180.0 / np.pi),mxnest,int(velocity),int(mx*my))
         
 
     
@@ -49,7 +52,7 @@ class SingleLayerBaseTest(test_runs.TestML2D):
         super(SingleLayerBaseTest,self).write_data_objects()
         
         import topo_data
-        topo_data.write_topo_file('topo.data',bathy_type='simple_shelf',
+        topo_data.write_topo_file('topo.data',bathy_type=self.bathy_type,
                                         plot=False,force=False)
 
 tests = []
@@ -60,6 +63,12 @@ tests = []
 # tests.append(SingleLayerBaseTest(5.0,-0.25*np.pi,(200e3,100e3),False))
 # tests.append(SingleLayerBaseTest(5.0,-0.50*np.pi,(425e3,100e3),False))
 # tests.append(SingleLayerBaseTest(5.0, 0.50*np.pi,(425e3,-100e3),False))
+
+# Comparison test case
+levels = 3
+tests.append(SingleLayerBaseTest(velocity=5.0,angle=0.0,eye=(0.0,0.0),mxnest=1,
+                    mx=70*levels,my=60*levels,bathy_type='shallow_shelf',
+                    friction=False))
 
 # Speed Tests
 for speed in [5.0,10.0,15.0,20.0,30.0]:

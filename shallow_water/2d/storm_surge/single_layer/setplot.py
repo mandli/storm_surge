@@ -403,8 +403,10 @@ def setplot(plotdata):
     xlimits = [amrdata.xlower,amrdata.xupper]
     ylimits = [amrdata.ylower,amrdata.yupper]
     multilayer_data.eta = eta
-    surface_limits = [-0.5,0.5]
-    speed_limits = [0.0,0.1]
+    surface_limits = [-2.5,2.5]
+    speed_limits = [0.0,6.0]
+    # surface_limits = [-0.5,0.5]
+    # speed_limits = [0.0,0.1]
     
     wind_limits = [0,55]
     pressure_limits = [954,1002]
