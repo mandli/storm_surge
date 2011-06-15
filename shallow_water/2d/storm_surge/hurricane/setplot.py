@@ -799,6 +799,65 @@ def setplot(plotdata):
     add_land(plotaxes)
     
     # ========================================================================
+    #  Combined columar plot
+    # ========================================================================
+    plotfigure = plotdata.new_plotfigure(name='CombinedPlot', figno=231)
+    plotfigure.show = True
+    plotfigure.kwargs = {'figsize':(14,10)}
+    
+    # Top surface
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.title = 'Top Surface'
+    plotaxes.axescmd = 'subplot(2,2,1)'
+    plotaxes.scaled = True
+    plotaxes.xlimits = xlimits
+    plotaxes.ylimits = ylimits
+    plotaxes.afteraxes = pcolor_afteraxes
+    add_surface_elevation(plotaxes,1,bounds=top_surface_limits)
+    # add_surface_elevation(plotaxes,1,bounds=[-0.06,0.06])
+    # add_surface_elevation(plotaxes,1)
+    add_land(plotaxes)
+    
+    # Bottom surface
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.title = 'Internal Surface'
+    plotaxes.axescmd = 'subplot(2,2,3)'
+    plotaxes.scaled = True
+    plotaxes.xlimits = xlimits
+    plotaxes.ylimits = ylimits
+    plotaxes.afteraxes = pcolor_afteraxes
+    # add_surface_elevation(plotaxes,2,bounds=[-300-0.5,-300+0.5])
+    add_surface_elevation(plotaxes,2,bounds=internal_surface_limits)
+    # add_surface_elevation(plotaxes,2)
+    add_land(plotaxes)
+    
+    # Top layer speed
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.title = 'Currents - Top Layer'
+    plotaxes.scaled = True
+    plotaxes.xlimits = xlimits
+    plotaxes.ylimits = ylimits
+    plotaxes.axescmd = 'subplot(2,2,2)'
+    plotaxes.afteraxes = pcolor_afteraxes
+    # add_speed(plotaxes,1,bounds=[0.00,0.2])
+    add_speed(plotaxes,1,bounds=top_speed_limits)
+    # add_speed(plotaxes,1)
+    add_land(plotaxes)
+    
+    # Bottom layer speed
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.title = 'Currents - Bottom Layer'
+    plotaxes.scaled = True
+    plotaxes.xlimits = xlimits
+    plotaxes.ylimits = ylimits
+    plotaxes.axescmd = 'subplot(2,2,4)'
+    plotaxes.afteraxes = pcolor_afteraxes
+    # add_speed(plotaxes,2,bounds=[0.0,1e-10])
+    add_speed(plotaxes,2,bounds=internal_speed_limits)
+    # add_speed(plotaxes,2)
+    add_land(plotaxes)
+    
+    # ========================================================================
     # Hurricane forcing
     # ========================================================================
     # Single figure forcing

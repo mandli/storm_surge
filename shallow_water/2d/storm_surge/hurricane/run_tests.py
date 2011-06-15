@@ -71,8 +71,8 @@ tests = []
 # R test
 for r in [0.95,0.96,0.97,0.98,0.99]:
     tests.append(TwoLayerBaseTest(r,5.0,0.0,(0.0,0.0),True))
-    tests.append(TwoLayerBaseTest(r,5.0, 0.50*np.pi,(425e3,-100e3),True))
-    tests.append(TwoLayerBaseTest(r,5.0,0.25*np.pi,(200e3,-100e3),False))
+    # tests.append(TwoLayerBaseTest(r,5.0, 0.50*np.pi,(425e3,-100e3),True))
+    # tests.append(TwoLayerBaseTest(r,5.0,0.25*np.pi,(200e3,-100e3),True))
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
