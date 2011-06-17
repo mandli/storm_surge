@@ -56,6 +56,7 @@ CLAW_SOURCES = \
 	$(MULTILAYER_SRC)/tick.f \
 	$(MULTILAYER_SRC)/stepgrid_geo.f \
 	$(MULTILAYER_SRC)/flux2fw.f \
+    $(MULTILAYER_SRC)/dumpgauge_ml.f
 	
 	
 	# $(MULTILAYER_SRC)/filval_ml.f \
@@ -78,6 +79,7 @@ DATA_FILES = hurricane.data topo.data multilayer.data
   # $(GEOLIB)/setaux_geo.f \
   # $(GEOLIB)/b4step2_geo.f \
   # $(GEOLIB)/stepgrid_geo.f \
+  # $(GEOLIB)/dumpgauge_geo.f \
 	
 CLAW_LIBSOURCES = \
   $(GEOLIB)/geoclaw_mod.f90 \
@@ -103,7 +105,6 @@ CLAW_LIBSOURCES = \
   $(GEOLIB)/setgauges_geo.f \
   $(GEOLIB)/setfixedgrids_geo.f \
   $(GEOLIB)/allowflag_geo.f  \
-  $(GEOLIB)/dumpgauge_geo.f \
   $(GEOLIB)/upbnd_geo.f  \
   $(GEOLIB)/setgrd_geo.f \
   $(GEOLIB)/gfixup_geo.f \
