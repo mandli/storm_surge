@@ -41,22 +41,20 @@ plt.legend( (exact,base,beta),  ('True f', 'Constant f', 'Beta-plane f'), loc=4)
 
 
 f = 2.0*omega*np.sin(theta_0 * np.pi/180)
-L = np.linspace(50e3,500e3,100)
+L = np.linspace(10e3,250e3,100)
 g = 9.81
 r = 0.98
 
 fig = plt.figure(2)
 ax = fig.add_subplot(111)
 rossby_plots = []
-rossby_labels = ['$U = 2$',"$U = \sqrt{g 100}$","$U = \sqrt{g 200}$","$U = \sqrt{g 2000}$","$U = \sqrt{g 3000}$","$U = \sqrt{g 4000}$"]
+velocities = [1.0,2.0,3.0,4.0,5.0]
+rossby_labels = []
 # Could also use gravity wave speed = np.sqrt(g*4000.0)
-for U in [2.0,np.sqrt(g*(1-r)*100.0),
-          np.sqrt(g*(1-r)*200.0),
-          np.sqrt(g*(1-r)*2000.0),
-          np.sqrt(g*(1-r)*3000.0),
-          np.sqrt(g*(1-r)*4000.0)]:
+for U in velocities:
     Ro = U/(L*f)
-    rossby_plots.append(ax.plot(L,Ro))
+    rossby_labels.append('$U = %s$' % U)
+    rossby_plots.append(ax.semilogx(L,Ro))
     print "Range(U = %s) = [%s,%s]" % (U,np.min(Ro),np.max(Ro))
 
 ax.set_title("Rossby Number")
@@ -65,6 +63,8 @@ ax.set_ylabel('Ro')
 locs,labels = plt.xticks()
 labels = locs/1e3
 plt.xticks(locs,labels)
+ax.set_xbound([10e3,250e3])
+ax.set_ybound([0.0,7.0])
 ax.legend(rossby_plots,rossby_labels)
 plt.savefig('rossby_numbers.pdf')
 
