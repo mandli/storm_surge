@@ -34,17 +34,19 @@ class SingleLayerBaseTest(test_runs.TestML2D):
         self.run_data.clawdata.mx = mx
         self.run_data.clawdata.my = my
         self.run_data.clawdata.mxnest = -mxnest
-        self.hurricane_data.hurricane_velocity = (velocity * np.cos(angle),velocity * np.sin(angle))
-        self.hurricane_data.R_eye_init = eye
-
+        
         if friction:
             self.run_data.geodata.ifriction = 2
         else:
             self.run_data.geodata.ifriction = 0
+        
+        self.hurricane_data.hurricane_velocity = (velocity * np.cos(angle),velocity * np.sin(angle))
+        self.hurricane_data.R_eye_init = eye
 
         self.bathy_type = bathy_type
 
-        self.prefix = "sl_angle%s_m%s_v%s_dof%s" % (int(angle * 180.0 / np.pi),mxnest,int(velocity),int(mx*my))
+        self.prefix = "sl_angle%s_v%s_m%s_dof%s" % (
+            int(angle * 180.0 / np.pi),int(velocity),mxnest,int(mx*my))
         
 
     
@@ -58,21 +60,21 @@ class SingleLayerBaseTest(test_runs.TestML2D):
 tests = []
 
 # Angle Tests
-# tests.append(SingleLayerBaseTest(5.0,0.0,(0.0,0.0),False))
-# tests.append(SingleLayerBaseTest(5.0,0.25*np.pi,(200e3,-100e3),False))
-# tests.append(SingleLayerBaseTest(5.0,-0.25*np.pi,(200e3,100e3),False))
-# tests.append(SingleLayerBaseTest(5.0,-0.50*np.pi,(425e3,100e3),False))
-# tests.append(SingleLayerBaseTest(5.0, 0.50*np.pi,(425e3,-100e3),False))
-
-# Comparison test case
-levels = 3
-tests.append(SingleLayerBaseTest(velocity=5.0,angle=0.0,eye=(0.0,0.0),mxnest=1,
-                    mx=70*levels,my=60*levels,bathy_type='shallow_shelf',
-                    friction=False))
+tests.append(SingleLayerBaseTest(velocity=5.0, angle= 0.00*np.pi, eye=(0.0,0.0)))
+tests.append(SingleLayerBaseTest(velocity=5.0, angle= 0.25*np.pi, eye=(200e3,-100e3)))
+tests.append(SingleLayerBaseTest(velocity=5.0, angle=-0.25*np.pi, eye=(200e3,100e3)))
+tests.append(SingleLayerBaseTest(velocity=5.0, angle= 0.50*np.pi, eye=(425e3,-100e3)))
+tests.append(SingleLayerBaseTest(velocity=5.0, angle=-0.50*np.pi, eye=(425e3,100e3)))
 
 # Speed Tests
 for speed in [5.0,10.0,15.0,20.0,30.0]:
     tests.append(SingleLayerBaseTest(speed,0.0,(0.0,0.0),True))
+    
+# Comparison test case
+# levels = 3
+# tests.append(SingleLayerBaseTest(velocity=5.0,angle=0.0,eye=(0.0,0.0),mxnest=1,
+#                     mx=70*levels,my=60*levels,bathy_type='flat100',
+#                     friction=False))
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
