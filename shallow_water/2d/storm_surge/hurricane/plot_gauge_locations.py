@@ -33,7 +33,7 @@ ax = fig.add_subplot(111)
 # Plot gauges
 for i in xrange(num_gauges):
     ax.plot(gauges[i,0],gauges[i,1],'ko',markersize=5)
-    ax.text(gauges[i,0]-30e3,gauges[i,1]-10e3,str(i).zfill(2),fontsize=15)
+    ax.text(gauges[i,0]-35e3,gauges[i,1]-10e3,str(i).zfill(2),fontsize=15)
 # Plot bathy locations
 for bathy_ref in [350e3,450e3,480e3]:
     ax.plot(bathy_ref*np.ones(y.shape),y,'k--')
@@ -49,4 +49,5 @@ ax.set_xlabel('km')
 ax.set_ylabel('km')
 plt.grid(True)
 
+plt.savefig("gauge_locations.pdf")
 plt.show()

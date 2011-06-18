@@ -23,56 +23,65 @@ import test_runs
 
 class TwoLayerBaseTest(test_runs.TestML2D):
     
-    def __init__(self,r=0.98,velocity=5.0,angle=0.0,eye=(0.0,0.0),coriolis=True,mxnest=1):
+    def __init__(self,rho_ratio=0.97,velocity=5.0,angle=0.0,eye=(0.0,0.0),mxnest=1,
+                    mx=70,my=60,bathy_type='simple_shelf',friction=True,eta=[0.0,-300.0]):
+                    
         super(TwoLayerBaseTest,self).__init__()
-        
-        # Create topography
         
         self.type = "storm_surge"
         self.name = "multi_layer"
         self.setplot = "setplot"
         
+        self.run_data.clawdata.mx = mx
+        self.run_data.clawdata.my = my
         self.run_data.clawdata.mxnest = -mxnest
+
+        if friction:
+            self.run_data.geodata.ifriction = 2
+        else:
+            self.run_data.geodata.ifriction = 0
+        
         self.hurricane_data.hurricane_velocity = (velocity * np.cos(angle),velocity * np.sin(angle))
         self.hurricane_data.R_eye_init = eye
         
-        self.rho = [1025.0,1025.0/r]
-            
-        self.prefix = "ml_angle%s_m%s_v%s_r%s_c" % (int(angle * 180.0 / np.pi),
-                                                    mxnest,int(velocity),int(r*100))
+        self.ml_data.rho = [1025.0,1025.0/rho_ratio]
+        self.ml_data.eta = eta
 
-        if coriolis:
-            self.hurricane_data.icoriolis = 1
-            self.prefix = self.prefix + 'T'
-        else:
-            self.hurricane_data.icoriolis = 0
-            self.prefix = self.prefix + 'F'
+        self.bathy_type = bathy_type
+
+        self.prefix = "ml_angle%s_v%s_m%s_r%s_dof%s" % (
+            int(angle * 180.0 / np.pi),int(velocity),mxnest,
+            int(rho_ratio*100),int(mx*my))
         
     def write_data_objects(self):
         super(TwoLayerBaseTest,self).write_data_objects()
         
         import topo_data
-        topo_data.write_topo_file('topo.data',bathy_type='simple_shelf',
+        topo_data.write_topo_file('topo.data',bathy_type=self.bathy_type,
                                         plot=False,force=False)
         
 tests = []
+factor = 3
 
 # Two Layer Tests
-# tests.append(TwoLayerBaseTest(5.0,0.0,(0.0,0.0),False))
-# tests.append(TwoLayerBaseTest(5.0,0.25*np.pi,(200e3,-100e3),False))
-# tests.append(TwoLayerBaseTest(5.0,-0.25*np.pi,(200e3,100e3),False))
-# tests.append(TwoLayerBaseTest(5.0,-0.50*np.pi,(425e3,100e3),False))
-# tests.append(TwoLayerBaseTest(5.0, 0.50*np.pi,(425e3,-100e3),False))
+tests.append(TwoLayerBaseTest(velocity=5.0, angle= 0.00*np.pi, eye=(0.0,0.0), mx=70*factor, my=60*factor))
+tests.append(TwoLayerBaseTest(velocity=5.0, angle= 0.25*np.pi, eye=(200e3,-100e3), mx=70*factor, my=60*factor))
+tests.append(TwoLayerBaseTest(velocity=5.0, angle=-0.25*np.pi, eye=(200e3,100e3), mx=70*factor, my=60*factor))
+tests.append(TwoLayerBaseTest(velocity=5.0, angle= 0.50*np.pi, eye=(425e3,-100e3), mx=70*factor, my=60*factor))
+tests.append(TwoLayerBaseTest(velocity=5.0, angle=-0.50*np.pi, eye=(425e3,100e3), mx=70*factor, my=60*factor))
 
-# Speed Tests
-# for speed in [5.0,10.0,15.0,20.0,30.0]:
-#     tests.append(TwoLayerBaseTest(speed,0.0,(0.0,0.0),True))
+Speed Tests
+for speed in [5.0,10.0,15.0,20.0,30.0]:
+    tests.append(TwoLayerBaseTest(velocity=speed, mx=70*factor, my=60*factor))
 
 # R test
-for r in [0.95,0.96,0.97,0.98,0.99]:
-    tests.append(TwoLayerBaseTest(r,5.0,0.0,(0.0,0.0),True))
-    # tests.append(TwoLayerBaseTest(r,5.0, 0.50*np.pi,(425e3,-100e3),True))
-    # tests.append(TwoLayerBaseTest(r,5.0,0.25*np.pi,(200e3,-100e3),True))
+# for r in [0.95,0.96,0.97,0.98,0.99]:
+#     tests.append(TwoLayerBaseTest(rho_ratio=r, mx=70*factor, my=60*factor))
+
+# Two layer version of shallow sea test
+# tests.append(TwoLayerBaseTest(velocity=5.0,angle=0.0,eye=(0.0,0.0),mxnest=1,
+#                     mx=70*factor,my=60*factor,bathy_type='flat1000',
+#                     friction=False,eta=[0.0,-100.0]))
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
