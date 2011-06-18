@@ -46,12 +46,12 @@ c     should fancier (limited) interp be done?
           jindex =  int(.5 + (ygauge(i)-ylow)/hy)
           if ((iindex < nghost .or. iindex > mitot-nghost) .or.
      &       (jindex < nghost .or. jindex > mjtot-nghost)) then
-             write(*,*)"ERROR in output of Gauge Data "
+             print *,"ERROR in output of Gauge Data ",i,iindex,jindex
           endif
           xcent = xlow + (iindex-.5)*hx
           ycent = ylow + (jindex-.5)*hy
-          xoff  = (xgauge(i)-xcent)/hx
-          yoff  = (ygauge(i)-ycent)/hy
+          xoff  = abs((xgauge(i)-xcent)/hx)
+          yoff  = abs((ygauge(i)-ycent)/hy)
 	      if (xoff < 0 .or. xoff > 1 .or. yoff < 0. .or. yoff > 1) then
 	          print *," BIG PROBLEM in DUMPGAUGE", i,xoff,yoff  
     	  endif
