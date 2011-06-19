@@ -291,7 +291,7 @@ def setgeo(rundata):
     # geodata.wavetolerance = 1e0
     geodata.depthdeep = 2.e2
     geodata.maxleveldeep = 4
-    geodata.ifriction = 1
+    geodata.ifriction = 2
     geodata.coeffmanning = 0.025
     geodata.frictiondepth = 20.0
 

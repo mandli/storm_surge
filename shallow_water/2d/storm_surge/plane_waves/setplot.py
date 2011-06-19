@@ -968,19 +968,18 @@ def setplot(plotdata):
 
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes()
-    # plotaxes.xlimits = [0.0,40.0*3600.0]
-    # plotaxes.ylimits = [0,150.0]
-    # plotaxes.ylimits = [-3.0, 3.0]
-    plotaxes.title = 'Surface'
+    plotaxes.xlimits = [0.0,40.0*3600.0]
+    plotaxes.ylimits = top_surface_limits
+    plotaxes.title = 'Top Surface'
 
     # Plot surface as blue curve:
     plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
-    plotitem.plot_var = eta1
-    plotitem.plotstyle = 'r-'
+    plotitem.plot_var = 6
+    plotitem.plotstyle = 'b-'
 
     # Plot topo as green curve:
     # plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
-    # plotitem.plot_var = gaugetopo
+    # plotitem.plot_var = geoplot.gaugetopo
     # plotitem.plotstyle = 'g+'
     
     #-----------------------------------------

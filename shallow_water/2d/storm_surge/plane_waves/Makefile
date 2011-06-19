@@ -54,7 +54,9 @@ CLAW_SOURCES = \
 	$(MULTILAYER_SRC)/rpn2_inundation_multilayer.f90 \
 	$(MULTILAYER_SRC)/rpt2_dry_multilayer.f90 \
 	$(MULTILAYER_SRC)/multilayer_eigen.f90 \
-	$(MULTILAYER_SRC)/filval_ml.f 
+	$(MULTILAYER_SRC)/tick.f \
+	$(MULTILAYER_SRC)/stepgrid_geo.f \
+    $(MULTILAYER_SRC)/dumpgauge_ml.f
 
 DATA_FILES = hurricane.data topo.data multilayer.data
 	
@@ -67,8 +69,8 @@ CLAW_LIBSOURCES = \
 	$(GEOLIB)/movetopo_geo.f \
 	$(GEOLIB)/cellgridintegrate_geo.f \
 	$(GEOLIB)/topointegral_geo.f \
+	$(GEOLIB)/filval_geo.f \
 	$(GEOLIB)/bilinearintegral_geo.f \
-	$(GEOLIB)/stepgrid_geo.f \
 	$(GEOLIB)/fgridinterp_geo.f \
 	$(GEOLIB)/fgridout_geo.f \
 	$(GEOLIB)/step2_geo.f \
@@ -83,13 +85,11 @@ CLAW_LIBSOURCES = \
 	$(GEOLIB)/setgauges_geo.f \
 	$(GEOLIB)/setfixedgrids_geo.f \
 	$(GEOLIB)/allowflag_geo.f  \
-	$(GEOLIB)/dumpgauge_geo.f \
 	$(GEOLIB)/upbnd_geo.f  \
 	$(GEOLIB)/setgrd_geo.f \
 	$(GEOLIB)/gfixup_geo.f \
 	$(GEOLIB)/ginit_geo.f \
 	$(GEOLIB)/getmaxspeed_geo.f \
-	$(CLAW_LIB)/tick.f \
 	$(CLAW_LIB)/prefilp.f \
 	$(CLAW_LIB)/quick_sort1.f \
 	$(CLAW_LIB)/advanc.f \
