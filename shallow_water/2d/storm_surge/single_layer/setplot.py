@@ -777,11 +777,6 @@ def setplot(plotdata):
     plotitem.plot_var = 3
     plotitem.plotstyle = 'r-'
 
-    # # Plot topo as green curve:
-    # plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
-    # plotitem.plot_var = gaugetopo
-    # plotitem.plotstyle = 'g+'
-
     #-----------------------------------------
     
     # Parameters used only when creating html and/or latex hardcopy
