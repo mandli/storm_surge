@@ -768,7 +768,7 @@ def setplot(plotdata):
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.xlimits = [0.0,40.0*3600.0]
     # plotaxes.ylimits = [0,150.0]
-    plotaxes.ylimits = [-3.0, 3.0]
+    plotaxes.ylimits = surface_limits
     plotaxes.title = 'Surface'
     plotaxes.afteraxes = gauge_afteraxes
 

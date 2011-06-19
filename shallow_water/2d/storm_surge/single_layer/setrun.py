@@ -331,7 +331,8 @@ def setgeo(rundata):
     # for gauges append lines of the form  [gaugeno, x, y, tstart, tend]
     N_gauges = 21
     for i in xrange(0,N_gauges):
-        x = -80.0 * (23e3 / 180) + 500e3 - 5e3  # 1 km off shore
+        x = 480e3 # This is right where the shelf turns into beach, 100 meter of water
+        # x = -80.0 * (23e3 / 180) + 500e3 - 5e3  # 1 km off shore
         y = 550e3 / (N_gauges + 1) * (i+1) + -275e3       # Start 25 km inside domain
         geodata.gauges.append([i, x, y, 0.0, 1e10])
         print "Gauge %s: (%s,%s)" % (i,x/1e3,y/1e3)
