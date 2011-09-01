@@ -1,2 +1,9 @@
 README for Storm Surge Code
-===========================
+
+This repository contains the code needed to solve the multi-layer shallow
+water equations in 1d and 2d using Clawpack and GeoClaw.  The code does not 
+include versions of Clawpack and GeoClaw and these packages must be downloaded
+separately.  The best option is to clone the Clawpack-4.x repository from 
+github.com (as of September 1, 2011).  
+
+Kyle Mandli 2011-9-1
