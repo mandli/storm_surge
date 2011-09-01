@@ -195,7 +195,7 @@ for method in [1,2,3,4]:
 # This shelf jump case does not work with newer Riemann solver! ????
 mx = 2000
 for method in [1,2,3,4]:
-    # tests.append(ShelfBaseTest(mx=mx,eigen_method=method))
+    tests.append(ShelfBaseTest(mx=mx,eigen_method=method))
     tests.append(RealShelfBaseTest(mx=mx,eigen_method=method))
 
 
