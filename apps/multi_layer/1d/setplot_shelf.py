@@ -236,10 +236,16 @@ def setplot(plotdata):
     plotfigure = plotdata.new_plotfigure(name='bathy',figno=102)
     plotfigure.show = True
     
+    def bathy_axes(cd):
+        km_labels(cd)
+        mpl.xticks([-300e3,-200e3,-100e3,-30e3],[300,200,100,30],fontsize=15)
+        mpl.xlabel('km')
+    
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.title = 'Bathymetry'
     plotaxes.xlimits = xlimits
     plotaxes.ylimtis = [-4100,100]
+    plotaxes.afteraxes = bathy_axes
     # if prob_data.bathy_type == 1:
     #     plotaxes.ylimits = [prob_data.bathy_right,10.0 ]
     #     plotaxes.xlimits = xlimits

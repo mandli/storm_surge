@@ -65,12 +65,14 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             ! Check for dry states in this layer
             if (h_l(j) < dry_tolerance) then
                 dry_state_l(j) = .true.
+                h_l(j) = 0.d0
                 u_l(j) = 0.d0
             else
                 u_l(j) = qr(i-1,layer_index+2) / qr(i-1,layer_index+1)
             endif
             if (h_r(j) < dry_tolerance) then
                 dry_state_r(j) = .true.
+                h_r(j) = 0.d0
                 u_r(j) = 0.d0
             else
                 u_r(j) = ql(i,layer_index+2) / ql(i,layer_index+1)
@@ -113,7 +115,9 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         if (dry_state_r(2).and.(.not.dry_state_l(2)).and.(h_l(2) + b_l > b_r)) then
             rare = 1
             print *,"Right inundation problem"
-            if (inundation_method == 1) then
+            if (inundation_method == 0) then
+                stop "Inundation not allowed."
+            else if (inundation_method == 1) then
                 ! Linear eigensystem
                 inundation_height = [h_r(1),0.d0]
                 call linear_eigen(h_l,inundation_height,u_l,u_r,b_l,b_r,0,lambda,eig_vec)
@@ -162,7 +166,9 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             rare = 2
             print *,"Left inundation problem"
             ! Inundation problem eigen
-            if (inundation_method == 1) then
+            if (inundation_method == 0) then
+                stop "Inundation not allowed."
+            else if (inundation_method == 1) then
                 ! Linear eigensystem
                 inundation_height = [h_l(1),dry_tolerance]
                 call linear_eigen(inundation_height,h_r,u_l,u_r,b_l,b_r,0,lambda,eig_vec)

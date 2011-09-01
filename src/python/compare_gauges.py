@@ -49,13 +49,14 @@ def read_setgauges(path):
         
     return gauges
 
-def plot_gauges(gauge_numbers,paths,plot_vars=[[0]],titles=["q(0)"],kwargs={}):
+def plot_gauges(gauge_numbers,paths,plot_vars=[[0]],titles=["q(0)"],
+                tlim=None,kwargs={}):
     
     if isinstance(paths,basestring):
         paths = [paths]
     
     figures = {}
-    styles = ['b','r','k','g']
+    styles = ['b','r.','kx','g+']
     
     # Read in each file
     for (k,path) in enumerate(paths):
@@ -87,7 +88,9 @@ def plot_gauges(gauge_numbers,paths,plot_vars=[[0]],titles=["q(0)"],kwargs={}):
                 figures[num] = plt.figure(**kwargs)
                 for j in xrange(len(plot_vars[k])):
                     figures[num].add_subplot(1,len(plot_vars[k]),j+1)
-                    figures[num].axes[j].set_title(titles[j])
+                    title = "%s - Gauge %s" % (titles[j],num) 
+                    figures[num].axes[j].set_title(title)
+                    figures[num].axes[j].set_xlim(tlim)
                 
             # Plot the gauge on the appropriate figure
             for (j,m) in enumerate(plot_vars[k]):

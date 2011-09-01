@@ -57,7 +57,7 @@ def convert_hurricane_track_data(data_path,out_path='hurricane_track.data',plot=
 
     # Write out data in (time,lat,long,wind,pressure)
     for (i,t) in enumerate(time):
-        out_file.write("%s %s %s %s %s\n" % (t,latitude[i],longitude[i],wind[i],pressure[i]))
+        out_file.write("%s %s %s %s %s\n" % (t,longitude[i],latitude[i],wind[i],pressure[i]))
         
     out_file.close()
     
@@ -74,6 +74,15 @@ def convert_hurricane_track_data(data_path,out_path='hurricane_track.data',plot=
         ax2.plot(time,pressure,'r')
     
         plt.show()
+        
+def read_hurricane_track(path):
+    """Read in hurricane track data from file at path
+    
+    returns ndarray with track data in each column representing t,x,y,wind,p 
+    
+    """    
+    return np.loadtxt(path,skiprows=2)
+
         
 if __name__ == "__main__":
     if len(sys.argv) > 1:

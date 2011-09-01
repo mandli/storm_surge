@@ -31,8 +31,8 @@ def print_tests(tests):
         print "====== Test #%s ============================" % (i)
         print str(test)
 
-def run_tests(tests,max_processes=None,parallel=True,verbose=False,
-                terminal_output=False):
+def run_tests(tests,plot=True,tar=False,max_processes=None,parallel=True,
+                verbose=False,terminal_output=False):
     # Parameters
     if os.environ.has_key('DATA_PATH'):
         base_path = os.environ['DATA_PATH']
@@ -100,7 +100,11 @@ def run_tests(tests,max_processes=None,parallel=True,verbose=False,
         run_cmd = "%s xclaw %s T F %s" % (RUNCLAW_CMD,output_path,data_path)
         plot_cmd = "%s %s %s %s" % (PLOTCLAW_CMD,output_path,plots_path,test.setplot)
         tar_cmd = "tar -cvzf %s.tgz %s" % (plots_path,plots_path)
-        cmd = ";".join((run_cmd,plot_cmd))
+        cmd = run_cmd
+        if plot:
+            cmd = ";".join((cmd,plot_cmd))
+            if tar:
+                cmd = ";".join((cmd,tar_cmd))
         print cmd
         if parallel:
             while len(process_queue) == max_processes:

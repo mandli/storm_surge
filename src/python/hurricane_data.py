@@ -40,7 +40,7 @@ class HurricaneData(data.Data):
         # Read in hurricane track data
         self.add_attribute("hurricane_track_file",'./hurricane_track.data')
         
-        # Idealized Hurricane, these match hurricane Tracy
+        # Idealized Hurricane, these match hurricane Tracy as a default
         self.add_attribute("ramp_up_t",ramp_up_time) # Ramp up time for hurricane
         self.add_attribute('hurricane_velocity',(5.0,0.0))  # Speed of hurricane
         self.add_attribute('R_eye_init',(0.0,0.0))     # Initial position

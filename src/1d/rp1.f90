@@ -89,9 +89,11 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         if (dry_state_r(2).and.(.not.dry_state_l(2)).and. &
                 h_l(2) + b_l > b_r) then
             rare = 1
+            stop "Right inundation problem not handled"
         else if (dry_state_l(2).and.(.not.dry_state_r(2)).and. &
                 h_r(2) + b_r > b_l) then
             rare = 2
+            stop "Left inundation problem not handled"
         else
             rare = 0
         endif

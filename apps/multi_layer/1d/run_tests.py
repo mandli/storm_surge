@@ -25,6 +25,38 @@ import test_runs
 
 tests = []
 
+class SmoothBaseTest(test_runs.TestML1D):
+    
+    def __init__(self,wave_family,mx=500,epsilon=0.1):
+        
+        super(IdealizedBaseTest,self).__init__()
+        
+        self.name = "smooth_%s" % wave_family
+        
+        # Static data
+        self.run_data.clawdata.xlower = 0.0
+        self.run_data.clawdata.xupper = 1.0
+        self.run_data.clawdata.outstyle = 1
+        self.run_data.clawdata.nout = 50
+        self.run_data.clawdata.tfinal = 0.5
+        
+        self.ml_data.init_type = 1
+        self.ml_data.init_location = 0.45
+        self.ml_data.eta_2 = -0.6
+        self.ml_data.bathy_type = 2
+        self.ml_data.bathy_left = -1.0
+        self.ml_data.bathy_right = -1.0
+        self.ml_data.wind_type = 0
+        self.ml_data.rho_1 = 0.95
+        
+        # Parameters
+        self.run_data.clawdata.mx = mx
+        self.ml_data.wave_family = wave_family
+        self.ml_data.eigen_method = eigen_method
+        self.ml_data.epsilon = epsilon
+        
+        self.prefix = "ml_e%s_m%s" % (eigen_method,mx)
+
 class IdealizedBaseTest(test_runs.TestML1D):
     
     def __init__(self,wave_family,mx=500,eigen_method=2,epsilon=0.1):
@@ -55,19 +87,19 @@ class IdealizedBaseTest(test_runs.TestML1D):
         self.ml_data.eigen_method = eigen_method
         self.ml_data.epsilon = epsilon
         
-        self.prefix = "ml_1d_e%s_m%s" % (eigen_method,mx)
+        self.prefix = "ml_e%s_m%s" % (eigen_method,mx)
 
         
 class OscillatoryWindBaseTest(test_runs.TestML1D):
     
-    def __init__(self,eigen_method=2):
+    def __init__(self,mx=100,eigen_method=2):
         
         super(OscillatoryWindBaseTest,self).__init__()
         
         self.name = "oscillatory_wind"
         self.setplot = "setplot_oscillatory"
         
-        self.run_data.clawdata.mx = 100
+        self.run_data.clawdata.mx = mx
         self.run_data.clawdata.outstyle = 1
         self.run_data.clawdata.nout = 160
         self.run_data.clawdata.tfinal = 10.0
@@ -90,7 +122,7 @@ class OscillatoryWindBaseTest(test_runs.TestML1D):
         self.ml_data.bathy_right = -1.0
         self.ml_data.eigen_method = eigen_method
         
-        self.prefix = "ml_e%s" % eigen_method
+        self.prefix = "ml_e%s_m%s" % (eigen_method,mx)
         
         
 class ShelfBaseTest(test_runs.TestML1D):
@@ -113,6 +145,8 @@ class ShelfBaseTest(test_runs.TestML1D):
         self.run_data.clawdata.xlower = -400e3
         self.run_data.clawdata.mthbc_xupper = 3
         
+        
+        self.ml_data.inundation_method = 0
         self.ml_data.rho_air = 1.0
         self.ml_data.rho_1 = 1025.0
         self.ml_data.rho_2 = 1028.0
@@ -123,7 +157,7 @@ class ShelfBaseTest(test_runs.TestML1D):
         self.ml_data.bathy_type = 1
         self.ml_data.bathy_location = -30e3
         self.ml_data.bathy_left = -4000.0
-        self.ml_data.bathy_right = -200.0
+        self.ml_data.bathy_right = -100.0
         self.ml_data.wind_type = 0
         
         self.prefix = "ml_e%s_m%s" % (eigen_method,mx)
@@ -145,27 +179,29 @@ class RealShelfBaseTest(ShelfBaseTest):
 # Idealized 3 eigen_method test
 # for method in [1,2,3,4]:
 #     tests.append(IdealizedBaseTest(3,epsilon=0.1,eigen_method=method))
-#     
-# # Idealized 4 eigen_method test
+     
+# Idealized 4 eigen_method test
 # for method in [1,2,3,4]:
 #     tests.append(IdealizedBaseTest(4,epsilon=0.04,eigen_method=method))
-# 
-# # Idealized 4 break down    
+
+# Idealized 4 break down    
 # for method in [1,2,3,4]:
 #     tests.append(IdealizedBaseTest(4,eigen_method=method,epsilon=0.1))
-# 
-# # Eigen method tests for oscillatory wind
+
+# Eigen method tests for oscillatory wind
 # for method in [1,2,3,4]:
 #     tests.append(OscillatoryWindBaseTest(eigen_method=method))
     
 # Convergence test for shelf
 # for method in [1,2,3,4]:
     # for mx in [100,200,400,800,1200,1600,2000,3000,4000,5000]:
-method = 2
+
+# This shelf jump case does not work with newer Riemann solver! ????
 mx = 2000
-tests.append(ShelfBaseTest(mx=mx,eigen_method=4))
-tests.append(RealShelfBaseTest(mx=mx,eigen_method=method))
-        
+for method in [1,2,3,4]:
+    # tests.append(ShelfBaseTest(mx=mx,eigen_method=method))
+    tests.append(RealShelfBaseTest(mx=mx,eigen_method=method))
+
 
 
 if __name__ == '__main__':
@@ -177,7 +213,7 @@ if __name__ == '__main__':
             for test in sys.argv[1:]:
                 tests_to_be_run.append(tests[int(test)])
             
-        test_runs.run_tests(tests_to_be_run,parallel=True)
+        test_runs.run_tests(tests_to_be_run,parallel=True,plot=True)
 
     else:
         test_runs.print_tests(tests)
