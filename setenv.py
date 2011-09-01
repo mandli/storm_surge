@@ -16,10 +16,10 @@ import os
 import sys
 
 def write_csh_line(file_handle,var,value):
-    file_handle.write("setenv %s '%s'\n" % (var.upper(),value))
+    file_handle.write('setenv %s "%s"\n' % (var.upper(),value))
 
 def write_bash_line(file_handle,var,value):
-    file_handle.write("export %s='%s'\n" % (var.upper(),value))
+    file_handle.write('export %s="%s"\n' % (var.upper(),value))
 
 
 if __name__ == "__main__":
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     # Set base directory path
     base_path = os.path.abspath(os.curdir)
     if len(sys.argv) > 1:
-        base_path = sys.argv[1]
+        base_path = os.path.abspath(sys.argv[1])
     print "Full path to multi-layer code directory should be:"
     print "      $ML_PATH = ",base_path
     var_dict['ML_PATH'] = base_path

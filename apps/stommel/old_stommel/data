@@ -1,8 +1,0 @@
-0                            irstrt
-.1d0   .1d0                dx, dy
-.004d0   3.0d0                 dt, tend
-12                           nout
-1 2 2                        method(1:3)
-2                            mthlim
-3			     mcapa
-0.d0  0.d0                 x0, theta

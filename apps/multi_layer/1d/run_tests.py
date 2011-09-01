@@ -177,20 +177,16 @@ class RealShelfBaseTest(ShelfBaseTest):
         self.prefix = "ml_e%s_m%s" % (eigen_method,mx)
     
 # Idealized 3 eigen_method test
-# for method in [1,2,3,4]:
-#     tests.append(IdealizedBaseTest(3,epsilon=0.1,eigen_method=method))
+for method in [1,2,3,4]:
+    tests.append(IdealizedBaseTest(3,epsilon=0.1,eigen_method=method))
      
 # Idealized 4 eigen_method test
-# for method in [1,2,3,4]:
-#     tests.append(IdealizedBaseTest(4,epsilon=0.04,eigen_method=method))
-
-# Idealized 4 break down    
-# for method in [1,2,3,4]:
-#     tests.append(IdealizedBaseTest(4,eigen_method=method,epsilon=0.1))
+for method in [1,2,3,4]:
+    tests.append(IdealizedBaseTest(4,epsilon=0.04,eigen_method=method))
 
 # Eigen method tests for oscillatory wind
-# for method in [1,2,3,4]:
-#     tests.append(OscillatoryWindBaseTest(eigen_method=method))
+for method in [1,2,3,4]:
+    tests.append(OscillatoryWindBaseTest(eigen_method=method))
     
 # Convergence test for shelf
 # for method in [1,2,3,4]:
