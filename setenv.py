@@ -6,6 +6,8 @@
 # been appropriately set.
 #
 # Environment variables set:
+#   DATA_PATH = Path where the output is put, defaults to the current
+#     directory.  If a variable with this name already exists it is not set.
 #   ML_PATH = Path to this code repository, defaults to current directory from
 #     which this script has been run
 #   ML_SRC = Path to the source files
@@ -36,6 +38,12 @@ if __name__ == "__main__":
     print "Full path to multi-layer code directory should be:"
     print "      $ML_PATH = ",base_path
     var_dict['ML_PATH'] = base_path
+    
+    # Set DATA_PATH variable if not present
+    if len(sys.argv) > 2:
+        data_path = os.path.abspath(sys.arv[2])
+    else:
+        data_path = "./"
 
     # PYTHONPATH modification
     ml_python_path = os.path.join(base_path,"src","python")
@@ -52,6 +60,15 @@ if __name__ == "__main__":
     for (var,value) in var_dict.iteritems():
         write_bash_line(bash_file,var,value)
         write_csh_line(csh_file,var,value)
+    
+    # Add DATA_PATH check
+    csh_file.write('if ($?DATA_PATH == 0) then\n')
+    csh_file.write('    setenv "DATA_PATH" "%s"\n' % data_path)
+    csh_file.write('endif\n')
+    bash_file.write('if [ -z "${DATA_PATH}" ]; then\n')
+    bash_file.write('    export DATA_PATH="%s"\n' % data_path)
+    bash_file.write('fi\n')
+    
     csh_file.close()
     bash_file.close()
 
