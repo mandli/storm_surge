@@ -70,7 +70,7 @@ tests.append(TwoLayerBaseTest(velocity=5.0, angle=-0.25*np.pi, eye=(200e3,100e3)
 tests.append(TwoLayerBaseTest(velocity=5.0, angle= 0.50*np.pi, eye=(425e3,-100e3), mx=70*factor, my=60*factor))
 tests.append(TwoLayerBaseTest(velocity=5.0, angle=-0.50*np.pi, eye=(425e3,100e3), mx=70*factor, my=60*factor))
 
-Speed Tests
+# Speed Tests
 for speed in [5.0,10.0,15.0,20.0,30.0]:
     tests.append(TwoLayerBaseTest(velocity=speed, mx=70*factor, my=60*factor))
 
