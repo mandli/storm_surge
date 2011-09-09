@@ -3,7 +3,7 @@
 #
 
 # Path to storm surge specific source
-MULTILAYER_SRC = ../src
+MULTILAYER_SRC = $(ML_SRC)/2d/
 
 # Adjust these variables if desired:
 # ----------------------------------
