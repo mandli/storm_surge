@@ -1,8 +1,8 @@
 2D Multilayer Applications
 
 Bubble - Simple radially symmetric test problem with a jump in bathymetry
-         where the bottom layer becomes dry.  Works with all eigenspace
-         methods.
+         where the bottom layer becomes dry.  Topography files need to be
+         generated.
 Hurricane - Storm surge test cases.  All test cases work currently.
 Plane Wave - Test case with a plane wave hitting a jump in bathymetry
              where the bottom layer becomes dry at different angles.  
