@@ -1,0 +1,15 @@
+2D Multilayer Applications
+
+Bubble - Simple radially symmetric test problem with a jump in bathymetry
+         where the bottom layer becomes dry.  Works with all eigenspace
+         methods.
+Hurricane - Storm surge test cases.  All test cases work currently.
+Plane Wave - Test case with a plane wave hitting a jump in bathymetry
+             where the bottom layer becomes dry at different angles.  
+             All tests work.
+Idealized - Test cases meant to test basic Riemann solver, not tested.
+chesapeake - Storm surge in chesapeake bay.  Not tested.
+shelf - Storm surge with a jump discontinuity for the shelf slope.
+        Not tested.
+stommel - Simple stommel problem setup for the multi-layer equations.
+          Not tested.
