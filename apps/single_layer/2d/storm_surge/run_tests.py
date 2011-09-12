@@ -68,7 +68,7 @@ tests.append(SingleLayerBaseTest(velocity=5.0, angle=-0.50*np.pi, eye=(425e3,100
 
 # Speed Tests
 for speed in [5.0,10.0,15.0,20.0,30.0]:
-    tests.append(SingleLayerBaseTest(speed,0.0,(0.0,0.0),True))
+    tests.append(SingleLayerBaseTest(velocity=speed,angle=0.0,eye=(0.0,0.0)))
     
 # Comparison test case
 # levels = 3

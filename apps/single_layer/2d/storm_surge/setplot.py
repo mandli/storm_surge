@@ -563,7 +563,7 @@ def setplot(plotdata):
     
     
     plotfigure = plotdata.new_plotfigure(name='profile', figno=4)
-    plotfigure.show = True
+    plotfigure.show = False
         
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.title = 'Profiles'

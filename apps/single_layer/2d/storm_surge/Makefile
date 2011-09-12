@@ -3,7 +3,7 @@
 #
 
 # Path to storm surge specific source
-HURRICANE_SRC = ../src
+HURRICANE_SRC = $(ML_SRC)/2d/
 
 # Adjust these variables if desired:
 # ----------------------------------
