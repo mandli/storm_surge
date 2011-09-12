@@ -47,7 +47,7 @@ if __name__ == "__main__":
 
     # PYTHONPATH modification
     ml_python_path = os.path.join(base_path,"src","python")
-    python_path = ":".join(("${PYTHONPATH}",ml_python_path))
+    python_path = ":".join((ml_python_path,"${PYTHONPATH}"))
     var_dict['PYTHONPATH'] = python_path
     var_dict['ML_PYTHON'] = ml_python_path
     
@@ -63,10 +63,10 @@ if __name__ == "__main__":
     
     # Add DATA_PATH check
     csh_file.write('if ($?DATA_PATH == 0) then\n')
-    csh_file.write('    setenv "DATA_PATH" "%s"\n' % data_path)
+    csh_file.write("    setenv 'DATA_PATH' '%s'\n"% data_path)
     csh_file.write('endif\n')
     bash_file.write('if [ -z "${DATA_PATH}" ]; then\n')
-    bash_file.write('    export DATA_PATH="%s"\n' % data_path)
+    bash_file.write('export DATA_PATH="%s"\n'% data_path)
     bash_file.write('fi\n')
     
     csh_file.close()
