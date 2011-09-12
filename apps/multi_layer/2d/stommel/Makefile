@@ -1,10 +1,10 @@
 #
-# Local makefile for test_beach
+# Local makefile for stommel
 #
 
 # Path to storm surge specific source
-MULTILAYER_SRC = ../../src
-STOMMEL_SRC = ../src
+MULTILAYER_SRC = $(ML_PATH)/2d/
+STOMMEL_SRC = $(ML_PATH)/apps/single_layer/2d/stommel/src
 
 # Adjust these variables if desired:
 # ----------------------------------

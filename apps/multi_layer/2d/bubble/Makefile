@@ -3,7 +3,7 @@
 #
 
 # Path to storm surge specific source
-MULTILAYER_SRC = ../src
+MULTILAYER_SRC = $(ML_SRC)/2d/
 
 # Adjust these variables if desired:
 # ----------------------------------
@@ -19,7 +19,7 @@ GEOLIB = $(CLAW)/geoclaw/2d/lib
 
 # Flagging
 FC ?= gfortran
-FFLAGS += -I$(GEOLIB) -I/opt/local/include
+FFLAGS += -I$(GEOLIB)
 UNAME = $(shell uname)
 ifeq ($(UNAME), Darwin)
 	ifndef LFLAGS
@@ -53,11 +53,10 @@ CLAW_SOURCES = \
 	$(MULTILAYER_SRC)/flag2refine_geo.f \
 	$(MULTILAYER_SRC)/rpn2_inundation_multilayer.f90 \
 	$(MULTILAYER_SRC)/rpt2_dry_multilayer.f90 \
-	$(MULTILAYER_SRC)/multilayer_eigen.f90 \
-	$(MULTILAYER_SRC)/filval_ml.f \
+	$(MULTILAYER_SRC)/multilayer_eigen.f90
+#	$(MULTILAYER_SRC)/filval_ml.f \
 
 # Replaced src	
-# $(GEOLIB)/filval_geo.f \
 
 DATA_FILES = hurricane.data topo.data multilayer.data
 	
@@ -67,6 +66,7 @@ CLAW_LIBSOURCES = \
 	$(GEOLIB)/dtopo_mod.f90 \
 	$(GEOLIB)/riemannsolvers_geo.f \
 	$(GEOLIB)/readqinit_geo.f \
+	$(GEOLIB)/filval_geo.f \
 	$(GEOLIB)/movetopo_geo.f \
 	$(GEOLIB)/cellgridintegrate_geo.f \
 	$(GEOLIB)/topointegral_geo.f \
