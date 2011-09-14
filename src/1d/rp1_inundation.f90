@@ -325,15 +325,55 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
     enddo
     
     ! Calculate amdq and apdq
-    do i=2-mbc,mx+mbc
-        do mw=1,mwaves
-            if (s(i,mw) > 0.d0) then
-                apdq(i,:) = apdq(i,:) + fwave(i,:,mw)
-            else                                     
-                amdq(i,:) = amdq(i,:) + fwave(i,:,mw)
+    ! Note that entropy fix here is only implemented for linearized eigenvalue
+    ! methods.
+    if (.not.entropy_fix.and.(eigen_method == 1 .or. eigen_method == 2)) then
+        do i=2-mbc,mx+mbc
+            do mw=1,mwaves
+                if (s(i,mw) > 0.d0) then
+                    apdq(i,:) = apdq(i,:) + fwave(i,:,mw)
+                else                                     
+                    amdq(i,:) = amdq(i,:) + fwave(i,:,mw)
+                endif
+            enddo
+        enddo
+    else
+        do i=2-mbc,mx+mbc
+            
+            ! Wave 1 - Shallow water like wave, "left" going
+            if (s(i,1) < 0.d0) then
+                amdq(i,:) = amdq(i,:) + fwave(i,:,1)
+            endif
+
+            ! Wave 2 and 3 - Internal mode
+            if (s(i,3) > 0.d0) then
+                
+                ! Transonic correction needed
+                amdq(i,:) = amdq(i,:) + fwave(i,:,2) * 0.d0
+                
+            else
+                ! Wave 3 is "left" going
+                amdq(i,:) = amdq(i,:) + fwave(i,:,2)
+            endif
+
+            ! Wave 4 - Shallow water like wave, "right" going
+            ! Corresponds to fully supersonic case
+            if (s(i,4) < 0.d0) then
+                amdq(i,:) = amdq(i,:) + fwave(i,:,4)
             endif
         enddo
-    enddo
+
+        ! Calculate apdq from amdq
+        do i=2,-mbc,mx+mbc
+            df = 0.d0
+            do mw=1,mwaves
+                if (s(i,mw) >= 0.d0) then
+                    df = df + fwave(i,:,mw)
+                endif
+            enddo
+            apdq(i,:) = df - amdq(i,:)
+        enddo
+    endif
 
 end subroutine rp1
 
