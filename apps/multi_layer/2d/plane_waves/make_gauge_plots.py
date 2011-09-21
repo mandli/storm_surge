@@ -18,7 +18,7 @@ for path in comparisons:
     comparison_paths.append([os.path.join(base_path,path[0]),os.path.join(base_path,path[1])])
               
 for (i,data_paths) in enumerate(comparison_paths):
-    figures = compare_gauges.plot_gauges('all',data_paths,plot_vars=[6,7],
+    figures = compare_gauges.plot_gauges('all',data_paths,plot_vars=[[6,7],[6,7]],
                                titles=["Top Surface","Bottom Surface"],
                                kwargs={'figsize':(8,4)})
     for (num,figure) in figures.iteritems():
