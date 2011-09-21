@@ -14,7 +14,16 @@ if not os.path.exists(output_path):
     os.mkdir(output_path)
 
 # Comparisons
-comparisons = [["single_layer/sl_angle0_v5_m5_dof4200_output","multi_layer/ml_angle0_v5_m1_r95_dof37800_output"]]
+comparisons = [["single_layer/sl_angle0_v5_m5_dof4200_output","multi_layer/ml_angle0_v5_m1_r97_dof37800_output"],
+               ["single_layer/sl_angle0_v10_m5_dof4200_output","multi_layer/ml_angle0_v10_m1_r97_dof37800_output"],
+               ["single_layer/sl_angle0_v15_m5_dof4200_output","multi_layer/ml_angle0_v15_m1_r97_dof37800_output"],
+               ["single_layer/sl_angle0_v20_m5_dof4200_output","multi_layer/ml_angle0_v20_m1_r97_dof37800_output"],
+               ["single_layer/sl_angle0_v30_m5_dof4200_output","multi_layer/ml_angle0_v30_m1_r97_dof37800_output"],
+               ["single_layer/sl_angle-45_v5_m5_dof4200_output","multi_layer/ml_angle-45_v5_m1_r97_dof37800_output"],
+               ["single_layer/sl_angle45_v5_m5_dof4200_output","multi_layer/ml_angle45_v5_m1_r97_dof37800_output"],
+               ["single_layer/sl_angle-90_v5_m5_dof4200_output","multi_layer/ml_angle-90_v5_m1_r97_dof37800_output"],
+               ["single_layer/sl_angle90_v5_m5_dof4200_output","multi_layer/ml_angle90_v5_m1_r97_dof37800_output"]]
+
 comparison_paths = []
 for path in comparisons:
     comparison_paths.append([os.path.join(base_path,path[0]),os.path.join(base_path,path[1])])
