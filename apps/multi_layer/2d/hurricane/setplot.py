@@ -740,7 +740,7 @@ def setplot(plotdata):
     
     # Individual components
     plotfigure = plotdata.new_plotfigure(name='speed_components',figno=401)
-    plotfigure.show = True
+    plotfigure.show = False
     plotfigure.kwargs = {'figsize':(14,14)}
     
     # Top layer
@@ -862,7 +862,7 @@ def setplot(plotdata):
     # ========================================================================
     # Single figure forcing
     plotfigure = plotdata.new_plotfigure(name='Hurricane Forcing',figno=111)
-    plotfigure.show = True
+    plotfigure.show = False
     plotfigure.kwargs = {'figsize':(14,4)}
     
     plotaxes = plotfigure.new_plotaxes()
@@ -1230,8 +1230,8 @@ def setplot(plotdata):
 
     plotdata.printfigs = True                # print figures
     plotdata.print_format = 'png'            # file format
-    plotdata.print_framenos = 'all'          # list of frames to print
-    # plotdata.print_framenos = [48,88,128,168]
+    #plotdata.print_framenos = 'all'          # list of frames to print
+    plotdata.print_framenos = [48,88,128,168]
     plotdata.print_fignos = 'all'            # list of figures to print
     plotdata.html = True                    # create html files of plots?
     plotdata.latex = False                   # create latex file of plots?
