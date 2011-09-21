@@ -26,7 +26,7 @@ import test_runs
 tests = []
 
 class SmoothBaseTest(test_runs.TestML1D):
-    
+
     def __init__(self,wave_family,mx=500,epsilon=0.1):
         
         super(IdealizedBaseTest,self).__init__()
@@ -175,28 +175,71 @@ class RealShelfBaseTest(ShelfBaseTest):
         self.ml_data.bathy_type = 2
         
         self.prefix = "ml_e%s_m%s" % (eigen_method,mx)
+
+class DryStateBaseTest(test_runs.TestML1D):
+
+    def __init__(self,mx=500,eigen_method=2,entropy_fix=True):
+
+        super(DryStateBaseTest,self).__init__()
+
+        self.name = "dry_state"
+        self.setplot = "setplot_drystate"
+
+        self.ml_data.eigen_method = eigen_method
+        self.run_data.clawdata.mx = mx
+
+        self.run_data.clawdata.iout = [1,100]
+        self.run_data.clawdata.outstyle = 3
+        self.run_data.clawdata.xlower = 0.0
+        self.run_data.clawdata.xupper = 1.0
+
+        self.ml_data.inundation_method = 2
+        self.ml_data.manning = 0.0
+        self.ml_data.rho_1 = 0.95 # r = rho_1 / rho_2 ==> r = rho_1 in this case
+        self.ml_data.rho_2 = 1.0
+        self.ml_data.init_type = 5
+        self.ml_data.init_location = 0.5
+        self.ml_data.eta_1 = 0.0
+        self.ml_data.eta_2 = -0.5
+        self.ml_data.bathy_type = 1
+        self.ml_data.bathy_left = -1.0
+        self.ml_data.bathy_right = -1.0
+        self.ml_data.bathy_location = 0.5
+        self.ml_data.wind_type = 0
+
+        self.ml_data.entropy_fix = entropy_fix
+
+        self.prefix = "ml_e%s_m%s_fix" % (eigen_method,mx)
+        if entropy_fix:
+            self.prefix = "".join((self.prefix,"T"))
+        else:
+            self.prefix = "".join((self.prefix,"F"))
+
     
 # Idealized 3 eigen_method test
-for method in [1,2,3,4]:
-    tests.append(IdealizedBaseTest(3,epsilon=0.1,eigen_method=method))
+# for method in [1,2,3,4]:
+#     tests.append(IdealizedBaseTest(3,epsilon=0.1,eigen_method=method))
      
 # Idealized 4 eigen_method test
-for method in [1,2,3,4]:
-    tests.append(IdealizedBaseTest(4,epsilon=0.04,eigen_method=method))
+# for method in [1,2,3,4]:
+#     tests.append(IdealizedBaseTest(4,epsilon=0.04,eigen_method=method))
 
 # Eigen method tests for oscillatory wind
-for method in [1,2,3,4]:
-    tests.append(OscillatoryWindBaseTest(eigen_method=method))
+# for method in [1,2,3,4]:
+#     tests.append(OscillatoryWindBaseTest(eigen_method=method))
+
+for efix in [True,False]:
+    tests.append(DryStateBaseTest(eigen_method=2,mx=500,entropy_fix=efix))
     
 # Convergence test for shelf
 # for method in [1,2,3,4]:
     # for mx in [100,200,400,800,1200,1600,2000,3000,4000,5000]:
 
 # This shelf jump case does not work with newer Riemann solver! ????
-mx = 2000
-for method in [1,2,3,4]:
-    tests.append(ShelfBaseTest(mx=mx,eigen_method=method))
-    tests.append(RealShelfBaseTest(mx=mx,eigen_method=method))
+# mx = 2000
+# for method in [1,2,3,4]:
+#     tests.append(ShelfBaseTest(mx=mx,eigen_method=method))
+#     tests.append(RealShelfBaseTest(mx=mx,eigen_method=method))
 
 
 
