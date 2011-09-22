@@ -37,15 +37,17 @@ def transform_p2c(x,y,x0,y0,theta):
 # Base Plane Wave Test
 class PlaneWaveBaseTest(test_runs.TestML2D):
     
-    def __init__(self,angle=0.0,bathy_angle=0.0,location=[0.1,0.0],bathy_location=0.5):
+    # Domain centered at (0.0,0.0), rotate around this point
+    
+    def __init__(self,angle=0.0,bathy_angle=0.0,location=[-0.1,0.0],bathy_location=0.15):
         super(PlaneWaveBaseTest,self).__init__()
 
         self.name = "plane_wave"
         
         # self.run_data.clawdata.nout = 1
         # self.run_data.clawdata.tfinal = 0.1
-        self.run_data.clawdata.mx = 100
-        self.run_data.clawdata.my = 100
+        self.run_data.clawdata.mx = 3*100
+        self.run_data.clawdata.my = 3*100
         
         self.ml_data.eigen_method = 2
         self.ml_data.inundation_method = 2
@@ -61,13 +63,12 @@ class PlaneWaveBaseTest(test_runs.TestML2D):
         self.ml_data.bathy_right = -0.2
         
         # Add gauges down perpendicular
-        N_gauges = 5   
-        gauge_locations = np.linspace(self.run_data.clawdata.xlower,
-                                      self.run_data.clawdata.xupper,
-                                      N_gauges+2)[1:-1]
+        gauge_locations = [-0.1,0.0,0.1,0.2,0.3]
         for (i,x_c) in enumerate(gauge_locations):
             # y0 = (self.run_data.clawdata.yupper - self.run_data.clawdata.ylower) / 2.0
-            x_p,y_p = transform_c2p(x_c,0.0,location[0],location[1],angle)
+            # x_p,y_p = transform_c2p(x_c,0.0,location[0],location[1],angle)
+            x_p = x_c*np.cos(angle)
+            y_p = x_c*np.sin(angle)
             print "+=====+"
             print x_c,0.0
             print x_p,y_p
@@ -112,18 +113,27 @@ class PlaneWaveBaseTest(test_runs.TestML2D):
                 
                
 # Angle tests
-tests.append(PlaneWaveBaseTest(0.0,location=[0.1,0.5]))
-tests.append(PlaneWaveBaseTest(np.pi/4.0,np.pi/4.0,location=[0.5,0.0],
-                                                   bathy_location=0.9))
+# tests.append(PlaneWaveBaseTest(0.0,location=[0.1,0.0]))
+# tests.append(PlaneWaveBaseTest(np.pi/4.0,np.pi/4.0,location=[0.5,0.0],
+#                                                    bathy_location=0.9))
+# 
+# tests.append(PlaneWaveBaseTest(np.pi/4.0,0.0,location=[0.4,0.0],
+#                                              bathy_location=0.6))
+# tests.append(PlaneWaveBaseTest(0.0,np.pi/4.0,location=[0.1,0.5],
+#                                              bathy_location=0.8))
+# 
+# tests.append(PlaneWaveBaseTest(np.pi/8.0,0.0,location=[0.3,0.3]))
+# tests.append(PlaneWaveBaseTest(np.pi/4.0,np.pi/8.0,location=[0.4,0.0],
+#                                                    bathy_location=0.7))
+tests.append(PlaneWaveBaseTest())
+tests.append(PlaneWaveBaseTest(np.pi/4.0,np.pi/4.0))
 
-tests.append(PlaneWaveBaseTest(np.pi/4.0,0.0,location=[0.4,0.0],
-                                             bathy_location=0.6))
-tests.append(PlaneWaveBaseTest(0.0,np.pi/4.0,location=[0.1,0.5],
-                                             bathy_location=0.8))
+tests.append(PlaneWaveBaseTest(np.pi/4.0,0.0))
+tests.append(PlaneWaveBaseTest(0.0,np.pi/4.0))
 
-tests.append(PlaneWaveBaseTest(np.pi/8.0,0.0,location=[0.3,0.3]))
-tests.append(PlaneWaveBaseTest(np.pi/4.0,np.pi/8.0,location=[0.4,0.0],
-                                                   bathy_location=0.7))
+tests.append(PlaneWaveBaseTest(np.pi/8.0,0.0))
+tests.append(PlaneWaveBaseTest(np.pi/4.0,np.pi/8.0))
+
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:

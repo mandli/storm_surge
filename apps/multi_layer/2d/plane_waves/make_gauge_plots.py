@@ -20,7 +20,7 @@ for path in comparisons:
 for (i,data_paths) in enumerate(comparison_paths):
     figures = compare_gauges.plot_gauges('all',data_paths,plot_vars=[[6,7],[6,7]],
                                titles=["Top Surface","Bottom Surface"],
-                               kwargs={'figsize':(8,4)})
+                               kwargs={'figsize':(10,4)})
     for (num,figure) in figures.iteritems():
         name = os.path.split(data_paths[0])[-1][:-7]
         figure.savefig(os.path.join(output_path,"%s_%s_gauge.pdf" % (name,num)))

@@ -64,17 +64,23 @@ def setrun(claw_pkg='geoclaw'):
     clawdata.ndim = ndim
     
     # Lower and upper edge of computational domain:
-    clawdata.xlower = 0.0
-    clawdata.xupper = 1.0
+    # clawdata.xlower = 0.0
+    # clawdata.xupper = 1.0
+    # 
+    # clawdata.ylower = 0.0
+    # clawdata.yupper = 1.0
+    # These were expanded in order to get rid of edge effects
+    clawdata.xlower = -1.0
+    clawdata.xupper = 2.0
     
-    clawdata.ylower = 0.0
-    clawdata.yupper = 1.0
+    clawdata.ylower = -1.0
+    clawdata.yupper = 2.0
         
 
     # Number of grid cells:
     # clawdata.mx = 70
-    clawdata.mx = 100
-    clawdata.my = 100
+    clawdata.mx = 100*3
+    clawdata.my = 100*3
     # clawdata.my = 120
     # clawdata.mx = 100
     # clawdata.my = 100
