@@ -113,7 +113,7 @@ def setplot(plotdata):
     def hour_figure_title(current_data):
         t = current_data.t
         title = current_data.plotaxes.title
-        plt.title('%s at time t = %s h' % (title,str(t/3600.0)))
+        plt.title('%s at time t = %3.2f  h' % (title,str(t/3600.0)))
 
     def m_to_km_labels(current_data=None):
         plt.xlabel('km')
@@ -400,11 +400,14 @@ def setplot(plotdata):
             plotitem.gridedges_show = 0
 
     # Limits
+    surface_range = 1.0
+    speed_range = 2.0
+
     xlimits = [amrdata.xlower,amrdata.xupper]
     ylimits = [amrdata.ylower,amrdata.yupper]
     multilayer_data.eta = eta
-    surface_limits = [-3,3]
-    speed_limits = [0.0,6.0]
+    surface_limits = [eta[0]-surface_range,eta+[0]-surface_range]
+    speed_limits = [0.0,speed_range]
     # surface_limits = [-0.5,0.5]
     # speed_limits = [0.0,0.1]
     

@@ -25,7 +25,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
     double precision, dimension(2) :: h_l,u_l,hu_l,h_r,u_r,hu_r,h_ave,u_ave
     double precision :: b_l,b_r,gamma_l,gamma_r,tau,w_l,w_r
     double precision :: wind_speed,lambda(4),eta_l(2),eta_r(2),h_hat_l(2),h_hat_r(2)
-    logical :: inundation, dry_state_l(2), dry_state_r(2)
+    logical :: dry_state_l(2), dry_state_r(2), inundation
     
     integer :: layer_index
     double precision :: momentum_transfer(2),flux_transfer_r,flux_transfer_l
@@ -90,7 +90,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         ! ====================================================================
         ! Solve Single layer problem seperately
         if (dry_state_r(2).and.dry_state_l(2)) then
-            call single_layer_eigen(h_l,h_r,u_l,u_r,b_l,b_r,rare,lambda,eig_vec)
+            call single_layer_eigen(h_l,h_r,u_l,u_r,b_l,b_r,lambda,eig_vec)
             s(i,:) = lambda
             
             delta(1) = rho(1) * (hu_r(1) - hu_l(1))
@@ -119,6 +119,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         if (dry_state_r(2).and.(.not.dry_state_l(2)).and.(h_l(2) + b_l > b_r)) then
             inundation = .true.
             print *,"Right inundation problem"
+            inundation = .true.
             if (inundation_method == 0) then
                 stop "Inundation not allowed."
             else if (inundation_method == 1) then
@@ -169,6 +170,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         else if (dry_state_l(2).and.(.not.dry_state_r(2)).and.(h_r(2) + b_r > b_l)) then
             inundation = .true.
             print *,"Left inundation problem"
+            inundation = .true.
             ! Inundation problem eigen
             if (inundation_method == 0) then
                 stop "Inundation not allowed."
@@ -223,6 +225,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         ! ====================================================================  
         !  Wall or wet case       
         else
+            ! Wall dry state or completely wet case
             if (eigen_method == 1) then
                 call linear_eigen(h_hat_l,h_hat_r,u_l,u_r,b_l,b_r,lambda,eig_vec)
                 s(i,:) = lambda
@@ -353,6 +356,7 @@ subroutine linear_eigen(h_l,h_r,u_l,u_r,b_l,b_r,s,eig_vec)
 
     implicit none
     
+    ! I/O
     double precision, intent(in) :: h_l(2),h_r(2),u_l(2),u_r(2),b_l,b_r
     double precision, intent(inout) :: s(4),eig_vec(4,4)
     
@@ -390,7 +394,7 @@ subroutine linear_eigen(h_l,h_r,u_l,u_r,b_l,b_r,s,eig_vec)
             stop "ERROR:  Entropy violation in wave family 3."
         endif
     endif
-    
+
 end subroutine linear_eigen
 
 subroutine velocity_eigen(h_l,h_r,u_l,u_r,b_l,b_r,s,eig_vec)
@@ -450,6 +454,7 @@ subroutine velocity_eigen(h_l,h_r,u_l,u_r,b_l,b_r,s,eig_vec)
     endif
 
 end subroutine velocity_eigen
+
 
 subroutine lapack_eigen(h_l,h_r,u_l,u_r,b_l,b_r,s,eig_vec)
 

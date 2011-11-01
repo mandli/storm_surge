@@ -501,9 +501,11 @@ def setplot(plotdata):
 
     # ========================================================================
     # Axis limits
-    xlimits = [amrdata.xlower,amrdata.xupper]
+    #xlimits = [amrdata.xlower,amrdata.xupper]
+    xlimits = [-0.5,0.5]
     xlimits_zoomed = xlimits
-    ylimits = [amrdata.ylower,amrdata.yupper]
+    #ylimits = [amrdata.ylower,amrdata.yupper]
+    ylimits = [-0.5,0.5]
     eta = [multilayer_data.eta[0],multilayer_data.eta[1]]
     top_surface_limits = [eta[0]-0.03,eta[0]+0.03]
     internal_surface_limits = [eta[1]-0.015,eta[1]+0.015]
