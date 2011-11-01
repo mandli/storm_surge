@@ -217,16 +217,16 @@ class DryStateBaseTest(test_runs.TestML1D):
 
     
 # Idealized 3 eigen_method test
-# for method in [1,2,3,4]:
-#     tests.append(IdealizedBaseTest(3,epsilon=0.1,eigen_method=method))
+for method in [1,2,3,4]:
+    tests.append(IdealizedBaseTest(3,epsilon=0.1,eigen_method=method))
      
 # Idealized 4 eigen_method test
-# for method in [1,2,3,4]:
-#     tests.append(IdealizedBaseTest(4,epsilon=0.04,eigen_method=method))
+for method in [1,2,3,4]:
+    tests.append(IdealizedBaseTest(4,epsilon=0.04,eigen_method=method))
 
 # Eigen method tests for oscillatory wind
-# for method in [1,2,3,4]:
-#     tests.append(OscillatoryWindBaseTest(eigen_method=method))
+for method in [1,2,3,4]:
+    tests.append(OscillatoryWindBaseTest(eigen_method=method))
 
 for efix in [True,False]:
     tests.append(DryStateBaseTest(eigen_method=2,mx=500,entropy_fix=efix))
@@ -236,10 +236,10 @@ for efix in [True,False]:
     # for mx in [100,200,400,800,1200,1600,2000,3000,4000,5000]:
 
 # This shelf jump case does not work with newer Riemann solver! ????
-# mx = 2000
-# for method in [1,2,3,4]:
-#     tests.append(ShelfBaseTest(mx=mx,eigen_method=method))
-#     tests.append(RealShelfBaseTest(mx=mx,eigen_method=method))
+mx = 2000
+for method in [1,2,3,4]:
+    tests.append(ShelfBaseTest(mx=mx,eigen_method=method))
+    tests.append(RealShelfBaseTest(mx=mx,eigen_method=method))
 
 
 
