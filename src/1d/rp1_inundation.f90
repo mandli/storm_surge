@@ -156,7 +156,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
                 eig_vec(:,4) = [1.d0,s(i,4),0.d0,0.d0]
             else if (inundation_method == 4) then
                 inundation_height = [h_r(1),dry_tolerance]
-                call exact_eigen(h_l,inundation_height,u_l,u_r,b_l,b_r,lambda,eig_vec)
+                call lapack_eigen(h_l,inundation_height,u_l,u_r,b_l,b_r,lambda,eig_vec)
                 s(i,:) = lambda
                 
                 ! Correction for the fast waves
@@ -164,7 +164,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
                 eig_vec(:,2) = [1.d0,s(i,2),0.d0,0.d0]
             else if (inundation_method == 5) then
                 inundation_height = [h_r(1),0.d0]
-                call exact_eigen(h_l,inundation_height,u_l,u_r,b_l,b_r,lambda,eig_vec)
+                call lapack_eigen(h_l,inundation_height,u_l,u_r,b_l,b_r,lambda,eig_vec)
                 s(i,:) = lambda                
             endif   
         else if (dry_state_l(2).and.(.not.dry_state_r(2)).and.(h_r(2) + b_r > b_l)) then
@@ -209,7 +209,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             else if (inundation_method == 4) then
                 ! LAPACK solver with corrective wave and small wet layer
                 inundation_height = [h_r(1),dry_tolerance]
-                call exact_eigen(h_l,inundation_height,u_l,u_r,b_l,b_r,lambda,eig_vec)
+                call lapack_eigen(h_l,inundation_height,u_l,u_r,b_l,b_r,lambda,eig_vec)
                 s(i,:) = lambda
                             
                 ! Correction for the fast waves
@@ -218,7 +218,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             else if (inundation_method == 5) then
                 ! Use the LAPACK solver with no correction
                 inundation_height = [h_l(1),0.d0]
-                call exact_eigen(inundation_height,h_r,u_l,u_r,b_l,b_r,lambda,eig_vec)
+                call lapack_eigen(inundation_height,h_r,u_l,u_r,b_l,b_r,lambda,eig_vec)
                 s(i,:) = lambda
             endif        
           
@@ -241,7 +241,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
                     call linear_eigen(h_l,h_r,u_l,u_r,b_l,b_r,lambda,eig_vec)
                     s(i,:) = lambda
                 else
-                    call exact_eigen(h_l,h_r,u_l,u_r,b_l,b_r,lambda,eig_vec)
+                    call lapack_eigen(h_l,h_r,u_l,u_r,b_l,b_r,lambda,eig_vec)
                     s(i,:) = lambda
                 endif
             else
