@@ -1,0 +1,27 @@
+Two Layer Shallow Water Equations Examples - 1D
+
+To run all the examples in this directory, use
+
+    python run_tests.py all
+    
+or some other combination of the tests located in that script.  All the tests
+are defined by running the base setrun.py in this directory and then each of
+the tests in run_tests.py overrides the appropriate parameters to start the 
+test.  The script run_tests.py also tries to run as many simulations at the 
+same time as there are cores.
+
+The tests included are:
+
+    idealized - Test cases with simple Riemann problems as the setup.
+    drystate - Dry state dam break problem, demonstrates the entropy fix.
+    oscillatory - Oscillatory wind field applied to two-layer flow, 
+                  demonstrates the loss of hyperbolicity.
+    shelf - Test cases involving oceanic scales with a continental shelf of
+            varying complexity.
+            
+The other python scripts are for data analysis and plotting which includes:
+
+    compare_eigen.py - Compares each of the different eigen methods to
+                       eachother.
+    shelf_contour.py - Produces contours of the surfaces in time and space.
+    shelf_convergence.py - Basic convergence plotting of shelf simulations.
