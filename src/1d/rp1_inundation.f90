@@ -1,3 +1,6 @@
+! ============================================================================
+!  Reimann Solver
+! ============================================================================
 subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
 !
 !   Riemann solver for linearized multilayer shallow water equations
@@ -27,9 +30,12 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
     double precision :: wind_speed,lambda(4),eta_l(2),eta_r(2),h_hat_l(2),h_hat_r(2)
     logical :: dry_state_l(2), dry_state_r(2), inundation
     
-    integer :: layer_index
+    integer :: layer_index,rare(1-mbc:mx+mbc)
     double precision :: momentum_transfer(2),flux_transfer_r,flux_transfer_l
     double precision :: inundation_height(2)
+
+    ! Eigenvalue functions
+    integer :: single_layer_eigen,linear_eigen,velocity_eigen,lapack_eigen
 
     ! Common block
     double precision :: dt,dx,t
@@ -90,7 +96,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         ! ====================================================================
         ! Solve Single layer problem seperately
         if (dry_state_r(2).and.dry_state_l(2)) then
-            call single_layer_eigen(h_l,h_r,u_l,u_r,b_l,b_r,lambda,eig_vec)
+            rare(i) = single_layer_eigen(h_l,h_r,u_l,u_r,b_l,b_r,lambda,eig_vec)
             s(i,:) = lambda
             
             delta(1) = rho(1) * (hu_r(1) - hu_l(1))
@@ -125,7 +131,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             else if (inundation_method == 1) then
                 ! Linear eigensystem
                 inundation_height = [h_r(1),0.d0]
-                call linear_eigen(h_l,inundation_height,u_l,u_r,b_l,b_r,lambda,eig_vec)
+                rare(i) = linear_eigen(h_l,inundation_height,u_l,u_r,b_l,b_r,lambda,eig_vec)
                 s(i,:) = lambda
                 
                 ! Corrective wave
@@ -141,14 +147,14 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             else if (inundation_method == 2) then
                 inundation_height = [h_r(1),dry_tolerance]
                 h_r(2) = dry_tolerance
-                call linear_eigen(h_l,inundation_height,u_l,u_r,b_l,b_r,lambda,eig_vec)
+                rare(i) = linear_eigen(h_l,inundation_height,u_l,u_r,b_l,b_r,lambda,eig_vec)
                 s(i,:) = lambda
                 
                 s(i,4) = u_r(1) + sqrt(g*h_r(1))
                 eig_vec(:,4) = [1.d0,s(i,4),0.d0,0.d0]
             else if (inundation_method == 3) then
                 inundation_height = [h_r(1),dry_tolerance]
-                call velocity_eigen(h_l,inundation_height,u_l,u_r,b_l,b_r,lambda,eig_vec)
+                rare(i) = velocity_eigen(h_l,inundation_height,u_l,u_r,b_l,b_r,lambda,eig_vec)
                 s(i,:) = lambda
                 
                 ! Correction for fast wave
@@ -156,7 +162,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
                 eig_vec(:,4) = [1.d0,s(i,4),0.d0,0.d0]
             else if (inundation_method == 4) then
                 inundation_height = [h_r(1),dry_tolerance]
-                call lapack_eigen(h_l,inundation_height,u_l,u_r,b_l,b_r,lambda,eig_vec)
+                rare(i) = lapack_eigen(h_l,inundation_height,u_l,u_r,b_l,b_r,lambda,eig_vec)
                 s(i,:) = lambda
                 
                 ! Correction for the fast waves
@@ -164,7 +170,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
                 eig_vec(:,2) = [1.d0,s(i,2),0.d0,0.d0]
             else if (inundation_method == 5) then
                 inundation_height = [h_r(1),0.d0]
-                call lapack_eigen(h_l,inundation_height,u_l,u_r,b_l,b_r,lambda,eig_vec)
+                rare(i) = lapack_eigen(h_l,inundation_height,u_l,u_r,b_l,b_r,lambda,eig_vec)
                 s(i,:) = lambda                
             endif   
         else if (dry_state_l(2).and.(.not.dry_state_r(2)).and.(h_r(2) + b_r > b_l)) then
@@ -177,7 +183,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             else if (inundation_method == 1) then
                 ! Linear eigensystem
                 inundation_height = [h_l(1),dry_tolerance]
-                call linear_eigen(inundation_height,h_r,u_l,u_r,b_l,b_r,lambda,eig_vec)
+                rare(i) = linear_eigen(inundation_height,h_r,u_l,u_r,b_l,b_r,lambda,eig_vec)
                 s(i,:) = lambda
 
                 ! Corrections to internal wave
@@ -191,7 +197,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             else if (inundation_method == 2) then
                 ! Use linearized eigensystem
                 inundation_height = [h_l(1),dry_tolerance]
-                call linear_eigen(inundation_height,h_r,u_l,u_r,b_l,b_r,lambda,eig_vec)
+                rare(i) = linear_eigen(inundation_height,h_r,u_l,u_r,b_l,b_r,lambda,eig_vec)
                 s(i,:) = lambda
                             
                 ! Correction for the fast waves
@@ -200,7 +206,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             else if (inundation_method == 3) then
                 ! Use velocity difference expansion eigensystems
                 inundation_height = [h_l(1),dry_tolerance]
-                call velocity_eigen(inundation_height,h_r,u_l,u_r,b_l,b_r,lambda,eig_vec)
+                rare(i) = velocity_eigen(inundation_height,h_r,u_l,u_r,b_l,b_r,lambda,eig_vec)
                 s(i,:) = lambda                
         
                 ! Correction for the fast waves
@@ -209,7 +215,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             else if (inundation_method == 4) then
                 ! LAPACK solver with corrective wave and small wet layer
                 inundation_height = [h_r(1),dry_tolerance]
-                call lapack_eigen(h_l,inundation_height,u_l,u_r,b_l,b_r,lambda,eig_vec)
+                rare(i) = lapack_eigen(h_l,inundation_height,u_l,u_r,b_l,b_r,lambda,eig_vec)
                 s(i,:) = lambda
                             
                 ! Correction for the fast waves
@@ -218,7 +224,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             else if (inundation_method == 5) then
                 ! Use the LAPACK solver with no correction
                 inundation_height = [h_l(1),0.d0]
-                call lapack_eigen(inundation_height,h_r,u_l,u_r,b_l,b_r,lambda,eig_vec)
+                rare(i) = lapack_eigen(inundation_height,h_r,u_l,u_r,b_l,b_r,lambda,eig_vec)
                 s(i,:) = lambda
             endif        
           
@@ -227,21 +233,21 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         else
             ! Wall dry state or completely wet case
             if (eigen_method == 1) then
-                call linear_eigen(h_hat_l,h_hat_r,u_l,u_r,b_l,b_r,lambda,eig_vec)
+                rare(i) = linear_eigen(h_hat_l,h_hat_r,u_l,u_r,b_l,b_r,lambda,eig_vec)
                 s(i,:) = lambda
             else if (eigen_method == 2) then
-                call linear_eigen(h_l,h_r,u_l,u_r,b_l,b_r,lambda,eig_vec)
+                rare(i) = linear_eigen(h_l,h_r,u_l,u_r,b_l,b_r,lambda,eig_vec)
                 s(i,:) = lambda
             else if (eigen_method == 3) then 
-                call velocity_eigen(h_l,h_r,u_l,u_r,b_l,b_r,lambda,eig_vec)
+                rare(i) = velocity_eigen(h_l,h_r,u_l,u_r,b_l,b_r,lambda,eig_vec)
                 s(i,:) = lambda
             else if (eigen_method == 4) then
                 if (dry_state_r(2).and.(.not.dry_state_l(2)).or. &
                         dry_state_l(2).and.(.not.dry_state_r(2))) then
-                    call linear_eigen(h_l,h_r,u_l,u_r,b_l,b_r,lambda,eig_vec)
+                    rare(i) = linear_eigen(h_l,h_r,u_l,u_r,b_l,b_r,lambda,eig_vec)
                     s(i,:) = lambda
                 else
-                    call lapack_eigen(h_l,h_r,u_l,u_r,b_l,b_r,lambda,eig_vec)
+                    rare(i) = lapack_eigen(h_l,h_r,u_l,u_r,b_l,b_r,lambda,eig_vec)
                     s(i,:) = lambda
                 endif
             else
@@ -338,19 +344,78 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
     enddo
     
     ! Calculate amdq and apdq
-    do i=2-mbc,mx+mbc
-        do mw=1,mwaves
-            if (s(i,mw) > 0.d0) then
-                apdq(i,:) = apdq(i,:) + fwave(i,:,mw)
-            else                                     
-                amdq(i,:) = amdq(i,:) + fwave(i,:,mw)
-            endif
+    ! No entropy fix requested
+    if (.not.entropy_fix) then
+        do i=2-mbc,mx+mbc
+            do mw=1,mwaves
+                if (s(i,mw) > 0.d0) then
+                    apdq(i,:) = apdq(i,:) + fwave(i,:,mw)
+                else                                     
+                    amdq(i,:) = amdq(i,:) + fwave(i,:,mw)
+                endif
+            enddo
         enddo
-    enddo
-
+    else
+        ! if rare(i) > 0.d0 then wave correction is in 2nd family
+        ! if rare(i) < 0.d0 then wave correction is in 3rd family
+        do i=2-mbc,mx+mbc
+            ! Move from left to right acros wave fan checking position of each
+            ! wave, here we only need to figure out the left going
+            ! fluctuations amdq since we can calculate apdq from that quantity
+            ! as     apdq = sum fwave - amdq     holds
+            
+            ! (1) Fully supersonic case right going 
+            if (s(i,1) > 0.d0) then
+                continue
+            ! (2) All but the 1st wave is going right
+            else if (s(i,2) > 0.d0) then
+                amdq(i,:) = amdq(i,:) + fwave(i,:,1)
+            ! (3) Rarefaction in 2nd wave family
+            else if (rare(i) > 0.d0) then
+                ! Note that this will be zero unless this is an inundation
+                ! problem, puzzling
+                beta = (lambda_r - s(i,2)) / (lambda_r - lambda_l)
+                amdq(i,:) = amdq(i,:) + fwave(i,:,1)
+                amdq(i,:) = amdq(i,:) + beta*fwave(i,:,2)
+            ! (4) 1st and 2nd waves going right
+            else if (s(i,2) < 0.d0) then
+                do mw=1,2
+                    amdq(i,:) = amdq(i,:) + fwave(i,:,mw)
+                enddo
+            ! (5) Rarefaction in 3rd family
+            else if (rare(i) < 0.d0) then
+                do mw=1,2
+                    amdq(i,:) = amdq(i,:) + fwave(i,:,mw)
+                enddo
+                lambda_l = rare(i)
+                lambda_r = s(i,3)
+                beta = (lambda_r - s(i,3)) / (lambda_r - lambda_l)
+                amdq(i,:) = amdq(i,:) + beta * fwave(i,:,3)
+            ! (6) 1st, 2nd, and 3rd going right
+            else if (s(i,3) < 0.d0) then
+                do mw=1,3
+                    amdq(i,:) = amdq(i,:) + fwave(i,:,mw)
+                enddo
+            ! (7) Fully supersonic case left going
+            else if (s(i,4) < 0.d0) then
+                do mw=1,mwaves
+                    amdq(i,:) = amdq(i,:) + fwave(i,:,mw)
+                enddo
+            endif
+            
+            ! Compute each element going right
+            do m=1,meqn
+                apdq(i,m) = sum(fwave(i,m,:)) - amdq(i,m)
+            enddo
+        enddo
+    endif
 end subroutine rp1
 
-subroutine linear_eigen(h_l,h_r,u_l,u_r,b_l,b_r,s,eig_vec)
+
+! ============================================================================
+!  Eigenvalue routines
+! ============================================================================
+double precision function linear_eigen(h_l,h_r,u_l,u_r,b_l,b_r,s,eig_vec) result(rare)
 
     use parameters_module, only: r,g,dry_tolerance,entropy_fix
 
@@ -362,6 +427,8 @@ subroutine linear_eigen(h_l,h_r,u_l,u_r,b_l,b_r,s,eig_vec)
     
     ! Locals
     double precision :: alpha(4),gamma_l,gamma_r
+        
+    rare = 0.d0
         
     gamma_l = h_l(2) / h_l(1)
     gamma_r = h_r(2) / h_r(1)
@@ -385,19 +452,19 @@ subroutine linear_eigen(h_l,h_r,u_l,u_r,b_l,b_r,s,eig_vec)
         ! Check for entropy problems, reverse state evaluation
         alpha(2) = 0.5d0*(gamma_r-1.d0-sqrt((gamma_r-1.d0)**2+4.d0*r*gamma_r))
         alpha(3) = 0.5d0*(gamma_l-1.d0-sqrt((gamma_l-1.d0)**2+4.d0*r*gamma_l))
-
+    
         if (u_r(2) - sqrt(g*h_r(1)*(1+alpha(2))) > 0.d0) then
-            ! Entropy violation in wave 2
-            stop "ERROR:  Entropy violation in wave family 2"
+            ! Entropy correction required for wave 2
+            rare = u_r(2) - sqrt(g*h_r(1)*(1+alpha(2)))
         else if (u_l(2) + sqrt(g*h_l(1)*(1+alpha(3))) < 0.d0) then
-            ! Entropy violation in wave 3
-            stop "ERROR:  Entropy violation in wave family 3."
+            ! Entropy correction required for wave 3
+            rare = u_l(2) + sqrt(g*h_l(1)*(1+alpha(3)))
         endif
     endif
 
-end subroutine linear_eigen
+end function linear_eigen
 
-subroutine velocity_eigen(h_l,h_r,u_l,u_r,b_l,b_r,s,eig_vec)
+double precision function velocity_eigen(h_l,h_r,u_l,u_r,b_l,b_r,s,eig_vec) result(rare)
 
     use parameters_module, only: r,g,one_minus_r,entropy_fix
 
@@ -410,6 +477,8 @@ subroutine velocity_eigen(h_l,h_r,u_l,u_r,b_l,b_r,s,eig_vec)
     ! Locals
     double precision :: total_depth_l,total_depth_r,mult_depth_l,mult_depth_r
     double precision :: alpha(4)
+    
+    rare = 0
     
     total_depth_l = sum(h_l)
     total_depth_r = sum(h_r)
@@ -445,18 +514,16 @@ subroutine velocity_eigen(h_l,h_r,u_l,u_r,b_l,b_r,s,eig_vec)
               + sqrt(g*one_minus_r*mult_depth_l/total_depth_l &
               * (1-(u_l(1)-u_l(2))**2/(g*one_minus_r*total_depth_l)))
         if (alpha(2) > 0.d0) then
-            ! Entropy violation in wave 2
-            stop "ERROR:  Entropy violation in wave family 2"
+            rare = alpha(2)
         else if (alpha(3) < 0.d0) then
-            ! Entropy violation in wave 3
-            stop "ERROR:  Entropy violation in wave family 3."
+            rare = alpha(3)
         endif
     endif
 
-end subroutine velocity_eigen
+end function velocity_eigen
 
 
-subroutine lapack_eigen(h_l,h_r,u_l,u_r,b_l,b_r,s,eig_vec)
+double precision function lapack_eigen(h_l,h_r,u_l,u_r,b_l,b_r,s,eig_vec) result(rare)
 
     use parameters_module, only: r,g,entropy_fix
 
@@ -503,13 +570,14 @@ subroutine lapack_eigen(h_l,h_r,u_l,u_r,b_l,b_r,s,eig_vec)
         s(j) = real_evalues(j)
     enddo
     
+    rare = 0.d0
     if (entropy_fix) then
         stop "ERROR:  Entropy fix has not been implemented with this solver."
     endif
     
-end subroutine lapack_eigen
+end function lapack_eigen
 
-subroutine single_layer_eigen(h_l,h_r,u_l,u_r,b_l,b_r,s,eig_vec)
+double precision function single_layer_eigen(h_l,h_r,u_l,u_r,b_l,b_r,s,eig_vec) result(rare)
 
     use parameters_module, only: g
 
@@ -528,5 +596,9 @@ subroutine single_layer_eigen(h_l,h_r,u_l,u_r,b_l,b_r,s,eig_vec)
     eig_vec(2,:) = s(:)
     eig_vec(3,:) = 0.d0
     eig_vec(4,:) = 0.d0
+    
+    rare = 0.d0
 
-end subroutine single_layer_eigen
+end function single_layer_eigen
+! ============================================================================
+
