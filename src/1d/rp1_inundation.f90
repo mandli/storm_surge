@@ -32,7 +32,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
     
     integer :: layer_index,rare(1-mbc:mx+mbc)
     double precision :: momentum_transfer(2),flux_transfer_r,flux_transfer_l
-    double precision :: inundation_height(2)
+    double precision :: inundation_height(2),lambda_l,lambda_r,lambda_hat
 
     ! Eigenvalue functions
     integer :: single_layer_eigen,linear_eigen,velocity_eigen,lapack_eigen
@@ -374,7 +374,9 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             else if (rare(i) > 0.d0) then
                 ! Note that this will be zero unless this is an inundation
                 ! problem, puzzling
-                beta = (lambda_r - s(i,2)) / (lambda_r - lambda_l)
+                lambda_l = s(i,2)
+                lambda_r = rare(i)
+                beta = lambda_l / (lambda_r - lambda_l)
                 amdq(i,:) = amdq(i,:) + fwave(i,:,1)
                 amdq(i,:) = amdq(i,:) + beta*fwave(i,:,2)
             ! (4) 1st and 2nd waves going right
@@ -389,7 +391,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
                 enddo
                 lambda_l = rare(i)
                 lambda_r = s(i,3)
-                beta = (lambda_r - s(i,3)) / (lambda_r - lambda_l)
+                beta = lambda_l / (lambda_r - lambda_l)
                 amdq(i,:) = amdq(i,:) + beta * fwave(i,:,3)
             ! (6) 1st, 2nd, and 3rd going right
             else if (s(i,3) < 0.d0) then
