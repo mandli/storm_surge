@@ -356,6 +356,24 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             enddo
         enddo
     else
+!         do i=2-mbc,mx+mbc
+!             ! Check to see if an entropy fix is necessary
+!             if (sum(sign(s(i,:),1)) /= 0) then
+!                 if (s(i,2) > 0.d0) then
+!                     print *,"Entropy fix needed: i=",i
+!                     print *,"  s(i,:)=",(s(i,m),m=1,4)
+!                     stop
+!                 endif
+!             else
+!                 ! No entropy fix needed                
+!                 do mw=1,mwaves
+!                     if (s(i,mw) > 0.d0) then
+!                         apdq(i,:) = apdq(i,:) + fwave(i,:,mw)
+!                     else                                     
+!                         amdq(i,:) = amdq(i,:) + fwave(i,:,mw)
+!                     endif
+!                 enddo
+!             endif
         ! if rare(i) > 0.d0 then wave correction is in 2nd family
         ! if rare(i) < 0.d0 then wave correction is in 3rd family
         do i=2-mbc,mx+mbc
@@ -391,7 +409,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
                 enddo
                 lambda_l = rare(i)
                 lambda_r = s(i,3)
-                beta = lambda_l / (lambda_r - lambda_l)
+                beta = lambda_l / (lambda_l - lambda_r)
                 amdq(i,:) = amdq(i,:) + beta * fwave(i,:,3)
             ! (6) 1st, 2nd, and 3rd going right
             else if (s(i,3) < 0.d0) then
