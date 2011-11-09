@@ -14,7 +14,8 @@ module parameters_module
 
     ! Initial condition settings
     integer :: init_type,wave_family
-    double precision :: init_location,eta(2),epsilon,sigma,bathy_type
+    double precision :: init_location,eta_left(2),eta_right(2)
+    double precision :: u_left(2),u_right(2),epsilon,sigma,bathy_type
     double precision :: bathy_location,bathy_left,bathy_right
     double precision :: x0,basin_depth,x1,shelf_depth,shelf_slope
     
@@ -47,8 +48,7 @@ contains
 
         ! Physics constants
         read(13,*) rho_air
-        read(13,*) rho(1)
-        read(13,*) rho(2)
+        read(13,*) rho
         r = rho(1) / rho(2)
         one_minus_r = 1.d0 - r
         read(13,*) manning
@@ -65,8 +65,10 @@ contains
         read(13,*) init_type
         read(13,*) init_location
         read(13,*) wave_family
-        read(13,*) eta(1)
-        read(13,*) eta(2)
+        read(13,*) eta_left
+        read(13,*) eta_right
+        read(13,*) u_left
+        read(13,*) u_right
         read(13,*) epsilon
         read(13,*) sigma
         read(13,*)

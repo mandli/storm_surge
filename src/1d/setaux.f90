@@ -44,11 +44,20 @@ subroutine setaux(maxmx,mbc,mx,xlower,dx,maux,aux)
         endif
         
         ! Set initial states
-        if (eta(2) > aux(i,1)) then
-            aux(i,3) = eta(1) - eta(2)
-            aux(i,4) = eta(2) - aux(i,1)
+        if (x < init_location) then
+            if (eta_left(2) > aux(i,1)) then
+                aux(i,3) = eta_left(1) - eta_left(2)
+                aux(i,4) = eta_left(2) - aux(i,1)
+            else
+                aux(i,3) = eta_left(1) - aux(i,1)
+            endif
         else
-            aux(i,3) = eta(1) - aux(i,1)
+            if (eta_right(2) > aux(i,1)) then
+                aux(i,3) = eta_right(1) - eta_right(2)
+                aux(i,4) = eta_right(2) - aux(i,1)
+            else
+                aux(i,3) = eta_right(1) - aux(i,1)
+            endif
         endif
     enddo
     

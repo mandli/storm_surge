@@ -28,8 +28,20 @@ subroutine qinit(maxmx,meqn,mbc,mx,xlower,dx,q,maux,aux)
         q(i,2) = 0.d0
         q(i,4) = 0.d0
         
+        ! Simple Riemann problem specification
+        if (init_type == 0) then
+            ! Depth is already set above appropriately
+            ! Need to set momentum though
+            if (x < init_location) then
+                q(i,2) = u_left(1) * q(i,1)
+                q(i,4) = u_left(2) * q(i,3)
+            else
+                q(i,2) = u_right(1) * q(i,1)
+                q(i,4) = u_right(2) * q(i,3)
+            endif
+
         ! Riemann problem in one wave family
-        if (init_type == 1) then
+        else if (init_type == 1) then
             ! Calculate wave family for perturbation
             gamma = aux(i,4) / aux(i,3)
             select case(wave_family)
@@ -78,22 +90,6 @@ subroutine qinit(maxmx,meqn,mbc,mx,xlower,dx,q,maux,aux)
                 deta = epsilon * sin((x-xmid)*PI/(-80.e3-xmid))
                 q(i,3) = q(i,3) + rho(2) * alpha * deta
                 q(i,1) = q(i,1) + rho(1) * deta * (1.d0 - alpha)
-            endif
-        ! Dry state test
-        else if (init_type == 5) then
-            q(i,2) = 0.d0
-            q(i,4) = 0.d0
-            if (x > init_location) then
-                q(i,3) = 0.d0
-                q(i,1) = rho(1) * (eta(1) - aux(i,1))
-            endif
-        else if (init_type == 6) then
-            if (x< init_location) then
-                q(i,2) = 0.d0
-                q(i,4) = -q(i,3) * epsilon
-            else 
-                q(i,2) = 0.d0
-                q(i,4) = q(i,3) * epsilon
             endif
         endif
     enddo
