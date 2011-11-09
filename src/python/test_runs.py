@@ -59,7 +59,10 @@ def run_tests(tests,plot=True,tar=False,max_processes=None,parallel=True,
         plots_dirname = ''.join((test.prefix,"_plots"))
         log_name = ''.join((test.prefix,"_log.txt"))
         
-        test_path = os.path.join(base_path,test.type,test.name)
+        if len(test.type) > 0:
+            test_path = os.path.join(base_path,test.type,test.name)
+        else:
+            test_path = os.path.join(base_path,test.name)
         test_path = os.path.abspath(test_path)
         data_path = os.path.join(test_path,data_dirname)
         output_path = os.path.join(test_path,output_dirname)
