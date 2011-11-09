@@ -202,8 +202,7 @@ def set_multilayer_data():
     
     # Physics
     prob_data.rho_air = 1.15e-3
-    prob_data.rho_1 = 0.98
-    prob_data.rho_2 = 1.0
+    prob_data.rho = [0.98,1.0]
     
     # Algorithm
     prob_data.dry_tolerance = 1e-3
@@ -213,8 +212,7 @@ def set_multilayer_data():
     prob_data.init_type = 1
     prob_data.init_location = 0.45
     prob_data.wave_family = wave_family
-    prob_data.eta_1 = 0.0
-    prob_data.eta_2 = -0.6
+    prob_data.eta = [0.0,-0.6]
     prob_data.epsilon = 0.1
     prob_data.sigma = 0.02
     
@@ -245,7 +243,7 @@ if __name__ == '__main__':
         rundata = setrun(sys.argv[1])
     else:
     	rundata = setrun()
-    prob_data = set_multilayer()
+    prob_data = set_multilayer_data()
 
     rundata.write()
     prob_data.write()

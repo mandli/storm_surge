@@ -26,9 +26,8 @@ class MultilayerData(data.Data):
         
         # Physics
         self.add_attribute('rho_air',1.0)
-        self.add_attribute('rho_1',1025.0)
+        self.add_attribute('rho',[1025.0,1028.0])
         # self.add_attribute('rho_2',self.rho_1/0.99)
-        self.add_attribute('rho_2',1028.0)
         self.add_attribute('manning',0.025)
         
         # Algorithm
@@ -41,9 +40,12 @@ class MultilayerData(data.Data):
         self.add_attribute('init_type',4)
         self.add_attribute('init_location',300e3)
         self.add_attribute('wave_family',4)
-        self.add_attribute('eta_1',0.0)
-        self.add_attribute('eta_2',-300)
-        # self.add_attribute('epsilon',0.027)
+        self.add_attribute('eta',[0.0,-300.0]) # Default values
+        self.add_attribute('eta_left',None)
+        self.add_attribute('eta_right',None)
+        self.add_attribute('u',[0.0,0.0])  # Default values
+        self.add_attribute('u_left',None)
+        self.add_attribute('u_right',None)
         self.add_attribute('epsilon',0.4)
         self.add_attribute('sigma',25e3)
         
@@ -78,8 +80,7 @@ class MultilayerData(data.Data):
         out_file = data.open_datafile(file)
         
         data.data_write(out_file,self,'rho_air','(Density of air)')
-        data.data_write(out_file,self,'rho_1','(Density of top layer)')
-        data.data_write(out_file,self,'rho_2','(Density of bottom layer)')
+        data.data_write(out_file,self,'rho','(Densities of layers)')
         data.data_write(out_file,self,'manning',"(Manning N coefficent for friction)")
         data.data_write(out_file,self,None)
         data.data_write(out_file,self,'dry_tolerance','(Dry state tolerance)')
@@ -90,8 +91,18 @@ class MultilayerData(data.Data):
         data.data_write(out_file,self,'init_type','(Type of initial condition)')
         data.data_write(out_file,self,'init_location','(Location for perturbation)')
         data.data_write(out_file,self,'wave_family','(Wave family of the perturbation)')
-        data.data_write(out_file,self,'eta_1','(Steady state top surface)')
-        data.data_write(out_file,self,'eta_2','(Steady state internal surface)')
+        if self.eta_left is None:
+            self.eta_left = self.eta
+        data.data_write(out_file,self,'eta_left','(Left surface elevations)')
+        if self.eta_right is None:
+            self.eta_right = self.eta_left
+        data.data_write(out_file,self,'eta_right','(Right surface elevations)')
+        if self.u_left is None:
+            self.u_left = self.u
+        data.data_write(out_file,self,'u_left','(Left layer velocities)')
+        if self.u_right is None:
+            self.u_right = self.u_left
+        data.data_write(out_file,self,'u_right','(Right layer velocities)')
         data.data_write(out_file,self,'epsilon','(Perturbation strength)')
         data.data_write(out_file,self,'sigma','(Gaussian width for init_type=2,3)')
         data.data_write(out_file,self,None)

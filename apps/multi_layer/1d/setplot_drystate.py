@@ -223,7 +223,8 @@ def setplot(plotdata):
         for ref_line in bathy_ref_lines:
             ax1.plot([ref_line,ref_line],ylimits_velocities,'k--')
 
-        ax1.legend((bottom_layer,top_layer),('Bottom Layer','Top Layer'),loc=4)
+        # ax1.legend((bottom_layer,top_layer),('Bottom Layer','Top Layer'),loc=4)
+        ax1.legend(('Bottom Layer','Top Layer'),loc=4)
         ax1.set_title('Layer Velocities')
         ax1.set_ylabel('Velocities (m/s)')
         # ax1.legend((bottom_layer,top_layer,kappa_line),('Bottom Layer','Top Layer',"Kappa"),loc=4)
