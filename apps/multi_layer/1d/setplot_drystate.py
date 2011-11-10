@@ -83,8 +83,14 @@ def setplot(plotdata):
     xlimits_zoomed = [0.45,0.55]
     ylimits_momentum = [-0.004,0.004]
     
+    # Riemann problem
+    if problem_data.init_type == 0:
+        ylimits_depth = [-1.0,0.2]
+        ylimits_depth_zoomed = ylimits_depth
+        ylimits_velocities = [-0.75,0.75]
+        ylimits_velocities_zoomed = ylimits_velocities
     # Idealized waves
-    if problem_data.init_type == 1:
+    elif problem_data.init_type == 1:
         # External wave
         if problem_data.wave_family == 4:
             ylimits_velocities = [-0.8,0.8]
@@ -97,11 +103,6 @@ def setplot(plotdata):
             ylimits_velocities_zoomed = ylimits_velocities
             ylimits_depth = [-1.0,0.2]
             ylimits_depth_zoomed = ylimits_depth
-    elif problem_data.init_type == 5 or problem_data.init_type == 6:
-        ylimits_depth = [-1.0,0.2]
-        ylimits_depth_zoomed = ylimits_depth
-        ylimits_velocities = [-0.75,0.75]
-        ylimits_velocities_zoomed = ylimits_velocities
     
     # ========================================================================
     #  Fill plot

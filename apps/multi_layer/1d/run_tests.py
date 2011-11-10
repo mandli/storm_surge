@@ -234,8 +234,8 @@ class RarefactionBaseTest(test_runs.TestML1D):
         self.ml_data.init_type = 0
         self.ml_data.init_location = 0.5
         self.ml_data.eta = [0.0,-0.5]
-        self.ml_data.u_left = [0.0,-0.25]
-        self.ml_data.u_right = [0.0,0.25]
+        self.ml_data.u_left = [0.0,-0.5]
+        self.ml_data.u_right = [0.0,0.5]
         self.ml_data.bathy_type = 1
         self.ml_data.bathy_left = -1.0
         self.ml_data.bathy_right = -1.0
@@ -263,10 +263,6 @@ for method in [1,2,3,4]:
 # Eigen method tests for oscillatory wind
 for method in [1,2,3,4]:
     tests.append(OscillatoryWindBaseTest(eigen_method=method))
-
-# tests.append(DryStateBaseTest(eigen_method=2,mx=500,entropy_fix=False))
-# for method in [1,2,3,4]:
-#     tests.append(DryStateBaseTest(eigen_method=method,mx=500,entropy_fix=True))
     
 # Convergence test for shelf
 # for method in [1,2,3,4]:
@@ -278,6 +274,15 @@ mx = 2000
 for method in [1,2,3,4]:
     tests.append(ShelfBaseTest(mx=mx,eigen_method=method))
     tests.append(RealShelfBaseTest(mx=mx,eigen_method=method))
+    
+# Entropy correction tests
+tests.append(DryStateBaseTest(eigen_method=2,mx=500,entropy_fix=False))
+for method in [1,2,3,4]:
+    tests.append(DryStateBaseTest(eigen_method=method,mx=500,entropy_fix=True))
+
+for method in [2,4]:
+    tests.append(RarefactionBaseTest(eigen_method=method,entropy_fix=False))
+    tests.append(RarefactionBaseTest(eigen_method=method,entropy_fix=True))
 
 
 

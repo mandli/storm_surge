@@ -1,10 +1,7 @@
 ! ============================================================================
-!  Reimann Solver
+!  Reimann Solver for the two-layer shallow water equations
 ! ============================================================================
 subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
-!
-!   Riemann solver for linearized multilayer shallow water equations
-!
 
     use parameters_module
 
@@ -21,9 +18,9 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
     double precision, intent(out) :: fwave(1-mbc:maxmx+mbc, meqn, mwaves)
     double precision, intent(out), dimension(1-mbc:maxmx+mbc, meqn) :: amdq,apdq
     
-    ! Locals
-    integer :: i,j,m,mw,ipiv(4),info
-    double precision :: eig_vec(4,4),A(4,4),delta(4),alpha(4),beta(4)
+    ! Local storage
+    integer :: i,j,m,mw
+    double precision :: eig_vec(4,4),delta(4),alpha(4),beta(4)
     double precision, dimension(4) :: flux_l,flux_r
     double precision, dimension(2) :: h_l,u_l,hu_l,h_r,u_r,hu_r,h_ave,u_ave
     double precision :: b_l,b_r,gamma_l,gamma_r,tau,w_l,w_r
@@ -36,6 +33,15 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
 
     integer :: trans_wave(2-mbc:mx+mbc)
     double precision :: wave_correction(2-mbc:mx+mbc)
+
+    ! Function interfaces
+    interface
+        function eval_lapack_solve(eig_vec,delta) result(beta)
+            implicit none
+            double precision, intent(in) :: eig_vec(4,4), delta(4)
+            double precision :: beta(4)
+        end function eval_lapack_solve
+    end interface
 
     ! Common block
     double precision :: dt,dx,t
@@ -334,21 +340,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
 
         ! ====================================================================
         ! Solve system, solution is stored in delta
-        A = eig_vec
-        call dgesv(4,1,A,4,ipiv,delta,4,info)
-        if (.not.(info == 0)) then 
-            print *, "Location (i) = (",i,")"
-            print *, "Dry states, L=",dry_state_l(2)," R=",dry_state_r(2)
-            print *, "h_l(2) = ",h_l(2)," h_r(2) = ",h_r(2)
-            print *, "Error solving R beta = delta, ",info
-            print *, "Eigen-speeds:",(s(i,mw),mw=1,mwaves)
-            print *, "Eigen-vectors:"
-            do j=1,4
-                print "(4d16.8)",(eig_vec(j,m),m=1,meqn)
-            enddo
-            stop
-        endif
-        beta = delta
+        beta = eval_lapack_solve(eig_vec,delta)
         
         ! Calculate waves
         forall(mw=1:4)
@@ -397,11 +389,16 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         enddo
     endif
 end subroutine rp1
+! ============================================================================
+
 
 
 ! ============================================================================
 !  Eigenvalue routines
 ! ============================================================================
+
+! ============================================================================
+!  Eigenspace reconstruction using linear approximation
 subroutine linear_eigen(h_l,h_r,u_l,u_r,b_l,b_r,            &
                          &  transonic_wave,wave_correction,s,eig_vec)
 
@@ -457,35 +454,10 @@ subroutine linear_eigen(h_l,h_r,u_l,u_r,b_l,b_r,            &
             ! Transonic rarefaction
             ! s_l < 0.0 < s_r
             else if (speeds(mw,2) > 0.d0) then
-                ! Calculate LAPACK eigenvalues
-!                 h_ave = 0.5d0 * (h_l(:) + h_r(:))
-!                 u_ave = 0.5d0 * (u_l(:) + u_l(:))
-!                 call eval_lapack_eigen(h_l,u_l,s_l,work_vec)
-!                 call eval_lapack_eigen(h_r,u_r,s_r,work_vec)
-!                 call eval_lapack_eigen(h_ave,u_ave,s_ave,work_vec)
-!                 
-!                 ! Replace speed with LAPACK version
-!                 s(mw) = s_ave(mw)
-!                 
-!                 if (.not.(s_l(mw) < 0.d0 .and. 0.d0 < s_r(mw))) then
-!                     ! Entropy violation may not be occuring, use LAPACK
-!                     ! generated speeds
-!                     print *,"LAPACK predicts no entropy violation"
-!                     print *,"  ",speeds(mw,1),"          ",speeds(mw,2)
-!                     print *,"  ",s_l(mw),"  ",s_r(mw),"  ",s_ave(mw)
-!                 else
-!                     ! True entropy violation occuring
-!                     transonic_wave = mw
-! !                     wave_correction = (s_r(mw) - s_ave(mw)) / (s_r(mw) - s_l(mw))
-!                     wave_correction = abs(s_l(mw)) / (abs(s_l(mw)) + abs(s_r(mw)))
-!                 endif
-
-            ! Assign base speed for rarefaction, should approximate true speed
-            s(mw) = 0.5d0 * sum(speeds(mw,:))
-            transonic_wave = mw
-            wave_correction = abs(speeds(mw,1)) / (abs(speeds(mw,1)) + abs(speeds(mw,2)))
-            
-            ! Boths speeds left going
+                ! Assign base speed for rarefaction, should approximate true speed
+                s(mw) = 0.5d0 * sum(speeds(mw,:))
+                transonic_wave = mw
+                wave_correction = abs(speeds(mw,1)) / (abs(speeds(mw,1)) + abs(speeds(mw,2)))
             else
                 s(mw) = speeds(mw,1)
             endif
@@ -500,7 +472,11 @@ subroutine linear_eigen(h_l,h_r,u_l,u_r,b_l,b_r,            &
     eig_vec(4,:) = s(:)*alpha(:)
 
 end subroutine linear_eigen
+! ============================================================================
 
+
+! ============================================================================
+!  Eigenspace reconstruction using the velocity difference expansion
 subroutine velocity_eigen(h_l,h_r,u_l,u_r,b_l,b_r,            &
                          &  transonic_wave,wave_correction,s,eig_vec)
 
@@ -547,7 +523,98 @@ subroutine velocity_eigen(h_l,h_r,u_l,u_r,b_l,b_r,            &
     eig_vec(4,:) = s(:)*alpha(:)
 
 end subroutine velocity_eigen
+! ============================================================================
 
+
+! ============================================================================
+!  Eigenspace reconstruction using LAPACK
+subroutine lapack_eigen(h_l,h_r,u_l,u_r,b_l,b_r,            &
+                         &  transonic_wave,wave_correction,s,eig_vec)
+
+    use parameters_module, only: entropy_fix
+
+    implicit none
+    
+    ! I/O
+    double precision, intent(in) :: h_l(2),h_r(2),u_l(2),u_r(2),b_l,b_r
+    
+    integer, intent(inout) :: transonic_wave
+    double precision, intent(inout) :: wave_correction
+    double precision, intent(inout) :: s(4),eig_vec(4,4)
+    
+    ! Local
+    integer :: j
+    double precision :: h_ave(2),u_ave(2)
+    double precision :: s_l(4),s_r(4),vec_work(4,4)
+    
+    ! Solve eigenvalue problem
+    h_ave(:) = 0.5d0 * (h_l(:) + h_r(:))
+    u_ave(:) = 0.5d0 * (u_l(:) + u_r(:))
+    call eval_lapack_eigen(h_ave,u_ave,s,eig_vec)
+    
+    transonic_wave = 0
+    wave_correction = 0.d0
+    
+    if (entropy_fix) then
+        ! Check to see if we may be at a transonic rarefaction
+        call eval_lapack_eigen(h_l,u_l,s_l,vec_work)        
+        call eval_lapack_eigen(h_r,u_r,s_r,vec_work)
+        
+        ! Check each wave for a transonic problem
+        do j=1,4
+            if (s_l(j) < 0.d0 .and. 0.d0 < s_r(j)) then
+                print *,"Transonic wave detected in wave family ",j,"."
+                transonic_wave = j
+                wave_correction = (s_l(j) - s(j)) / (s_l(j) - s_r(j))
+            endif
+        enddo
+    endif
+    
+end subroutine lapack_eigen
+! ============================================================================
+
+
+! ============================================================================
+! Single layer eigenspace reconstruction
+subroutine single_layer_eigen(h_l,h_r,u_l,u_r,b_l,b_r,            &
+                         &  transonic_wave,wave_correction,s,eig_vec)
+
+    use parameters_module, only: g
+
+    implicit none
+    
+    ! I/O
+    double precision, intent(in) :: h_l(2),h_r(2),u_l(2),u_r(2),b_l,b_r
+    
+    integer, intent(inout) :: transonic_wave
+    double precision, intent(inout) :: wave_correction
+    double precision, intent(inout) :: s(4),eig_vec(4,4)
+    
+    transonic_wave = 0
+    wave_correction = 0.d0
+    
+    s(1) = u_l(1) - sqrt(g*h_l(1))
+    s(2) = 0.d0
+    s(3) = 0.d0
+    s(4) = u_r(1) + sqrt(g*h_r(1))
+    
+    eig_vec(1,:) = 1.d0
+    eig_vec(2,:) = s(:)
+    eig_vec(3,:) = 0.d0
+    eig_vec(4,:) = 0.d0
+
+end subroutine single_layer_eigen
+! ============================================================================
+
+
+
+
+! ============================================================================
+!  Helper routines
+! ============================================================================
+
+! ============================================================================
+!  Evaluate eigenvalues using LAPACK's DGEEV function
 subroutine eval_lapack_eigen(h,u,lambda,vec)
 
     use parameters_module, only: r,g
@@ -588,107 +655,41 @@ subroutine eval_lapack_eigen(h,u,lambda,vec)
     endif
 
 end subroutine eval_lapack_eigen
-
-subroutine eval_lapack_solve(eig_vec)
-
-    implicit none
-
-    double precision, intent(in) :: eig_vec
-    
-!     ! Locals
-!     integer :: ipiv
-! 
-!     call dgesv(4,1,eig_vec,4,ipiv,delta,4,info)
-!     if (.not.(info == 0)) then 
-!         print *, "Error solving R beta = delta, ",info
-!         stop
-!     endif
-
-end subroutine eval_lapack_solve
-
-
-subroutine lapack_eigen(h_l,h_r,u_l,u_r,b_l,b_r,            &
-                         &  transonic_wave,wave_correction,s,eig_vec)
-
-    use parameters_module, only: entropy_fix
-
-    implicit none
-    
-    ! I/O
-    double precision, intent(in) :: h_l(2),h_r(2),u_l(2),u_r(2),b_l,b_r
-    
-    integer, intent(inout) :: transonic_wave
-    double precision, intent(inout) :: wave_correction
-    double precision, intent(inout) :: s(4),eig_vec(4,4)
-    
-    ! Local
-    integer, parameter :: lwork = 4*4
-    integer :: j,info
-    double precision :: A(4,4),h_ave(2),u_ave(2)
-    double precision :: real_evalues(4),imag_evalues(4)
-    double precision :: empty,work(1,lwork)
-    double precision :: s_l(4),s_r(4),vec_work(4,4)
-    
-    ! Solve eigenvalue problem
-    h_ave(:) = 0.5d0 * (h_l(:) + h_r(:))
-    u_ave(:) = 0.5d0 * (u_l(:) + u_r(:))
-    call eval_lapack_eigen(h_ave,u_ave,s,eig_vec)
-    
-    transonic_wave = 0
-    wave_correction = 0.d0
-    
-    if (entropy_fix) then
-        ! Check to see if we may be at a transonic rarefaction
-        if (sum(sign(s,1.d0)) > 0.d0) then
-            ! Recalculate the eigenvalues for the right and left states
-            ! Left eigenvalues
-            call eval_lapack_eigen(h_l,u_l,s_l,vec_work)
-            
-            ! Right eigenvalues
-            call eval_lapack_eigen(h_r,u_r,s_r,vec_work)
-            
-            ! Check each wave for a transonic problem
-            do j=1,4
-                if (s_l(j) < 0.d0 .and. 0.d0 < s_r(j)) then
-                    print *,"Transonic wave detected in wave family ",j,"."
-                    transonic_wave = j
-                    wave_correction = (s_l(j) - s(j)) / (s_l(j) - s_r(j))
-                endif
-            enddo
-        endif
-    endif
-    
-end subroutine lapack_eigen
-
-
-
-subroutine single_layer_eigen(h_l,h_r,u_l,u_r,b_l,b_r,            &
-                         &  transonic_wave,wave_correction,s,eig_vec)
-
-    use parameters_module, only: g
-
-    implicit none
-    
-    ! I/O
-    double precision, intent(in) :: h_l(2),h_r(2),u_l(2),u_r(2),b_l,b_r
-    
-    integer, intent(inout) :: transonic_wave
-    double precision, intent(inout) :: wave_correction
-    double precision, intent(inout) :: s(4),eig_vec(4,4)
-    
-    transonic_wave = 0
-    wave_correction = 0.d0
-    
-    s(1) = u_l(1) - sqrt(g*h_l(1))
-    s(2) = 0.d0
-    s(3) = 0.d0
-    s(4) = u_r(1) + sqrt(g*h_r(1))
-    
-    eig_vec(1,:) = 1.d0
-    eig_vec(2,:) = s(:)
-    eig_vec(3,:) = 0.d0
-    eig_vec(4,:) = 0.d0
-
-end subroutine single_layer_eigen
 ! ============================================================================
+
+! ============================================================================
+!  Solve R beta = delta using LAPACK's DGESV function
+function eval_lapack_solve(eig_vec,delta) result(beta)
+
+    implicit none
+
+    ! Matrix and RHS
+    double precision, intent(in) :: eig_vec(4,4), delta(4)
+    
+    ! Output
+    double precision :: beta(4)
+    
+    ! Local storage
+    double precision :: R(4,4)
+    integer :: ipiv(4),info,i,m
+
+    ! Move input data into work arrays
+    R = eig_vec
+    beta = delta
+
+    ! Call LAPACK dense linear solver
+    call dgesv(4,1,R,4,ipiv,beta,4,info)
+    if (.not.(info == 0)) then 
+        print *, "Error solving R beta = delta, ",info
+        print *, "  R=",(eig_vec(1,m),m=1,4)
+        do i=2,4
+            print *, "    ",(eig_vec(i,m),m=1,4)
+        enddo
+        print *, "  delta=",(delta(m),m=1,4)
+        stop
+    endif
+
+end function eval_lapack_solve
+! ============================================================================
+
 

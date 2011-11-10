@@ -97,7 +97,7 @@ def setplot(plotdata):
             ylimits_velocities_zoomed = ylimits_velocities
             ylimits_depth = [-1.0,0.2]
             ylimits_depth_zoomed = ylimits_depth
-    elif problem_data.init_type == 5 or problem_data.init_type == 6:
+    elif problem_data.init_type == 0:
         ylimits_depth = [-1.0,0.2]
         ylimits_depth_zoomed = ylimits_depth
         ylimits_velocities = [-0.75,0.75]
