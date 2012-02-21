@@ -8,7 +8,7 @@ Functions for creating topography
 import os
 import numpy as np
 
-from clawdata import Data
+from oldclawdata import Data
 import topotools as tt
 
 def create_topo_func(loc,verbose=False):
@@ -171,7 +171,7 @@ def write_topo_file(topo_file,topo_type=1,factor=4,bathy_type=None,plot=False,
         print "%s profile: %s" % (bathy_type,bathy_profile)
 
     # Create and write topography
-    bathy_func = util.create_topo_func(bathy_profile,verbose=verbose)
+    bathy_func = create_topo_func(bathy_profile,verbose=verbose)
     N = len(bathy_profile)
     if topo_type == 1:
         tt.topo1writer(topo_file,bathy_func,xlower,xupper,ylower,yupper,
@@ -217,7 +217,7 @@ def plot_profiles(profiles,topo_type=1,factor=4,verbose=True):
         topo_file = os.path.join(bathy_path,name)
         
         # Write out temporary file
-        bathy_func = util.create_topo_func(profile,verbose=verbose)
+        bathy_func = create_topo_func(profile,verbose=verbose)
         N = len(profile)
         factor = 4
         if topo_type == 1:
