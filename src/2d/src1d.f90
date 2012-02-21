@@ -18,7 +18,7 @@ subroutine src1d(meqn,mbc,mx1d,q1d,maux,aux1d,t,dt)
     
     ! Output
     double precision, intent(inout) :: q1d(meqn,mx1d)
-    double precision, intent(inout) :: aux1d(maux,mx1d,maux)
+    double precision, intent(inout) :: aux1d(maux,mx1d)
 
     ! Locals
     integer :: i

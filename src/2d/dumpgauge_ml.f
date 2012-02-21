@@ -1,14 +1,15 @@
       subroutine dumpgauge(q,aux,xlow,ylow,nvar,mitot,mjtot,mptr)
 
-      use multilayer_module, only: layers, rho
+      use multilayer_module, only: layers, rho, ml_maux
       use amr_module
       use geoclaw_module
+      use gauges_module
 
       implicit double precision (a-h,o-z)
 
       integer bsearch
       dimension q(nvar,mitot,mjtot), var(maxvar)
-      dimension aux(naux,mitot,mjtot)
+      dimension aux(ml_maux,mitot,mjtot)
       dimension eta(layers)
       dimension h(layers,4)
 
@@ -37,7 +38,7 @@ c     # this stuff the same for all gauges on this grid
         if (mptr .ne. mbestsrc(i)) go to 99  ! all done
         if (tgrid.lt.t1gauge(i) .or. tgrid.gt.t2gauge(i)) then
 c          # don't output at this time for gauge i
-           go to 10
+           return
            endif
 c
 c
@@ -101,9 +102,9 @@ c velocities are zeroed out which can then lead to increase in h again.
      &                 + xoff*(1.d0 - yoff) 
      &                 * q(layer_index + ivar,iindex+1,jindex) / rho(m)
      &                 + (1.d0 - xoff) * yoff 
-     &                 * q(layer_index + ivar.iindex,jindex+1) / rho(m)
+     &                 * q(layer_index + ivar,iindex,jindex+1) / rho(m)
      &                 + xoff * yoff 
-     &                 * q(layer_index + ivar,iindex+1,jindex+1) / rho(m)
+     &                 * q(layer_index + ivar,iindex+1,jindex+1)/rho(m)
                   enddo
                   if (m == layers) then
                       topo = (1.d0 - xoff) * (1.d0 - yoff) 
@@ -124,9 +125,11 @@ c velocities are zeroed out which can then lead to increase in h again.
               
           write(OUTGAUGEUNIT,100) igauge(i),level,tgrid, 
      &                    (var(j),j=1,3*layers),(eta(j),j=1,layers)
-      enddo
+  10  enddo
       
  100  format(2i5,15e15.7)
+ 
+  99  return
  
       end subroutine dumpgauge
 c

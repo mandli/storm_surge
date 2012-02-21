@@ -71,10 +71,9 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
     logical :: rare(2)
 
     ! Common block variables
-    integer :: mcapa,icom,jcom
+    integer :: icom,jcom
     double precision :: dtcom,dxcom,dycom,tcom
-
-    common /cmcapa/ mcapa
+    
     common /comxyt/ dtcom,dxcom,dycom,tcom,icom,jcom
 
     external dgesv

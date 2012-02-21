@@ -42,16 +42,6 @@ c
       dimension   amrflags(1-mbc:mx+mbc,1-mbc:my+mbc)
       logical     allowflag
       external  allowflag
-      logical shoreregion,wave,shoreline
-
-
-      implicit double precision (a-h, o-z)
-
-      dimension   q(meqn,1-mbc:mx+mbc,1-mbc:my+mbc)
-      dimension   aux(maux,1-mbc:mx+mbc,1-mbc:my+mbc)
-      dimension   amrflags(1-mbc:mx+mbc,1-mbc:my+mbc)
-      logical     allowflag
-      external  allowflag
       logical shoreregion,shoreline
  
       logical wave

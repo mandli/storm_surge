@@ -18,12 +18,11 @@ c     Also calls movetopo if topography might be moving.
       use geoclaw_module
       use topo_module
       use dtopo_module
-      use amr_module, only naux
 
       implicit double precision (a-h,o-z)
 
       dimension q(meqn,1-mbc:maxmx+mbc,1-mbc:maxmy+mbc)
-      dimension aux(naux,1-mbc:maxmx+mbc,1-mbc:maxmy+mbc)
+      dimension aux(maux,1-mbc:maxmx+mbc,1-mbc:maxmy+mbc)
       dimension vel(2,1-mbc:maxmx+mbc,1-mbc:maxmy+mbc)
       
       integer :: layer,layer_index

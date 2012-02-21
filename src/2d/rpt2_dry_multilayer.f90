@@ -49,7 +49,7 @@ subroutine rpt2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,aux1,aux2,aux3,imp,asdq,bmasdq
     
     ! Single layer solver storage
     double precision :: ql_sl(3),qr_sl(3)
-    double precision :: aux1_sl(2,3),aux2_sl(2,3),aux3_sl(2,3)
+    double precision :: aux1_sl(3,2),aux2_sl(3,2),aux3_sl(3,2)
     double precision :: asdq_sl(meqn),bmasdq_sl(meqn),bpasdq_sl(meqn)
     
     double precision :: ts(6),teig_vec(6,6)
