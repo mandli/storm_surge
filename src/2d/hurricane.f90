@@ -245,13 +245,13 @@ contains
                     r = sqrt(x**2+y**2) * 1d-3
                 
                     if (abs(r) < 10d-6) then
-                        wind(i,j,:) = 0.d0
+                        wind(:,i,j) = 0.d0
                     else
                         w = sqrt(C * exp(-A/r**B) / r**B + r**2 * f**2 / 4.0) &
                                  - r * f / 2.d0
                         r = r * 1d3
-                        wind(i,j,1) = -w * y / r
-                        wind(i,j,2) =  w * x / r
+                        wind(1,i,j) = -w * y / r
+                        wind(2,i,j) =  w * x / r
                     endif
                 enddo
             enddo

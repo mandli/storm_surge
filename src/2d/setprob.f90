@@ -9,7 +9,7 @@ subroutine setprob()
     implicit none
     
     call set_geo           ! sets basic parameters g and coord system
-    call set_tsunami       ! sets parameters specific to tsunamis
+    call set_shallow       ! sets parameters specific to tsunamis
     call set_topo          ! specifies topography (bathymetry) files
     call set_dtopo         ! specifies file with dtopo from earthquake
     call setqinit         ! specifies file with dh if this used instead

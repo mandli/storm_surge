@@ -5,10 +5,9 @@ c
      &                naux,nout,tout,tchk,t0,rest)
 c
       use  geoclaw_module
-
+      use amr_module
       implicit double precision (a-h,o-z)
 
-      include  "call.i"
 
       logical    vtime, dumpout, dumpchk, rest
       dimension dtnew(maxlv), ntogo(maxlv), tlevel(maxlv)
@@ -88,7 +87,8 @@ c
 c  ------ start of coarse grid integration loop. ------------------
 c
 C  20   if (ncycle .ge. nstop .or. time .ge. tfinal) goto 999
-  20   if (time .ge. tfinal) goto 999
+ 20   if (time .ge. tfinal) goto 999
+
       if (nextout  .le. nout) then
          outtime       = tout(nextout)
       else
@@ -183,7 +183,7 @@ c
 101       format(8h  level ,i5,32h  stays fixed during regridding )
           call regrid(nvar,lbase,cut,naux,t0)
           call setbestsrc()     ! need at every grid change
-c         call conck(1,nvar,time,rest)
+c         call conck(1,nvar,naux,time,rest)
 c         call outtre(lstart(lbase+1),.true.,nvar,naux)
 c note negative time to signal regridding output in plots
 c         call valout(lbase,lfine,-tlevel(lbase),nvar,naux)
@@ -263,7 +263,8 @@ c                same level goes again. check for ok time step
  106             if ((possk(level)-dtnew(level))/dtnew(level)
      .                .gt. .05)  then
                     write(6,*)" ***adjusting timestep for level ",level
-                 write(6,*)"   old ntogo dt ",ntogo(level),possk(level)
+                    write(6,*)"   old ntogo dt ",ntogo(level),
+     .                         possk(level)
 c                   adjust time steps for this and finer levels
                     ntogo(level) = ntogo(level) + 1
                     possk(level) = (tlevel(level-1)-tlevel(level))/
@@ -275,10 +276,18 @@ c                   adjust time steps for this and finer levels
                  write(6,*)"   new ntogo dt ",ntogo(level),possk(level)
                     go to 106
                  endif
+                 if (ntogo(level) .gt. 100) then
+                     write(6,*) "**** Too many dt reductions ****"
+                     write(6,*) "**** Stopping calculation   ****"
+                     write(6,*) "Writing checkpoint file ..."
+                     call check(ncycle,time,nvar,naux)
+                     stop
+                 endif
+
                  go to 60
               else
                  level = level - 1
-                 call update(level,nvar)
+                 call update(level,nvar,naux)
               endif
           go to 105
 c
@@ -289,7 +298,7 @@ c
  110      continue
           time    = time   + possk(1)
           ncycle  = ncycle + 1
-          call conck(1,nvar,time,rest)
+          call conck(1,nvar,naux,time,rest)
 
        if ((ichkpt.gt.0 .and. mod(ncycle,ichkpt).eq.0) 
      &      .or. dumpchk) then

@@ -37,6 +37,9 @@ module multilayer_module
     ! Output files
     integer, parameter :: kappa_file = 42
     
+    ! HACK for maux passing
+    integer :: ml_maux
+    
 contains
 
     subroutine set_multilayer_params(data_file)

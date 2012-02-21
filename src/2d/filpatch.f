@@ -10,7 +10,7 @@ c
 c  fill the portion of valbig from rows  nrowst
 c                             and  cols  ncolst
 c  the patch can also be described by the corners (xlp,ybp) by (xrp,ytp).
-c  vals are needed at time time , and level level,
+c  vals are needed at time time, and level level,
 c
 c  first fill with  values obtainable from the level level
 c  grids. if any left unfilled, then enlarge remaining rectangle of
@@ -19,34 +19,54 @@ c  obtain the remaining values from  coarser levels.
 c
 c :::::::::::::::::::::::::::::::::::::::;:::::::::::::::::::::::;
 
+      use amr_module
+      use geoclaw_module
+
       implicit double precision (a-h,o-z)
 
-      include  "call.i"
 
       logical   set, sticksout
-      dimension valbig(mitot,mjtot,nvar), aux(mitot,mjtot,naux)
+      dimension valbig(nvar,mitot,mjtot), aux(naux,mitot,mjtot)
 
-c  use stack-based scratch arrays instead of alloc, since dont really
-c  need to save beyond these routines, and to allow dynamic memory resizing
+c     use stack-based scratch arrays instead of alloc, since dont really
+c     need to save beyond these routines, and to allow dynamic memory resizing
 c
-c     use 1d scratch arrays that are potentially the same size as 
+c     use 1d scratch arrays that are potentially the same size as
 c     current grid, since may not coarsen.
 c     need to make it 1d instead of 2 and do own indexing, since
 c     when pass it in to subroutines they treat it as having different
 c     dimensions than the max size need to allocate here
 c
-!--      dimension valcrse((ihi-ilo+2)*(jhi-jlo+2)*nvar)  ! NB this is a 1D array 
-!--      dimension auxcrse((ihi-ilo+2)*(jhi-jlo+2)*naux)  ! the +2 is to expand on coarse grid to enclose fine
-c ### turns out you need 3 rows, forget offset of 1 plus one on each side
-      dimension valcrse((ihi-ilo+3)*(jhi-jlo+3)*nvar)  ! NB this is a 1D array 
-      dimension auxcrse((ihi-ilo+3)*(jhi-jlo+3)*naux)  ! the +3 is to expand on coarse grid to enclose fine
+      dimension valcrse((ihi-ilo+2)*(jhi-jlo+2)*nvar)  ! NB this is a 1D array
+      dimension auxcrse((ihi-ilo+2)*(jhi-jlo+2)*naux)  ! the +2 is to expand on coarse grid to enclose fine
 c
       dimension flaguse(ihi-ilo+1,jhi-jlo+1)
 
-c      iadflag(i,j) =  locuse + i-1+(j-1)*nrowp  ! no longer used
-c      ivalc(i,j,ivar) = loccrse + (i - 1) + nrowc*(j - 1)
-      ivalc(i,j,ivar) = i + nrowc*(j - 1)
-     &                    + nrowc*ncolc*(ivar-1)
+      logical reloop
+      logical fineflag((ihi-ilo+2)*(jhi-jlo+2)*nvar)
+      double precision finemass((ihi-ilo+2)*(jhi-jlo+2))
+      double precision etacrse((ihi-ilo+2)*(jhi-jlo+2))
+      double precision velmax((ihi-ilo+2)*(jhi-jlo+2))
+      double precision velmin((ihi-ilo+2)*(jhi-jlo+2))
+      double precision slopex((ihi-ilo+2)*(jhi-jlo+2))
+      double precision slopey((ihi-ilo+2)*(jhi-jlo+2))
+      integer icount((ihi-ilo+2)*(jhi-jlo+2))
+
+c OLD INDEXING
+c$$$      ivalc(i,j,ivar) = i + nrowc*(j - 1)
+c$$$     &                    + nrowc*ncolc*(ivar-1)
+c$$$      icrse(i,j) = i + nrowc*(j-1)
+c$$$c
+c$$$c     # index into first component of aux = topo:
+c$$$      iauxc(i,j) =  i + nrowc*(j-1)
+
+c NEW INDEXING - ORDER SWITCHED
+      ivalc(ivar,i,j) = ivar + nvar*(i-1) + nvar*nrowc*(j-1)
+      icrse(i,j) = i + nrowc*(j-1)
+c
+c     # index into first component of aux = topo:
+      iauxc(i,j) = 1 + naux*(i-1) + naux*nrowc*(j-1)
+c
       sticksout(iplo,iphi,jplo,jphi)  =
      &            (iplo .lt. 0 .or. jplo .lt. 0 .or.
      &             iphi .ge. iregsz(levc) .or. jphi .ge. jregsz(levc))
@@ -55,9 +75,11 @@ c      ivalc(i,j,ivar) = loccrse + (i - 1) + nrowc*(j - 1)
 !--      write(*,*)" entering filrecur with level ",level
 !--      write(*,*)"     and patch indices ilo,ihi,jlo,jhi ",
 !--     &             ilo,ihi,jlo,jhi
+
+c         write(*,*)" in filrecur for level ",level,mitot,mjtot
 c
-c We begin by filling values for grids at level level. If all values can be
-c filled in this way, we return;
+c        We begin by filling values for grids at level level. If all values can be
+c        filled in this way, we return;
 
         nrowp   = ihi - ilo + 1
         ncolp   = jhi - jlo + 1
@@ -80,7 +102,7 @@ c set = false, otherwise. If set = true, then no other levels are
 c are required to interpolate, and we return.
 c
 c Note that the used array is filled entirely in intfil, i.e. the
-c marking done there also takes  into account the points filled by
+c marking done there also takes into account the points filled by
 c the boundary conditions. bc2amr will be called later, after all 4
 c boundary pieces filled.
 
@@ -119,10 +141,10 @@ c
 c       coarsen
         lratiox = intratx(levc)
         lratioy = intraty(levc)
-        iplo   = (isl-lratiox+nghost*lratiox)/lratiox - nghost
-        jplo   = (jsb-lratioy+nghost*lratioy)/lratioy - nghost
-        iphi   = (isr+lratiox)/lratiox
-        jphi   = (jst+lratioy)/lratioy
+        iplo   = (isl-lratiox  +nghost*lratiox)/lratiox - nghost
+        jplo   = (jsb-lratioy  +nghost*lratioy)/lratioy - nghost
+        iphi   = (isr+lratiox  )/lratiox
+        jphi   = (jst+lratioy  )/lratioy
 
         xlc  =  xlower + iplo*hxc
         ybc  =  ylower + jplo*hyc
@@ -133,12 +155,18 @@ c       coarsen
         ncolc   =  jphi - jplo + 1
         ntot    = nrowc*ncolc*(nvar+naux)
 c        write(*,876) nrowc,ncolc, ihi-ilo+2,jhi-jlo+2
-c        write(*,876) nrowc,ncolc, ihi-ilo+3,jhi-jlo+3
  876    format(" needed coarse grid size ",2i5," allocated ",2i5)
-        if (nrowc .gt. ihi-ilo+3 .or. ncolc .gt. jhi-jlo+3) then
+        if (nrowc .gt. ihi-ilo+2 .or. ncolc .gt. jhi-jlo+2) then
             write(*,*)" did not make big enough work space in filrecur "
             write(*,*)" need coarse space with nrowc,ncolc ",nrowc,ncolc
-            write(6,*)" made space for ilo,ihi,jlo,jhi ",ilo,ihi,jlo,jhi
+            write(*,*)" coarser level is ",levc," nghost ",nghost
+            write(*,*)" with ratios lratiox lratioy ",lratiox,lratioy
+            write(*,*)" made space for ilo,ihi,jlo,jhi ",ilo,ihi,jlo,jhi
+            write(*,*)" isl,isr,jsb,jst ",isl,isr,jsb,jst
+            write(*,*)"iplo,iphi,jplo,jphi ",iplo,iphi,jplo,jphi
+            write(*,*)" orig il,ir,jb,jt ",il,ir,jb,jt
+            write(*,*)"filpatch called with mitot,mjtot ",mitot,mjtot
+            call outtre(1,.false.,nvar,naux)
             stop
         endif
 c        loccrse = igetsp(ntot)
@@ -157,12 +185,12 @@ c     &                    naux,alloc(locauxc))
 
         if ((xperdom .or. (yperdom .or. spheredom)) .and.
      &       sticksout(iplo,iphi,jplo,jphi)) then
-             call prefilrecur(levc,nvar,valcrse,auxcrse,
-     1                        naux,time,nrowc,ncolc,1,1,
-     2                        iplo,iphi,jplo,jphi)
+            call prefilrecur(levc,nvar,valcrse,auxcrse,
+     1                    naux,time,nrowc,ncolc,1,1,
+     2                    iplo,iphi,jplo,jphi)
         else
-c           call filrecur(levc,nvar,alloc(loccrse),alloc(locauxc),naux,
-           call filrecur(levc,nvar,valcrse,auxcrse,naux,
+c          call filpatch2(levc,nvar,alloc(loccrse),alloc(locauxc),naux,
+          call filrecur(levc,nvar,valcrse,auxcrse,naux,
      1                   time,nrowc,ncolc,1,1,
      2                   iplo,iphi,jplo,jphi)
         endif
@@ -171,80 +199,217 @@ c       interpolate back up
 
 20      continue
 
-        do 100 iff = 1,nrowp
-          ic = 2 + (iff-(isl-ilo)-1)/lratiox
-          eta1 = (-0.5d0+dble(mod(iff-1,lratiox)))/dble(lratiox)
 
-        do 100 jf  = 1,ncolp
-          jc = 2 + (jf -(jsb-jlo)-1)/lratioy
-          eta2 = (-0.5d0+dble(mod(jf -1,lratioy)))/dble(lratioy)
+*       !loop through coarse cells determining intepolation slopes
+*       !these will be saved for fine grid loop
+*       !prevents finding the same slope possibly lratiox*lratioy times
+*       !all fine gid depths will be found before any momentum
+         reloop = .false.
+         toldry= drytolerance
+         do ic  = 2, nrowc-1
+         do jc  = 2, ncolc-1
+            icount(icrse(ic,jc)) = 0
+            finemass(icrse(ic,jc)) = 0.d0
+            do ivar=1,nvar
+               fineflag(ivalc(ivar,ic,jc)) = .false.
+            enddo
 
+*           !find interpolation slope for eta = q(1,:)+ aux(1,:)
+            do i=-1,1
+               etacrse(icrse(ic+i,jc)) = valcrse(ivalc(1,ic+i,jc))
+     &            +  auxcrse(iauxc(ic+i,jc))
+               if (valcrse(ivalc(1,ic+i,jc)).lt.toldry) then
+                  etacrse(icrse(ic+i,jc)) = sealevel
+                  endif
+               enddo
+            s1 = etacrse(icrse(ic,jc))- etacrse(icrse(ic-1,jc))
+            s2 = etacrse(icrse(ic+1,jc))- etacrse(icrse(ic,jc))
+            if (s1*s2.le.0) then
+               slopex(icrse(ic,jc))= 0.d0
+            else
+               slopex(icrse(ic,jc))=dmin1(dabs(s1),dabs(s2))*dsign(1.d0,
+     &               etacrse(icrse(ic+1,jc))- etacrse(icrse(ic-1,jc)))
+               endif
+            do j=-1,1
+               etacrse(icrse(ic,jc+j)) = valcrse(ivalc(1,ic,jc+j))
+     &            +  auxcrse(iauxc(ic,jc+j))
+               if (valcrse(ivalc(1,ic,jc+j)).lt.toldry) then
+                  etacrse(icrse(ic,jc+j)) = sealevel
+                  endif
+               enddo
+            s1 = etacrse(icrse(ic,jc))  - etacrse(icrse(ic,jc-1))
+            s2 = etacrse(icrse(ic,jc+1))- etacrse(icrse(ic,jc))
+            if (s1*s2.le.0) then
+               slopey(icrse(ic,jc))= 0.d0
+            else
+               slopey(icrse(ic,jc))=dmin1(dabs(s1),dabs(s2))*dsign(1.d0,
+     &               etacrse(icrse(ic,jc+1))- etacrse(icrse(ic,jc-1)))
+               endif
+
+            end do
+            end do
+
+*        !loop through patch: note this includes multiple coarse cells
+         do iff = 1,nrowp
+            ic = 2 + (iff - (isl - ilo) - 1)/lratiox
+            eta1 = (-0.5d0+dble(mod(iff-1,lratiox)))/dble(lratiox)
+         do jf  = 1,ncolp
+            jc = 2 + (jf - (jsb - jlo) - 1)/lratioy
+            eta2 = (-0.5d0+dble(mod(jf -1,lratioy)))/dble(lratioy)
+            cc = icrse(ic,jc)
 c           flag = alloc(iadflag(iff,jf))
-           flag = flaguse(iff,jf)
-           if (flag .eq. 0.0) then
+            flag = flaguse(iff,jf)
+            if (flag .eq. 0.0) then
+*              !interp. from coarse cells to fine grid to find eta
+               icount(icrse(ic,jc)) = icount(icrse(ic,jc)) + 1
+               etafine =  etacrse(icrse(ic,jc))
+     &            + eta1*slopex(icrse(ic,jc))+eta2*slopey(icrse(ic,jc))
+               hfine = max(etafine - aux(1,iff+nrowst-1,jf+ncolst-1),
+     &            0.d0)
+               valbig(1,iff+nrowst-1,jf+ncolst-1) = hfine
 
-c               xif = xlp + (.5 + float(iff-1))*hxf
-c               yjf = ybp + (.5 + float(jf -1))*hyf
+               finemass(icrse(ic,jc)) = finemass(icrse(ic,jc)) +
+     &                        valbig(1,iff+nrowst-1,jf+ncolst-1)
+               if (valbig(1,iff+nrowst-1,jf+ncolst-1).lt.toldry) then
+                  fineflag(ivalc(1,ic,jc)) = .true.
+                  reloop = .true.
+                  endif
+               endif
+            enddo
+            enddo
 
-c               ic=idint((xif-xlc+.5*hxc)/hxc)
-c               jc=idint((yjf-ybc+.5*hyc)/hyc)
+c        ! determine momentum
+         do ivar = 2,nvar
+*           !find interpolation slope for momentum = q(:,ivar)
+            do ic  = 2, nrowc-1
+            do jc  = 2, ncolc-1
 
-c               xc = xlc + (float(ic) - .5)*hxc
-c               yc = ybc + (float(jc) - .5)*hyc
+               s1 = valcrse(ivalc(ivar,ic,jc))
+     &               - valcrse(ivalc(ivar,ic-1,jc))
+               s2 = valcrse(ivalc(ivar,ic+1,jc))
+     &               - valcrse(ivalc(ivar,ic,jc))
+               if (s1*s2.le.0) then
+                  slopex(icrse(ic,jc))= 0.d0
+               else
+                  slopex(icrse(ic,jc))=dmin1(dabs(s1),dabs(s2))
+     &               *dsign(1.d0, valcrse(ivalc(ivar,ic+1,jc))
+     &                  - valcrse(ivalc(ivar,ic-1,jc)))
+                  endif
+               s1 = valcrse(ivalc(ivar,ic,jc))
+     &               - valcrse(ivalc(ivar,ic,jc-1))
+               s2 = valcrse(ivalc(ivar,ic,jc+1))
+     &               - valcrse(ivalc(ivar,ic,jc))
+               if (s1*s2.le.0) then
+                  slopey(icrse(ic,jc))= 0.d0
+               else
+                  slopey(icrse(ic,jc))=dmin1(dabs(s1),dabs(s2))
+     &               *dsign(1.d0, valcrse(ivalc(ivar,ic,jc+1))
+     &                  - valcrse(ivalc(ivar,ic,jc-1)))
+                  endif
 
-c               eta1 = (xif - xc)/hxc
-c               eta2 = (yjf - yc)/hyc
+               if (valcrse(ivalc(1,ic,jc)).gt.toldry) then
+                  velmax(icrse(ic,jc)) = valcrse(ivalc(ivar,ic,jc))
+     &                                       /valcrse(ivalc(1,ic,jc))
+                  velmin(icrse(ic,jc)) =  valcrse(ivalc(ivar,ic,jc))
+     &                                       /valcrse(ivalc(1,ic,jc))
+               else
+                  velmax(icrse(ic,jc)) = 0.d0
+                  velmin(icrse(ic,jc)) = 0.d0
+                  endif
 
-                do 101 ivar = 1,nvar
-!--
-!--                   valp10 = alloc(ivalc(ic+1,jc,ivar))
-!--                   valm10 = alloc(ivalc(ic-1,jc,ivar))
-!--                   valc   = alloc(ivalc(ic  ,jc,ivar))
-!--                   valp01 = alloc(ivalc(ic  ,jc+1,ivar))
-!--                   valm01 = alloc(ivalc(ic  ,jc-1,ivar))
+*              !look for bounds on velocity to avoid generating new extrema
+*              !necessary since interpolating momentum linearly
+*              !yet depth is not interpolated linearly
+               do ii = -1,1,2
+                  if (valcrse(ivalc(1,ic+ii,jc)).gt.toldry) then
+                     velmax(icrse(ic,jc)) = max(velmax(icrse(ic,jc))
+     &                  ,valcrse(ivalc(ivar,ic+ii,jc))
+     &                  /valcrse(ivalc(1,ic+ii,jc)))
+                     velmin(icrse(ic,jc)) = min(velmin(icrse(ic,jc))
+     &                  ,valcrse(ivalc(ivar,ic+ii,jc))
+     &                  /valcrse(ivalc(1,ic+ii,jc)))
+                     endif
+                  if (valcrse(ivalc(1,ic,jc+ii)).gt.toldry) then
+                     velmax(icrse(ic,jc)) = max(velmax(icrse(ic,jc))
+     &                  ,valcrse(ivalc(ivar,ic,jc+ii))
+     &                  /valcrse(ivalc(1,ic,jc+ii)))
+                     velmin(icrse(ic,jc)) = min(velmin(icrse(ic,jc))
+     &                  ,valcrse(ivalc(ivar,ic,jc+ii))
+     &                  /valcrse(ivalc(1,ic,jc+ii)))
+                     endif
+                  enddo
 
-                   valp10 = valcrse(ivalc(ic+1,jc,ivar))
-                   valm10 = valcrse(ivalc(ic-1,jc,ivar))
-                   valc   = valcrse(ivalc(ic  ,jc,ivar))
-                   valp01 = valcrse(ivalc(ic  ,jc+1,ivar))
-                   valm01 = valcrse(ivalc(ic  ,jc-1,ivar))
+               end do
+               end do
 
-                   dupc = valp10 - valc
-                   dumc = valc   - valm10
-                   ducc = valp10 - valm10
-                   du   = dmin1(dabs(dupc),dabs(dumc))
-                   du   = dmin1(2.d0*du,.5d0*dabs(ducc))
-                   fu = dmax1(0.d0,dsign(1.d0,dupc*dumc))
+*           !determine momentum in fine cells
+            do iff = 1,nrowp
+               ic = 2 + (iff - (isl - ilo) - 1)/lratiox
+               eta1 = (-0.5d0+dble(mod(iff-1,lratiox)))/dble(lratiox)
+            do jf  = 1,ncolp
+               jc = 2 + (jf  - (jsb - jlo) - 1)/lratioy
+               eta2 = (-0.5d0+dble(mod(jf -1,lratioy)))/dble(lratioy)
 
-                   dvpc = valp01 - valc
-                   dvmc = valc   - valm01
-                   dvcc = valp01 - valm01
-                   dv   = dmin1(dabs(dvpc),dabs(dvmc))
-                   dv   = dmin1(2.d0*dv,.5d0*dabs(dvcc))
-                   fv = dmax1(0.d0,dsign(1.d0,dvpc*dvmc))
+               flag = flaguse(iff,jf)
+               if (flag .eq. 0.0) then
+                  if (.not.(fineflag(ivalc(1,ic,jc)))) then
+*                    !this is a normal wet cell. intepolate normally
+                     hvf = valcrse(ivalc(ivar,ic,jc))
+     &                   + eta1*slopex(icrse(ic,jc))
+     &                   + eta2*slopey(icrse(ic,jc))
+                     vf = hvf/valbig(1,iff+nrowst-1,jf+ncolst-1)
+                     if (vf.lt.velmin(icrse(ic,jc)).or.
+     &                        vf.gt.velmax(icrse(ic,jc))) then
+                        fineflag(ivalc(ivar,ic,jc))=.true.
+                        reloop = .true.
+                     else
+                        valbig(ivar,iff+nrowst-1,jf+ncolst-1) = hvf
+                        endif
+                     endif
+                  endif
+               enddo
+               enddo
 
-                   valint = valc + eta1*du*dsign(1.d0,ducc)*fu
-     .                           + eta2*dv*dsign(1.d0,dvcc)*fv
 
-c                  valc00 = alloc(ivalc(ic,jc,ivar))
-c                  valc10 = alloc(ivalc(ic+1,jc,ivar))
-c                  valc01 = alloc(ivalc(ic,jc+1,ivar))
-c                  valc11 = alloc(ivalc(ic+1,jc+1,ivar))
-c                  valint = (1. - eta2)*
-c    &               ((1. - eta1)*valc00 + eta1*valc10)
-c    &               + eta2*((1. - eta1)*valc01 + eta1*valc11)
+*           !loop again and reset momentum to conserve momentum
+*           !in the case of gained momentum, or if velocity bounds violated
+            if (reloop) then
+               do iff = 1,nrowp
+                  ic = 2 + (iff - (isl - ilo) - 1)/lratiox
+                  eta1 =(-0.5d0+dble(mod(iff-1,lratiox)))/dble(lratiox)
+               do jf  = 1,ncolp
+                  jc = 2 + (jf  - (jsb - jlo) - 1)/lratioy
+                  eta2 = (-0.5d0+dble(mod(jf -1,lratioy)))/dble(lratioy)
+                  flag = flaguse(iff,jf)
+                  if (flag.eq.0.0) then
+                     if (fineflag(ivalc(1,ic,jc))
+     &               .or.fineflag(ivalc(ivar,ic,jc))) then
+                        if (finemass(icrse(ic,jc)).gt.toldry) then
+                           hcrse = valcrse(ivalc(1,ic,jc))
+                           hcnt = dble(icount(icrse(ic,jc)))
+                           hfineave = finemass(icrse(ic,jc))/hcnt
+                           dividemass = max(hcrse,hfineave)
+                           hfine = valbig(1,iff+nrowst-1,jf+ncolst-1)
+                           Vnew = valcrse(ivalc(ivar,ic,jc))/dividemass
+                           valbig(ivar,iff+nrowst-1,jf+ncolst-1) =
+     &                           Vnew*valbig(1,iff+nrowst-1,jf+ncolst-1)
+                        else
+                           valbig(ivar,iff+nrowst-1,jf+ncolst-1)=0.d0
+                           endif
+                        endif
+                     endif
+                  enddo
+                  enddo
+               endif
 
-                   valbig(iff+nrowst-1,jf+ncolst-1,ivar) = valint
+            enddo
 
-101             continue
 
-           endif
 
-100     continue
 
 c        call reclam(loccrse,ntot)
 
- 90     continue
+ 90       continue
 c
 c  set bcs, whether or not recursive calls needed. set any part of patch that stuck out
 c

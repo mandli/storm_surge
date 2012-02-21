@@ -4,7 +4,8 @@ c
       subroutine valout (lst, lend, time, nvar, naux)
 c
       use multilayer_module, only: layers,rho
-    
+      use amr_module
+      
       implicit double precision (a-h,o-z)
       character*10  matname1, matname2
 
@@ -12,16 +13,16 @@ c
       
       double precision :: wind_x,wind_y,pressure
 
-      include  "call.i"
+      iadd(ivar,i,j)  = loc + ivar - 1 + nvar*((j-1)*mitot+i-1)
+      iaddaux(iaux,i,j) = locaux + iaux-1 + naux*(i-1) +
+     .                                      naux*mitot*(j-1)
 
-      iadd(i,j,ivar) = loc + i - 1 + mitot*((ivar-1)*mjtot+j-1)
-      iaddaux(i,j,iaux) = locaux + i - 1 + mitot*((iaux-1)*mjtot+j-1)
 
 
 c ::::::::::::::::::::::::::: VALOUT ::::::::::::::::::::::::::::::::::;
 c graphics output of soln values for contour or surface plots.
 c modified for GeoClaw to output the surface level along with q.
-c    surface = q(i,j,1) + aux(i,j,1)
+c    surface = q(1,i,j) + aux(1,i,j)
 c :::::::::::::::::::::::::::::::::::::;:::::::::::::::::::::::::::::::;
 
 c
@@ -76,36 +77,37 @@ c  old        ycorn = rnode(cornylo,mptr) - .5d0*hyposs(level)
       do j = nghost+1, mjtot-nghost
          do i = nghost+1, mitot-nghost
             do ivar=1,nvar
-               if (dabs(alloc(iadd(i,j,ivar))) .lt. 1d-90) then
-                  alloc(iadd(i,j,ivar)) = 0.d0
+               if (dabs(alloc(iadd(ivar,i,j))) .lt. 1d-90) then
+                  alloc(iadd(ivar,i,j)) = 0.d0
                endif
             enddo
+
             if (layers > 1) then
                 do k=1,layers
                     index = 3*(k-1)
-                    h(k) = alloc(iadd(i,j,index+1)) / rho(k)
-                    hu(k) = alloc(iadd(i,j,index+2)) / rho(k)
-                    hv(k) = alloc(iadd(i,j,index+3)) / rho(k)
+                    h(k) = alloc(iadd(index+1,i,j)) / rho(k)
+                    hu(k) = alloc(iadd(index+2,i,j)) / rho(k)
+                    hv(k) = alloc(iadd(index+3,i,j)) / rho(k)
                 enddo
                 eta(2) = h(2) + alloc(iaddaux(i,j,1))
             else
                 k = 1
                 index = 3*(k-1)
-                h(k) = alloc(iadd(i,j,index+1))
-                hu(k) = alloc(iadd(i,j,index+2))
-                hv(k) = alloc(iadd(i,j,index+3))
-                eta(2) = alloc(iaddaux(i,j,1))
+                h(k) = alloc(iadd(index+1,i,j))
+                hu(k) = alloc(iadd(index+2,i,j))
+                hv(k) = alloc(iadd(index+3,i,j))
+                eta(2) = alloc(iaddaux(1,i,j))
             endif
             eta(1) = h(1) + eta(2)
-            wind_x = alloc(iaddaux(i,j,4))
+            wind_x = alloc(iaddaux(4,i,j))
             if (abs(wind_x) < 1d-90) then
                 wind_x = 0.d0
             endif
-            wind_y = alloc(iaddaux(i,j,5))
+            wind_y = alloc(iaddaux(5,i,j))
             if (abs(wind_y) < 1d-90) then
                 wind_y = 0.d0
             endif
-            pressure = alloc(iaddaux(i,j,6))
+            pressure = alloc(iaddaux(6,i,j))
             if (abs(pressure) < 1d-90) then
                 pressure = 0.d0
             endif

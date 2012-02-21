@@ -29,14 +29,26 @@ c ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 c
       use multilayer_module
       use hurricane_module
-      use topo_module
       use geoclaw_module
+      use topo_module
       use dtopo_module
+      use regions_module
+      use qinit_module
 
       implicit double precision (a-h, o-z)
 
-      dimension   q(1-mbc:mx+mbc,1-mbc:my+mbc,meqn)
-      dimension   aux(1-mbc:mx+mbc,1-mbc:my+mbc,maux)
+      dimension   q(meqn,1-mbc:mx+mbc,1-mbc:my+mbc)
+      dimension   aux(maux,1-mbc:mx+mbc,1-mbc:my+mbc)
+      dimension   amrflags(1-mbc:mx+mbc,1-mbc:my+mbc)
+      logical     allowflag
+      external  allowflag
+      logical shoreregion,wave,shoreline
+
+
+      implicit double precision (a-h, o-z)
+
+      dimension   q(meqn,1-mbc:mx+mbc,1-mbc:my+mbc)
+      dimension   aux(maux,1-mbc:mx+mbc,1-mbc:my+mbc)
       dimension   amrflags(1-mbc:mx+mbc,1-mbc:my+mbc)
       logical     allowflag
       external  allowflag
@@ -49,9 +61,6 @@ c
       integer layer
       
       double precision :: R_eye(2)
-
-      include 'regions.i'
-      include 'qinit.i'
 
 c     # loop over interior points on this grid:
       dmax_grad_wind = 0.d0
@@ -85,7 +94,7 @@ c         Refine based solely on distance from the eye of the hurricane
           enddo
           
 c         Refine based on wind speed
-          wind_speed = sqrt(aux(i,j,4)**2+aux(i,j,5)**2)
+          wind_speed = sqrt(aux(4,i,j)**2+aux(5,i,j)**2)
           do m=1,max_wind_nest
               if ((wind_speed > wind_refine(m)).and.(level <= m)) then
                   amrflags(i,j) = DOFLAG
@@ -115,9 +124,9 @@ c           # check to see if refinement is forced in any other region:
             if (level .lt. minlevelregion(m) .and.
      &          t.ge.tlowregion(m) .and. t.le.thiregion(m)) then
               xlow = xlowregion(m)
-              xhi = xhiregion(m)
+              xhi  = xhiregion(m)
               ylow = ylowregion(m)
-              yhi = yhiregion(m)
+              yhi  = yhiregion(m)
                  if (x2.gt.xlow.and.x1.lt.xhi.and.
      &               y2.gt.ylow.and.y1.lt.yhi) then
                     amrflags(i,j) = DOFLAG
@@ -153,6 +162,7 @@ c           # specified and need to force refinement:
                 endif
              endif
 
+
 c        -----------------------------------------------------------------
 
 c        # refinement not forced, so check if it is allowed, and if so,
@@ -162,18 +172,18 @@ C          if (allowflag(x,y,t,level)) then
              
              wave = .false.
 c            Check to see if bottom layer is dry
-             if (q(i,j,4) / rho(2) > drytolerance) then
-                 eta2 = q(i,j,4) / rho(2) + aux(i,j,1)
+             if (q(4,i,j) / rho(2) > drytolerance) then
+                 eta2 = q(4,i,j) / rho(2) + aux(1,i,j)
                  wave(2) = (abs(eta2-eta(2)) > wave_tol(2))
              else
-                 eta2 = aux(i,j,1)
+                 eta2 = aux(1,i,j)
                  wave(2) = .false.
              endif
              eta1 = q(i,j,1) / rho(1) + eta2
              
-             shoreregion = abs(aux(i,j,1)) < depthdeep
+             shoreregion = abs(aux(1,i,j)) < depthdeep
              wave(1) = (abs(eta1-eta(1)) > wave_tol(1)).and.
-     &               (q(i,j,1) / rho(1) > drytolerance)
+     &               (q(1,i,j) / rho(1) > drytolerance)
              
 C              wave = (((dabs(eta1-sealevel) > wavetolerance).and.
 C      &                (q(i,j,4) / rho(2) > drytolerance)).or.
@@ -210,7 +220,7 @@ c                  enddo
 c                 shoreline=shoreline.and.q(i,j,1).gt.shoretol
                  shoreline = shoreregion
 
-                 if (shoreline.and.q(i,j,1).gt.drytolerance) then
+                 if (shoreline.and.q(1,i,j).gt.drytolerance) then
 c                    # following comment is regarding commented nested do loop above.
 c                    # this cell is wet and a neighbor is dry ==> shoreline
                      amrflags(i,j)=DOFLAG
@@ -227,9 +237,9 @@ c        and was not allowing refinement before t = 0, we need this as the
 c        storm surge has ramp up time that may need refinement (KTM 2010-8-4)
          do m=1,layers
              index = 3*(m-1)
-             if (q(i,j,index+1) > drytolerance) then
-                 speed(m) = sqrt((q(i,j,index+2) / q(i,j,index+1))**2 
-     &                         + (q(i,j,index+3) / q(i,j,index+1))**2)
+             if (q(index+1,i,j) > drytolerance) then
+                 speed(m) = sqrt((q(index+2,i,j) / q(index+1,i,j))**2 
+     &                         + (q(index+3,i,j) / q(index+1,i,j))**2)
              else
                  speed(m) = 0.d0
              endif

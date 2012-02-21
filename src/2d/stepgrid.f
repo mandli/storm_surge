@@ -26,24 +26,23 @@ c      This version of stepgrid, stepgrid_geo.f allows output on
 c      fixed grids specified in setfixedgrids.data
 c :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-      use multilayer_module, only: rho,layers
+      use multilayer_module, only: rho, layers
       use geoclaw_module
-
+      use amr_module
+      use fixedgrids_module
       implicit double precision (a-h,o-z)
-      external rpn2,rpt2
 
-      include  "call.i"
-      include  "fixedgrids.i"
+      external rpn2,rpt2
 
       common /comxyt/ dtcom,dxcom,dycom,tcom,icom,jcom
 
       parameter (msize=max1d+4)
       parameter (mwork=msize*(maxvar*maxvar + 13*maxvar + 3*maxaux +2))
 
-      dimension q(mitot,mjtot,nvar)
-      dimension fp(mitot,mjtot,nvar),gp(mitot,mjtot,nvar)
-      dimension fm(mitot,mjtot,nvar),gm(mitot,mjtot,nvar)
-      dimension aux(mitot,mjtot,maux)
+      dimension q(nvar,mitot,mjtot)
+      dimension fp(nvar,mitot,mjtot),gp(nvar,mitot,mjtot)
+      dimension fm(nvar,mitot,mjtot),gm(nvar,mitot,mjtot)
+      dimension aux(maux,mitot,mjtot)
       dimension work(mwork)
 
       logical    debug,  dump
@@ -54,13 +53,15 @@ c     # be included in the Riemann solver, for example, if t is explicitly
 c     # needed there.
 
       tcom = time
+      
+      level = node(nestlevel,mptr)
 
       if (dump) then
          write(*,*)" dumping grid ",mptr
          do i = 1, mitot
          do j = 1, mjtot
-c            write(outunit,545) i,j,(q(i,j,ivar),ivar=1,nvar)
-            write(*,545) i,j,(q(i,j,ivar),ivar=1,nvar)
+            write(outunit,545) i,j,(q(ivar,i,j),ivar=1,nvar)
+c            write(*,545) i,j,(q(ivar,i,j),ivar=1,nvar)
  545        format(2i4,4e15.7)
          end do
          end do
@@ -117,48 +118,6 @@ c::::::::::::::::::::::::Fixed Grid Output:::::::::::::::::::::::::::::::::
       tc0=time !# start of computational step
       tcf=tc0+dt !# end of computational step
 
-c     # see if any f-grids should be written out
-      do ng=1,mfgrids
-        if (tc0.gt.tstartfg(ng).and.ilastoutfg(ng).lt.noutfg(ng)) then
-c     # fgrid ng may need to be written out
-c     # find the first output number that has not been written out and
-c     # find the first output number on a fixed grid that is >= tc0
-c     # which will not be written out
-           if (dtfg(ng).gt.0.d0) then
-             ioutfgend= 1+max(0,nint((tc0-tstartfg(ng))/dtfg(ng)))
-           else
-             ioutfgend=1
-           endif
-           ioutfgend=min(ioutfgend,noutfg(ng))
-           ioutfgstart=ilastoutfg(ng)+1
-c     # write-out fgrid times that are less than tc0, and have not been written yet
-c     # these should be the most accurate values at any given point in the fgrid
-c     # since tc0> output time
-           do ioutfg=ioutfgstart,ioutfgend
-             toutfg=tstartfg(ng)+(ioutfg-1)*dtfg(ng)
-             if (toutfg.lt.tc0) then
-c               # write out the solution for fixed grid ng
-                i0=i0fg(ng)
-                i02=i0fg2(ng)
-c               # test if arrival times should be output
-                ioutflag = ioutarrivaltimes(ng)*
-     &                         (noutfg(ng)-ilastoutfg(ng))
-
-                call fgridout(fgridearly(i0),fgridlate(i0),
-     &              fgridoften(i02),xlowfg(ng),xhifg(ng),ylowfg(ng),
-     &              yhifg(ng),mxfg(ng),myfg(ng),
-     &              mfgridvars(ng),mfgridvars2(ng),toutfg,
-     &              ioutfg,ng,ioutarrivaltimes(ng),ioutflag)
-
-                tlastoutfg(ng)=toutfg
-                ilastoutfg(ng)=ilastoutfg(ng)+1
-             endif
-           enddo
-
-        endif
-      enddo
-c::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
        call b4step2(mx,my,mbc,mx,my,nvar,q,
      &             xlowmbc,ylowmbc,dx,dy,time,dt,maux,aux)
 
@@ -186,7 +145,14 @@ c         #saving solution, variables and tc0 at every grid point
          endif
 
 c        # set maxima or minima if this is a new coarse step
-         if (tc0.ge.tcfmax) then
+c        if (tc0.ge.tcfmax) then
+
+c        # RJL: rewrote to set min/max every time a grid at level 1
+c        # is about to be taken.  The previous code failed if there was more than one grid
+c        # at level 1.   Note that all grids are up to date at start of step on level 1.
+c        # New feature added at end of this routine to check more frequently if
+c        # levelcheck > 0.
+         if (level .eq. 1) then
          if (ioutsurfacemax(ng)+ioutarrivaltimes(ng).gt.0) then
            i0=i0fg2(ng)
          call fgridinterp(fgridoften(i0),xlowfg(ng),ylowfg(ng),
@@ -219,50 +185,52 @@ c
         write(outunit,811) mptr, mptr_level, cflgrid
  811    format(" Courant # of grid ",i5," level",i3," is ",d12.4)
 c
+!$OMP  CRITICAL (cflm)
         cflmax = dmax1(cflmax,cflgrid)
         cfl_level = dmax1(cfl_level,cflgrid)
+!$OMP END CRITICAL (cflm)
 c
 c       # update q
-C         dtdx = dt/dx
-C         dtdy = dt/dy
-C         do 50 m=1,nvar
-C         do 50 i=mbc+1,mitot-mbc
-C         do 50 j=mbc+1,mjtot-mbc
-C          if (mcapa.eq.0) then
-C c
-C c            # no capa array.  Standard flux differencing:
-C 
-C            q(i,j,m) = q(i,j,m)
-C      &           - dtdx * (fm(i+1,j,m) - fp(i,j,m))
-C      &           - dtdy * (gm(i,j+1,m) - gp(i,j,m))
-C          else
-C c            # with capa array.
-C            q(i,j,m) = q(i,j,m)
-C      &           - (dtdx * (fm(i+1,j,m) - fp(i,j,m))
-C      &           + dtdy * (gm(i,j+1,m) - gp(i,j,m))) / aux(i,j,mcapa)
-C          endif
+        dtdx = dt/dx
+        dtdy = dt/dy
+        do 50 m=1,nvar
+        do 50 i=mbc+1,mitot-mbc
+        do 50 j=mbc+1,mjtot-mbc
+         if (mcapa.eq.0) then
+c
+c            # no capa array.  Standard flux differencing:
+
+           q(m,i,j) = q(m,i,j)
+     &           - dtdx * (fm(m,i+1,j) - fp(m,i,j))
+     &           - dtdy * (gm(m,i,j+1) - gp(m,i,j))
+         else
+c            # with capa array.
+           q(m,i,j) = q(m,i,j)
+     &           - (dtdx * (fm(m,i+1,j) - fp(m,i,j))
+     &           +  dtdy * (gm(m,i,j+1) - gp(m,i,j))) / aux(mcapa,i,j)
+         endif
 
  50      continue
 c
 c     # Copied here from b4step2 since need to do before saving to qc1d:
-C       do i=1,mitot
-C         do j=1,mjtot
-C             do m=1,layers
-C               index = 3*(m-1)
-C               if (q(i,j,index+1) / rho(m) < drytolerance) then
-C                   q(i,j,index+1) = max(q(i,j,index+1),0.d0)
-C                   q(i,j,index+2) = 0.d0
-C                   q(i,j,index+3) = 0.d0
-C               endif
-C             enddo
-C         enddo
-C       enddo
+      do i=1,mitot
+        do j=1,mjtot
+            do m=1,layers
+              index = 3*(m-1)
+              if (q(index+1,i,j) / rho(m) < drytolerance) then
+                  q(index+1,i,j) = max(q(index+1,i,j),0.d0)
+                  q(index+2,i,j) = 0.d0
+                  q(index+3,i,j) = 0.d0
+              endif
+            enddo
+        enddo
+      enddo
 c
-C       if (method(5).eq.1) then
-C c        # with source term:   use Godunov splitting
-C          call src2(mx,my,nvar,mbc,mx,my,xlowmbc,ylowmbc,dx,dy,
-C      &             q,maux,aux,time,dt)
-C          endif
+      if (method(5).eq.1) then
+c        # with source term:   use Godunov splitting
+         call src2(mx,my,nvar,mbc,mx,my,xlowmbc,ylowmbc,dx,dy,
+     &             q,maux,aux,time,dt)
+         endif
 
 
 c     ::::::::::::::::::::::::Fixed Grid data afterstep:::::::::::::::::::::::
@@ -299,6 +267,26 @@ c        # check for arrival times
      &    tc0,mfgridvars2(ng),q,nvar,mx,my,mbc,dx,dy,nvar,xlowmbc,
      &    ylowmbc,maux,aux,ioutarrivaltimes(ng),ioutsurfacemax(ng),1)
          endif
+         
+c        # RJL: Modified 8/20/11 
+c        # If levelcheck > 0 then update max/mins at end of step on this grid.
+c        # Note that if there are finer grids then fgridoften will not have been updated
+c        # properly yet by those grids.  This modification allows checking max/min more
+c        # frequently than the original code (equivalent to levelcheck==0) when you know
+c        # what level is most relevant for this fixed grid.  Note also that if there are no
+c        # grids at levelcheck overlapping a portion of the fixed grid then the max/min values 
+c        # will be updated only at start of next level 1 step.
+ 
+         levelcheck = 0 
+         if (level .eq. levelcheck) then
+         if (ioutsurfacemax(ng)+ioutarrivaltimes(ng).gt.0) then
+           i0=i0fg2(ng)
+         call fgridinterp(fgridoften(i0),xlowfg(ng),ylowfg(ng),
+     &    xhifg(ng),yhifg(ng),dxfg(ng),dyfg(ng),mxfg(ng),myfg(ng),
+     &    tc0,mfgridvars2(ng),q,nvar,mx,my,mbc,dx,dy,nvar,xlowmbc,
+     &    ylowmbc,maux,aux,ioutarrivaltimes(ng),ioutsurfacemax(ng),2)
+          endif
+          endif
 
 
       endif
@@ -310,11 +298,11 @@ c     # output fluxes for debugging purposes:
          write(dbugunit,*)" fluxes for grid ",mptr
          do 830 i = mbc+1, mitot-1
             do 830 j = mbc+1, mjtot-1
-               write(dbugunit,831) i,j,fm(i,j,1),fp(i,j,1),
-     .                             gm(i,j,1),gp(i,j,1)
+               write(dbugunit,831) i,j,fm(1,i,j),fp(1,i,j),
+     .                                 gm(1,i,j),gp(1,i,j)
                do 830 m = 2, meqn
-                  write(dbugunit,832) fm(i,j,m),fp(i,j,m),
-     .            gm(i,j,m),gp(i,j,m)
+                  write(dbugunit,832) fm(m,i,j),fp(m,i,j),
+     .            gm(m,i,j),gp(m,i,j)
   831          format(2i4,4d16.6)
   832          format(8x,4d16.6)
   830    continue
@@ -344,15 +332,15 @@ c
      &              '  on grid ',i3, ' level ',i3)
             endif
 c
-!--      if (dump) then
-!--         write(*,*)" at end of stepgrid: dumping grid ",mptr
-!--         do i = 1, mitot
-!--         do j = 1, mjtot
-!--c            write(outunit,545) i,j,(q(i,j,ivar),ivar=1,nvar)
-!--            write(*,545) i,j,(q(i,j,ivar),ivar=1,nvar)
-!--         end do
-!--         end do
-!--      endif
+      if (dump) then
+         write(*,*)" at end of stepgrid: dumping grid ",mptr
+         do i = 1, mitot
+         do j = 1, mjtot
+            write(outunit,545) i,j,(q(ivar,i,j),ivar=1,nvar)
+c            write(*,545) i,j,(q(i,j,ivar),ivar=1,nvar)
+         end do
+         end do
+      endif
 c
       return
       end

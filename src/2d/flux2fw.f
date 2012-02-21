@@ -87,28 +87,28 @@ c---------------------last modified 4/28/11-----------------------------
 
       use multilayer_module, only: rho, dry_limit
       use geoclaw_module
+      use amr_module
 
       implicit double precision (a-h,o-z)
-      include "call.i"
 
       external rpn2, rpt2
-      dimension  q1d(1-mbc:maxm+mbc, meqn)
-      dimension  amdq(1-mbc:maxm+mbc, meqn)
-      dimension  apdq(1-mbc:maxm+mbc, meqn)
-      dimension  bmasdq(1-mbc:maxm+mbc, meqn)
-      dimension  bpasdq(1-mbc:maxm+mbc, meqn)
-      dimension  cqxx(1-mbc:maxm+mbc, meqn)
-      dimension  faddm(1-mbc:maxm+mbc, meqn)
-      dimension  faddp(1-mbc:maxm+mbc, meqn)
-      dimension  gaddm(1-mbc:maxm+mbc, meqn, 2)
-      dimension  gaddp(1-mbc:maxm+mbc, meqn, 2)
+      dimension  q1d(meqn, 1-mbc:maxm+mbc)
+      dimension  amdq(meqn, 1-mbc:maxm+mbc)
+      dimension  apdq(meqn, 1-mbc:maxm+mbc)
+      dimension  bmasdq(meqn, 1-mbc:maxm+mbc)
+      dimension  bpasdq(meqn, 1-mbc:maxm+mbc)
+      dimension  cqxx(meqn, 1-mbc:maxm+mbc)
+      dimension  faddm(meqn,1-mbc:maxm+mbc)
+      dimension  faddp(meqn,1-mbc:maxm+mbc)
+      dimension  gaddm(meqn,1-mbc:maxm+mbc, 2)
+      dimension  gaddp(meqn,1-mbc:maxm+mbc, 2)
       dimension  dtdx1d(1-mbc:maxm+mbc)
-      dimension  aux1(1-mbc:maxm+mbc, maux)
-      dimension  aux2(1-mbc:maxm+mbc, maux)
-      dimension  aux3(1-mbc:maxm+mbc, maux)
+      dimension  aux1(maux, 1-mbc:maxm+mbc)
+      dimension  aux2(maux, 1-mbc:maxm+mbc)
+      dimension  aux3(maux, 1-mbc:maxm+mbc)
 c
-      dimension  s(1-mbc:maxm+mbc, mwaves)
-      dimension  fwave(1-mbc:maxm+mbc, meqn, mwaves)
+      dimension  s(mwaves, 1-mbc:maxm+mbc)
+      dimension  fwave(meqn, mwaves, 1-mbc:maxm+mbc)
 c
       logical limit, relimit, dry_l, dry_r
       integer eqn_index
@@ -129,13 +129,14 @@ c
       do 30 jside=1,2
          do 20 m=1,meqn
             do 10 i = 1-mbc, mx+mbc
-               faddm(i,m) = 0.d0
-               faddp(i,m) = 0.d0
-               gaddm(i,m,jside) = 0.d0
-               gaddp(i,m,jside) = 0.d0
+               faddm(m,i) = 0.d0
+               faddp(m,i) = 0.d0
+               gaddm(m,i,jside) = 0.d0
+               gaddp(m,i,jside) = 0.d0
    10          continue
    20       continue
    30    continue
+
 c
 c
 c     # solve Riemann problem at each interface and compute Godunov updates
@@ -156,12 +157,12 @@ c   # Set fadd for the donor-cell upwind method (Godunov)
 	      endif
 
          do m=1,meqn
-            faddp(i,m) = faddp(i,m) - apdq(i,m)
-            faddm(i,m) = faddm(i,m) + amdq(i,m)
+            faddp(m,i) = faddp(m,i) - apdq(m,i)
+            faddm(m,i) = faddm(m,i) + amdq(m,i)
          enddo
          if (relimit) then
-            faddp(i,1) = faddp(i,1) + dxdc*q1d(i,mu)
-            faddm(i,1) = faddp(i,1)
+            faddp(1,i) = faddp(1,i) + dxdc*q1d(mu,i)
+            faddm(1,i) = faddp(1,i)
          endif
    40       continue
 c
@@ -171,10 +172,11 @@ c     # compute maximum wave speed for checking Courant number:
          do 50 i=1,mx+1
 c          # if s>0 use dtdx1d(i) to compute CFL,
 c          # if s<0 use dtdx1d(i-1) to compute CFL:
-            cfl1d = dmax1(cfl1d, dtdx1d(i)*s(i,mw),
-     &                          -dtdx1d(i-1)*s(i,mw))
+            cfl1d = dmax1(cfl1d, dtdx1d(i)*s(mw,i),
+     &                          -dtdx1d(i-1)*s(mw,i))
 
    50       continue
+
 c
       if (method(2).eq.1) go to 130
 c
@@ -188,8 +190,8 @@ c
       do i=1,mx+1
           dtdx1d(i-1) = 0.5d0 * (dtdx1d(i-1) + dtdx1d(i))
           
-          dry_r = q1d(i-1,4) / rho(2) < drytolerance
-          dry_l = q1d(i,4) / rho(2)  < drytolerance
+          dry_r = q1d(4,i-1) / rho(2) < drytolerance
+          dry_l = q1d(4,i  ) / rho(2) < drytolerance
           
 C           if (dry_limit.and.
 C      &        dry_l.and.(.not.(hr < drytolerance).and.(.not.(hr > bl)))
@@ -206,12 +208,12 @@ C      &    then
           
           do m=1,eqn_index
               do mw=1,mwaves
-                  cqxx(i,m) = cqxx(i,m) + dsign(1.d0,s(i,mw))
-     &                * (1.d0 - dabs(s(i,mw)) * dtdx1d(i-1)) 
-     &                * fwave(i,m,mw)
+                  cqxx(m,i) = cqxx(m,i) + dsign(1.d0,s(mw,i))
+     &                * (1.d0 - dabs(s(mw,i)) * dtdx1d(i-1)) 
+     &                * fwave(m,mw,i)
               enddo
-              faddm(i,m) = faddm(i,m) + 0.5d0 * cqxx(i,m)
-              faddp(i,m) = faddp(i,m) + 0.5d0 * cqxx(i,m)
+            faddm(m,i) = faddm(m,i) + 0.5d0 * cqxx(m,i)
+            faddp(m,i) = faddp(m,i) + 0.5d0 * cqxx(m,i)
           enddo
       enddo
       
@@ -244,8 +246,8 @@ c
 c         # incorporate cqxx into amdq and apdq so that it is split also.
           do 150 i = 1, mx+1
              do 150 m=1,meqn
-                amdq(i,m) = amdq(i,m) + cqxx(i,m)
-                apdq(i,m) = apdq(i,m) - cqxx(i,m)
+                amdq(m,i) = amdq(m,i) + cqxx(m,i)
+                apdq(m,i) = apdq(m,i) - cqxx(m,i)
   150           continue
           endif
 c
@@ -260,15 +262,15 @@ c     # split the left-going flux difference into down-going and up-going:
      &          1,amdq,bmasdq,bpasdq)
 c
 c     # modify flux below and above by B^- A^- Delta q and  B^+ A^- Delta q:
-      do 160 m=1,meqn
-          do 160 i = 1, mx+1
-               gupdate = 0.5d0*dtdx1d(i-1) * bmasdq(i,m)
-               gaddm(i-1,m,1) = gaddm(i-1,m,1) - gupdate
-               gaddp(i-1,m,1) = gaddp(i-1,m,1) - gupdate
+      do 160 i = 1, mx+1
+         do 160 m=1,meqn
+               gupdate = 0.5d0*dtdx1d(i-1) * bmasdq(m,i)
+               gaddm(m,i-1,1) = gaddm(m,i-1,1) - gupdate
+               gaddp(m,i-1,1) = gaddp(m,i-1,1) - gupdate
 c
-               gupdate = 0.5d0*dtdx1d(i-1) * bpasdq(i,m)
-               gaddm(i-1,m,2) = gaddm(i-1,m,2) - gupdate
-               gaddp(i-1,m,2) = gaddp(i-1,m,2) - gupdate
+               gupdate = 0.5d0*dtdx1d(i-1) * bpasdq(m,i)
+               gaddm(m,i-1,2) = gaddm(m,i-1,2) - gupdate
+               gaddp(m,i-1,2) = gaddp(m,i-1,2) - gupdate
   160          continue
 c
 c     # split the right-going flux difference into down-going and up-going:
@@ -277,17 +279,19 @@ c     # split the right-going flux difference into down-going and up-going:
      &          2,apdq,bmasdq,bpasdq)
 c
 c     # modify flux below and above by B^- A^+ Delta q and  B^+ A^+ Delta q:
-      do 180 m=1,meqn
-          do 180 i = 1, mx+1
-               gupdate = 0.5d0*dtdx1d(i-1) * bmasdq(i,m)
-               gaddm(i,m,1) = gaddm(i,m,1) - gupdate
-               gaddp(i,m,1) = gaddp(i,m,1) - gupdate
+      do 180 i = 1, mx+1
+          do 180 m=1,meqn
+               gupdate = 0.5d0*dtdx1d(i-1) * bmasdq(m,i)
+               gaddm(m,i,1) = gaddm(m,i,1) - gupdate
+               gaddp(m,i,1) = gaddp(m,i,1) - gupdate
 c
-               gupdate = 0.5d0*dtdx1d(i-1) * bpasdq(i,m)
-               gaddm(i,m,2) = gaddm(i,m,2) - gupdate
-               gaddp(i,m,2) = gaddp(i,m,2) - gupdate
+               gupdate = 0.5d0*dtdx1d(i-1) * bpasdq(m,i)
+               gaddm(m,i,2) = gaddm(m,i,2) - gupdate
+               gaddp(m,i,2) = gaddp(m,i,2) - gupdate
   180          continue
 c
   999 continue
       return
       end
+
+

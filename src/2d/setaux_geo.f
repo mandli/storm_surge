@@ -27,8 +27,6 @@ c     # aux(i,j,7:8) = Initial depths
 
       dimension aux(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc, maux)
 
-      include "call.i"
-
       if (icoordsys.eq.2) then
          if (mcapa .ne. 2 .or. maux.lt.3) then
             write(6,*) 'ERROR in setaux:  for icoordsys=2'
@@ -37,6 +35,9 @@ c     # aux(i,j,7:8) = Initial depths
             stop
             endif
          endif
+         
+c     Hack for maux passing
+      ml_maux = maux
 
       do j=1-mbc,my+mbc
          ycell = ylow +(j-0.5d0)*dy

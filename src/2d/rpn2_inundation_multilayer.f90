@@ -25,6 +25,7 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
 ! ============================================================================
 
     use geoclaw_module
+    use amr_module, only: mcapa
     use hurricane_module
     use multilayer_module
 
@@ -32,13 +33,13 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
 
     ! Input arguments
     integer, intent(in) :: ixy,maxm,meqn,mwaves,mbc,mx
-    double precision, dimension(1-mbc:maxm+mbc,meqn), intent(in) :: ql,qr
-    double precision, dimension(1-mbc:maxm+mbc,*), intent(in) :: auxl,auxr
+    double precision, dimension(meqn,1-mbc:maxm+mbc), intent(in) :: ql,qr
+    double precision, dimension(ml_maux,1-mbc:maxm+mbc), intent(in) :: auxl,auxr
 
     ! Output arguments
-    double precision, dimension(1-mbc:maxm+mbc, meqn, mwaves), intent(out) :: fwave
-    double precision, dimension(1-mbc:maxm+mbc, mwaves), intent(out) :: s
-    double precision, dimension(1-mbc:maxm+mbc, meqn), intent(out) :: apdq, amdq
+    double precision, dimension(meqn, mwaves, 1-mbc:maxm+mbc), intent(out) :: fwave
+    double precision, dimension(mwaves, 1-mbc:maxm+mbc), intent(out) :: s
+    double precision, dimension(meqn, 1-mbc:maxm+mbc), intent(out) :: apdq, amdq
 
     ! Counters
     integer :: i,j,m,mw,k,maxiter,info
@@ -106,16 +107,16 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         
         do j=1,2
             layer_index = 3*(j-1)
-            h_l(j) = qr(i-1,layer_index+1) / rho(j)
-            hu_l(j) = qr(i-1,layer_index+n_index) / rho(j)
-            hv_l(j) = qr(i-1,layer_index+t_index) / rho(j)
+            h_l(j) = qr(layer_index+1,i-1) / rho(j)
+            hu_l(j) = qr(layer_index+n_index,i-1) / rho(j)
+            hv_l(j) = qr(layer_index+t_index,i-1) / rho(j)
             
-            h_r(j) = ql(i,layer_index+1) / rho(j)
-            hu_r(j) = ql(i,layer_index+n_index) / rho(j)
-            hv_r(j) = ql(i,layer_index+t_index) / rho(j)
+            h_r(j) = ql(layer_index+1,i) / rho(j)
+            hu_r(j) = ql(layer_index+n_index,i) / rho(j)
+            hv_r(j) = ql(layer_index+t_index,i) / rho(j)
             
-            h_hat_l(j) = auxr(i-1,j+6)
-            h_hat_r(j) = auxl(i,j+6)
+            h_hat_l(j) = auxr(j+6,i-1)
+            h_hat_r(j) = auxl(j+6,i)
             
             h_ave(:) = 0.5d0 * (h_l(:) + h_r(:))
             
@@ -142,8 +143,8 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             endif
         enddo
         
-        b_l = auxr(i-1,1)
-        b_r = auxl(i,1)
+        b_l = auxr(1,i-1)
+        b_r = auxl(1,i)
         
         ! Calculate wind stress
 !         w_normal = 0.5d0 * (auxr(i-1,n_index+2) + auxl(i,n_index+2))
@@ -240,13 +241,13 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             ! Note that we represent all the waves in the first three arrays
             ! so it does not directly correspond to the two-layer case's wave
             ! structure
-            s(i,:) = 0.d0
-            fwave(i,:,:) = 0.d0
+            s(:,i) = 0.d0
+            fwave(:,:,i) = 0.d0
             
-            s(i,1:3) = sw(:)
-            fwave(i,1,1:3) = fw(1,:) * rho(1)
-            fwave(i,n_index,1:3) = fw(2,:) * rho(1)
-            fwave(i,t_index,1:3) = fw(3,:) * rho(1)
+            s(1:3,i) = sw(:)
+            fwave(1,1:3,i) = fw(1,:) * rho(1)
+            fwave(n_index,1:3,i) = fw(2,:) * rho(1)
+            fwave(t_index,1:3,i) = fw(3,:) * rho(1)
             
             ! Go on to next cell, lat-long and fluctuation calculations are 
             ! outside of this loop
@@ -294,12 +295,12 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
                     call lapack_eigen(h_l,temp_depth,u_l,u_r,v_l,v_r, &
                         n_index,t_index,lambda,eig_vec)
                 endif
-                s(i,:) = lambda
+                s(:,i) = lambda
                 
                 ! Internal wave correction
                 if (inundation_method == 1) then
-                    s(i,5) = u_l(2) + 2.d0 * sqrt(g*(1.d0-r)*h_l(2))
-                    alpha(3) = r * g * h_l(2) / ((s(i,5) - u_l(2))**2 - g * h_l(2))
+                    s(5,i) = u_l(2) + 2.d0 * sqrt(g*(1.d0-r)*h_l(2))
+                    alpha(3) = r * g * h_l(2) / ((s(5,i) - u_l(2))**2 - g * h_l(2))
                     
                     eig_vec(1,5) = 1.d0
                     eig_vec(n_index,5) = s(i,5)
@@ -310,9 +311,9 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
                 endif
                 ! Fast wave correction
                 if (inundation_method /= 5) then
-                    s(i,6) = u_r(1) + sqrt(g*h_r(1))
+                    s(6,i) = u_r(1) + sqrt(g*h_r(1))
                     eig_vec(1,6) = 1.d0
-                    eig_vec(n_index,6) = s(i,6)
+                    eig_vec(n_index,6) = s(6,i)
                     eig_vec(t_index,6) = v_r(1)
                     eig_vec(4:6,6) = 0.d0
                 endif
@@ -329,7 +330,7 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
                 else if (eigen_method == 3) then
                     call vel_diff_eigen(h_l,temp_depth,u_l,temp_u,v_l,temp_v,n_index,t_index,lambda,eig_vec)
                 endif
-                s(i,:) = lambda
+                s(:,i) = lambda
             endif
         else if (dry_state_l(2).and.(.not.dry_state_r(2))) then
             ! Inundation
@@ -351,24 +352,24 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
                     temp_depth = [h_l(1),0.d0]
                     call lapack_eigen(temp_depth,h_r,u_l,u_r,v_l,v_r,n_index,t_index,lambda,eig_vec)
                 endif
-                s(i,:) = lambda    
+                s(:,i) = lambda    
                             
                 ! Internal wave correction
                 if (inundation_method == 1) then
-                    s(i,2) = u_r(2) - 2.d0 * sqrt(g*(1.d0-r)*h_r(2))
-                    alpha(2) = r * g * h_r(2) / ((s(i,2) - u_r(2))**2 - g*h_r(2))
+                    s(2,i) = u_r(2) - 2.d0 * sqrt(g*(1.d0-r)*h_r(2))
+                    alpha(2) = r * g * h_r(2) / ((s(2,i) - u_r(2))**2 - g*h_r(2))
                     eig_vec(1,2) = 1.d0
-                    eig_vec(n_index,2) = s(i,2) 
+                    eig_vec(n_index,2) = s(2,i) 
                     eig_vec(t_index,2) = v_l(1)
                     eig_vec(4,2) = alpha(2)
-                    eig_vec(n_index,2) = alpha(2)*s(i,2)
+                    eig_vec(n_index,2) = alpha(2)*s(2,i)
                     eig_vec(t_index,2) = alpha(2)*v_l(2)
                 endif
                 ! Fast wave correction
                 if (inundation_method /= 5) then
-                    s(i,1) = u_l(1) - sqrt(g*h_l(1))
+                    s(1,i) = u_l(1) - sqrt(g*h_l(1))
                     eig_vec(1,1) = 1.d0
-                    eig_vec(n_index,1) = s(i,1)
+                    eig_vec(n_index,1) = s(1,i)
                     eig_vec(t_index,1) = v_l(1)
                     eig_vec(4:6,1) = 0.d0
                 endif
@@ -385,7 +386,7 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
                 else if (eigen_method == 3) then
                     call vel_diff_eigen(h_l,temp_depth,temp_u,u_r,temp_v,v_r,n_index,t_index,lambda,eig_vec)
                 endif
-                s(i,:) = lambda
+                s(:,i) = lambda
             endif
         ! Completely wet state
         else            
@@ -402,7 +403,7 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
                 call lapack_eigen(h_l,h_r,u_l,u_r,v_l,v_r,n_index,t_index, &
                     lambda,eig_vec)
             endif
-            s(i,:) = lambda
+            s(:,i) = lambda
         endif
         
         ! ====================================================================
@@ -507,7 +508,7 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
         ! ====================================================================
         ! Compute fwaves
         forall(mw=1:mwaves)
-            fwave(i,:,mw) = eig_vec(:,mw) * beta(mw)
+            fwave(:,mw,i) = eig_vec(:,mw) * beta(mw)
         end forall
             
     enddo
@@ -524,8 +525,8 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             endif
 
             do mw=1,mwaves
-    	        s(i,mw)=dxdc*s(i,mw)
-    	        fwave(i,:,mw)=dxdc*fwave(i,:,mw)
+    	        s(mw,i)=dxdc*s(mw,i)
+    	        fwave(:,mw,i)=dxdc*fwave(:,mw,i)
             enddo
         enddo
     endif
@@ -535,14 +536,14 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
     do i=2-mbc,mx+mbc
         do mw=1,mwaves
             if (s(i,mw) > 0.d0) then
-                apdq(i,:) = apdq(i,:) + fwave(i,:,mw)
+                apdq(:,i) = apdq(:,i) + fwave(:,mw,i)
             else
-                amdq(i,:) = amdq(i,:) + fwave(i,:,mw)
+                amdq(:,i) = amdq(:,i) + fwave(:,mw,i)
             endif
-            h_r(1) = ql(i,1) / rho(1)
-            h_l(1) = qr(i-1,1) / rho(1)
-            h_r(2) = ql(i,4) / rho(2)
-            h_l(2) = qr(i-1,4) / rho(2)
+            h_r(1) = ql(1,i) / rho(1)
+            h_l(1) = qr(1,i-1) / rho(1)
+            h_r(2) = ql(4,i) / rho(2)
+            h_l(2) = qr(4,i-1) / rho(2)
             dry_state_r(2) = h_r(2) < drytolerance
             dry_state_l(2) = h_l(2) < drytolerance
             rare(1) = h_l(2) + b_l > b_r
@@ -553,14 +554,14 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
                     if (apdq(i,m) /= 0.d0) then
                         print *,"========================"
                         print *,"Wave ",mw," equation ",m
-                        print *,"s = ",s(i,mw)
-                        print *,"f = ",fwave(i,m,mw)
-                        print *,"amdq = ",(amdq(i,m))
-                        print *,"apdq = ",(apdq(i,m))
+                        print *,"s = ",s(mw,i)
+                        print *,"f = ",fwave(m,mw,i)
+                        print *,"amdq = ",(amdq(m,i))
+                        print *,"apdq = ",(apdq(m,i))
                         stop "Flux non-zero going into a wall, aborting calculation."
                     endif
                 enddo
-                apdq(i,4:6) = 0.d0
+                apdq(4:6,i) = 0.d0
             endif
         enddo
     enddo

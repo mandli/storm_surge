@@ -1,76 +1,78 @@
       subroutine dumpgauge(q,aux,xlow,ylow,nvar,mitot,mjtot,mptr)
 
       use multilayer_module, only: layers, rho
+      use amr_module
       use geoclaw_module
 
       implicit double precision (a-h,o-z)
 
-      include "gauges.i"
-      include "call.i"
-
       integer bsearch
-      dimension q(mitot,mjtot,nvar), var(maxvar)
-      dimension aux(mitot,mjtot,1)
+      dimension q(nvar,mitot,mjtot), var(maxvar)
+      dimension aux(naux,mitot,mjtot)
       dimension eta(layers)
       dimension h(layers,4)
 
-c     See if this grid contains any gauges so data can be output
-c     may turn out this should be sorted, but for now do linear search
-c     
-c     Array is sorted according to indices in mbestorder array
-c     so do binary search to find start. Could have many same source grids
+c  # see if this grid contains any gauges so data can be output
+c  # may turn out this should be sorted, but for now do linear search
+c
+c  # array is sorted according to indices in mbestorder array
+c  # so do binary search to find start. Could have many same source grids
+c
+      if (mgauges.eq.0) then
+         return
+         endif
 
-      if (mgauges == 0) return
 
       istart = bsearch(mptr) 
-      if (istart < 1) return      ! This grid not used
+      if (istart .lt. 1) return      !this grid not used
 
-c     This stuff the same for all gauges on this grid
+c     # this stuff the same for all gauges on this grid
       tgrid = rnode(timemult,mptr)
       level = node(nestlevel,mptr)
       hx    =  hxposs(level)
       hy    =  hyposs(level)
 
-      do ii = istart, mgauges
-          i = mbestorder(ii)   ! gauge number
-          if (mptr /= mbestsrc(i)) return  ! all done
-          
-          if (tgrid < t1gauge(i) .or. tgrid > t2gauge(i)) then
-c            Don't output at this time for gauge i
-             cycle
-          endif
-          
-c     prepare to do linear interp at gauge location to get vars
-c     should fancier (limited) interp be done?
-          iindex =  int(.5 + (xgauge(i)-xlow)/hx)
-          jindex =  int(.5 + (ygauge(i)-ylow)/hy)
-          if ((iindex < nghost .or. iindex > mitot-nghost) .or.
-     &       (jindex < nghost .or. jindex > mjtot-nghost)) then
-             print *,"ERROR in output of Gauge Data ",i,iindex,jindex
-          endif
-          xcent = xlow + (iindex-.5)*hx
-          ycent = ylow + (jindex-.5)*hy
-          xoff  = abs((xgauge(i)-xcent)/hx)
-          yoff  = abs((ygauge(i)-ycent)/hy)
-	      if (xoff < 0 .or. xoff > 1 .or. yoff < 0. .or. yoff > 1) then
-	          print *," BIG PROBLEM in DUMPGAUGE", i,xoff,yoff  
-    	  endif
+      do 10 ii = istart, mgauges
+        i = mbestorder(ii)   ! gauge number
+        if (mptr .ne. mbestsrc(i)) go to 99  ! all done
+        if (tgrid.lt.t1gauge(i) .or. tgrid.gt.t2gauge(i)) then
+c          # don't output at this time for gauge i
+           go to 10
+           endif
+c
+c
+c ## prepare to do linear interp at gauge location to get vars
+c ## should fancier (limited) interp be done??
+c
+        iindex =  int(.5 + (xgauge(i)-xlow)/hx)
+        jindex =  int(.5 + (ygauge(i)-ylow)/hy)
+        if ((iindex .lt. nghost .or. iindex .gt. mitot-nghost) .or.
+     .      (jindex .lt. nghost .or. jindex .gt. mjtot-nghost))
+     .    write(*,*)"ERROR in output of Gauge Data "
+        xcent  = xlow + (iindex-.5)*hx
+        ycent  = ylow + (jindex-.5)*hy
+        xoff   = (xgauge(i)-xcent)/hx
+        yoff   = (ygauge(i)-ycent)/hy
+        if (xoff .lt. 0. .or. xoff .gt. 1. or. 
+     .	    yoff .lt. 0. .or. yoff .gt. 1.) then
+	       write(6,*)" BIG PROBLEM in DUMPGAUGE", i
+        endif
 
-c      Modified by RJL 12/31/09 to interpolate only where all four cells are
-c      wet, otherwise just take this cell value:
+c ## Modified by RJL 12/31/09 to interpolate only where all four cells are
+c ## wet, otherwise just take this cell value:
 
-c      Check for dry cells by comparing h to drytol2, which should be smaller
-c      than drytolerance to avoid oscillations since when h < drytolerance the
-c      velocities are zeroed out which can then lead to increase in h again.
+c Check for dry cells by comparing h to drytol2, which should be smaller
+c than drytolerance to avoid oscillations since when h < drytolerance the
+c velocities are zeroed out which can then lead to increase in h again.
 
-          drytol2 = 0.1d0 * drytolerance
+        drytol2 = 0.1d0 * drytolerance
 
           do m=1,layers
               layer_index = 3*(m-1)
-              h(m,1) = q(iindex,jindex,layer_index+1) / rho(m)
-              h(m,2) = q(iindex+1,jindex,layer_index+1) / rho(m)
-              h(m,3) = q(iindex,jindex+1,layer_index+1) / rho(m)
-              h(m,4) = q(iindex+1,jindex+1,layer_index+1) / rho(m)
+              h(m,1) = q(layer_index+1,iindex,jindex) / rho(m)
+              h(m,2) = q(layer_index+1,iindex+1,jindex) / rho(m)
+              h(m,3) = q(layer_index+1,iindex,jindex+1) / rho(m)
+              h(m,4) = q(layer_index+1,iindex+1,jindex+1) / rho(m)
               
               if ((h(m,1) < drytol2) .or.
      &            (h(m,2) < drytol2) .or.
@@ -83,35 +85,35 @@ c      velocities are zeroed out which can then lead to increase in h again.
                   jcell = int(1.d0 + (ygauge(i) - ylow) / hy)
                   do ivar=1,3
                       var(ivar + layer_index) = 
-     &                       q(icell,jcell,ivar + layer_index) / rho(m)
+     &                       q(ivar + layer_index,icell,jcell) / rho(m)
                   enddo
                   if (m == layers) then
                       ! This is the bottom layer and we should figure out the
                       ! topography
-                      topo = aux(icell,jcell,1)
+                      topo = aux(1,icell,jcell)
                   endif
               else
                   ! Linear interpolation between four cells
                   do ivar=1,3
                       var(layer_index + ivar) = (1.d0 - xoff) * 
      &                   (1.d0 - yoff)
-     &                 * q(iindex,jindex,layer_index + ivar) / rho(m)
+     &                 * q(layer_index + ivar,iindex,jindex) / rho(m)
      &                 + xoff*(1.d0 - yoff) 
-     &                 * q(iindex+1,jindex,layer_index + ivar) / rho(m)
+     &                 * q(layer_index + ivar,iindex+1,jindex) / rho(m)
      &                 + (1.d0 - xoff) * yoff 
-     &                 * q(iindex,jindex+1,layer_index + ivar) / rho(m)
+     &                 * q(layer_index + ivar.iindex,jindex+1) / rho(m)
      &                 + xoff * yoff 
-     &                 * q(iindex+1,jindex+1,layer_index+ivar) / rho(m)
+     &                 * q(layer_index + ivar,iindex+1,jindex+1) / rho(m)
                   enddo
                   if (m == layers) then
                       topo = (1.d0 - xoff) * (1.d0 - yoff) 
-     &                        * aux(iindex,jindex,1) 
+     &                        * aux(1,iindex,jindex) 
      &                      + xoff * (1.d0 - yoff) 
-     &                        * aux(iindex+1,jindex,1) 
+     &                        * aux(1,iindex+1,jindex) 
      &                      + (1.d0 - xoff) * yoff 
-     &                        * aux(iindex,jindex+1,1) 
+     &                        * aux(1,iindex,jindex+1) 
      &                      + xoff * yoff 
-     &                        * aux(iindex+1,jindex+1,1)
+     &                        * aux(1,iindex+1,jindex+1)
                   endif
               endif
           enddo
@@ -139,10 +141,10 @@ c  ## lbase is grid level that didn't change but since fine
 c  ## grid may have disappeared, still have to look starting
 c  ## at coarsest level 1.
 c
+      use amr_module
+      use gauges_module
       implicit double precision (a-h,o-z)
 
-      include "gauges.i"
-      include "call.i"
 c
 c ##  set source grid for each loc from coarsest level to finest.
 c ##  that way finest src grid left and old ones overwritten
@@ -185,8 +187,8 @@ c ------------------------------------------------------------------------
 c
       integer function bsearch(mptr)
 
+      use gauges_module
       implicit double precision (a-h,o-z)
-      include "gauges.i"
 
       bsearch = -1           ! signal if not found
 
@@ -195,7 +197,6 @@ c
 
  5    if (indexhi .lt. indexlo) go to 99
       mid = (indexlo + indexhi)/2
-      mbomid = mbestorder(mid)
 
       if (mptr .gt. mbestsrc(mbestorder(mid))) then
 	   indexlo = mid+1
@@ -219,4 +220,6 @@ c
 
  99   return
       end
+	 
+
 	 

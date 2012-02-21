@@ -18,12 +18,13 @@ c     Also calls movetopo if topography might be moving.
       use geoclaw_module
       use topo_module
       use dtopo_module
+      use amr_module, only naux
 
       implicit double precision (a-h,o-z)
 
-      dimension q(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc, meqn)
-      dimension aux(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc, maux)
-      dimension vel(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc, 2)
+      dimension q(meqn,1-mbc:maxmx+mbc,1-mbc:maxmy+mbc)
+      dimension aux(naux,1-mbc:maxmx+mbc,1-mbc:maxmy+mbc)
+      dimension vel(2,1-mbc:maxmx+mbc,1-mbc:maxmy+mbc)
       
       integer :: layer,layer_index
       double precision :: h(2),u(2),v(2),g,kappa
@@ -68,9 +69,9 @@ c     # set hu = hv = 0 in all these cells
       ! Set wind and pressure aux variables for this grid
       write(26,*) "B4STEP2:  Setting aux array for wind and pressure"
       call hurricane_wind(maxmx,maxmy,mbc,mx,my,xlower,ylower,dx,dy,t,
-     & aux(:,:,4:5))
+     & aux(4:5,:,:))
       call hurricane_pressure(maxmx,maxmy,mbc,mx,my,xlower,ylower,dx,
-     & dy,t,aux(:,:,6))
+     & dy,t,aux(6,:,:))
      
       ! Check Richardson number
       if (layers > 1) then
@@ -79,10 +80,10 @@ c     # set hu = hv = 0 in all these cells
               dry_state = .false.
               do layer=1,2
                   m = 3*(layer-1)
-                  h(layer) = q(i,j,m+1)
+                  h(layer) = q(m+1,i,j)
                   if (h(layer) > drytolerance) then
-                      u(layer) = q(i,j,m+2) / q(i,j,m+1)
-                      v(layer) = q(i,j,m+3)/ q(i,j,m+1)
+                      u(layer) = q(m+2,i,j) / q(m+1,i,j)
+                      v(layer) = q(m+3,i,j)/ q(m+1,i,j)
                   else
                       dry_state(layer) = .true.
                       u(layer) = 0.d0
@@ -110,20 +111,20 @@ c     # set hu = hv = 0 in all these cells
 100   format ("Hyperbolicity may have failed (",i4,",",i4,") = ",d16.8)
        
        ! Calculate vorticity
-C        aux(:,:,9) = 0.d0
+C        aux(9,:,:) = 0.d0
 C        vel = 0.d0
 C        do i=1,mx
 C            do j=1,my
-C                if (abs(q(i,j,1)) > drytolerance) then
-C                    vel(i,j,1) = q(i,j,2) / q(i,j,1)
-C                    vel(i,j,2) = q(i,j,3) / q(i,j,1)
+C                if (abs(q(1,i,j)) > drytolerance) then
+C                    vel(1,i,j) = q(2,i,j) / q(1,i,j)
+C                    vel(2,i,j) = q(3,i,j) / q(1,i,j)
 C                endif
 C            enddo
 C        enddo
 C        do i=1,mx
 C            do j=1,my
-C                aux(i,j,9) = (vel(i+1,j,2) - vel(i-1,j,2)) / (2.d0*dx) -         
-C       &                     (vel(i,j+1,1) - vel(i,j-1,1)) / (2.d0*dy)
+C                aux(9,i,j) = (vel(2,i+1,j) - vel(2,i-1,j)) / (2.d0*dx) -         
+C       &                     (vel(1,i,j+1) - vel(1,i,j-1)) / (2.d0*dy)
 C            enddo
 C        enddo
       

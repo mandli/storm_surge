@@ -17,8 +17,8 @@ subroutine src1d(meqn,mbc,mx1d,q1d,maux,aux1d,t,dt)
     double precision, intent(in) :: t,dt
     
     ! Output
-    double precision, intent(inout) :: q1d(mx1d,meqn)
-    double precision, intent(inout) :: aux1d(mx1d,maux)
+    double precision, intent(inout) :: q1d(meqn,mx1d)
+    double precision, intent(inout) :: aux1d(maux,mx1d,maux)
 
     ! Locals
     integer :: i
@@ -39,32 +39,32 @@ subroutine src1d(meqn,mbc,mx1d,q1d,maux,aux1d,t,dt)
     ! = Friction =============================================================
     if (coeff > 0.d0) then
         do i=1,mx1d
-            h(1) = q1d(i,1) / rho(1)
+            h(1) = q1d(1,i) / rho(1)
             if (layers > 1) then
-                h(2) = q1d(i,4) / rho(2)
+                h(2) = q1d(4,i) / rho(2)
             else
                 h(2) = 0.d0
             endif
             
             if (h(2) > tol) then
-                speed = sqrt(q1d(i,5)**2 + q1d(i,6)**2) / q1d(i,4)
+                speed = sqrt(q1d(5,i)**2 + q1d(6,i)**2) / q1d(4,i)
                 D = coeff**2 * g * sum(h)**(-7/3) * speed
                 
-                q1d(i,5) = q1d(i,5) * exp(-D*dt)
-                q1d(i,6) = q1d(i,6) * exp(-D*dt)
+                q1d(5,i) = q1d(5,i) * exp(-D*dt)
+                q1d(6,i) = q1d(6,i) * exp(-D*dt)
             else if (h(1) > tol) then
-                if (layers > 1) q1d(i,5:6) = 0.d0
+                if (layers > 1) q1d(5:6,i) = 0.d0
                 
-                speed = sqrt(q1d(i,2)**2 + q1d(i,3)**2) / q1d(i,1)
+                speed = sqrt(q1d(2,i)**2 + q1d(3,i)**2) / q1d(1,i)
                 
                 D = coeff**2 * g * sum(h)**(-7/3) * speed
                 
-                q1d(i,2) = q1d(i,2) * exp(-D*dt)
-                q1d(i,3) = q1d(i,3) * exp(-D*dt)
+                q1d(2,i) = q1d(2,i) * exp(-D*dt)
+                q1d(3,i) = q1d(3,i) * exp(-D*dt)
                 
             else
-                q1d(i,2:3) = 0.d0
-                if (layers > 1)  q1d(i,5:6) = 0.d0
+                q1d(2:3,i) = 0.d0
+                if (layers > 1)  q1d(5:6,i) = 0.d0
             endif
         enddo          
     endif
@@ -75,22 +75,22 @@ subroutine src1d(meqn,mbc,mx1d,q1d,maux,aux1d,t,dt)
         ! single layer case.  It needs to divide by the water's density
         if (layers > 1) then
             do i=1,mx1d
-                if (abs(q1d(i,1)) > drytolerance) then
-                    wind_speed = sqrt(aux1d(i,4)**2 + aux1d(i,5)**2)
+                if (abs(q1d(1,i)) > drytolerance) then
+                    wind_speed = sqrt(aux1d(4,i)**2 + aux1d(5,i)**2)
                     if (wind_speed > wind_tolerance) then
                         tau = wind_drag(wind_speed) * rho_air * wind_speed
-                        q1d(i,2) = q1d(i,2) + dt * tau * aux1d(i,4)
-                        q1d(i,3) = q1d(i,3) + dt * tau * aux1d(i,5)
+                        q1d(2,i) = q1d(2,i) + dt * tau * aux1d(4,i)
+                        q1d(3,i) = q1d(3,i) + dt * tau * aux1d(5,i)
                     endif
                 endif
             enddo
         else
             do i=1,mx1d
-                if (abs(q1d(i,1)) > drytolerance) then
-                    wind_speed = sqrt(aux1d(i,4)**2 + aux1d(i,5)**2)
+                if (abs(q1d(1,i)) > drytolerance) then
+                    wind_speed = sqrt(aux1d(4,i)**2 + aux1d(5,i)**2)
                     tau = wind_drag(wind_speed) * rho_air * wind_speed
-                    q1d(i,2) = q1d(i,2) + dt * tau * aux1d(i,4) / rho(1)
-                    q1d(i,3) = q1d(i,3) + dt * tau * aux1d(i,5) / rho(1)
+                    q1d(2,i) = q1d(2,i) + dt * tau * aux1d(4,i) / rho(1)
+                    q1d(3,i) = q1d(3,i) + dt * tau * aux1d(5,i) / rho(1)
                 endif
             enddo
         endif

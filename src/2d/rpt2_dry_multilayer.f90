@@ -33,12 +33,12 @@ subroutine rpt2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,aux1,aux2,aux3,imp,asdq,bmasdq
 
     ! Input arguments
     integer, intent(in) :: ixy,maxm,meqn,mwaves,mbc,mx,imp
-    double precision, dimension(1-mbc:maxm+mbc,meqn), intent(in) :: ql,qr
-    double precision, dimension(1-mbc:maxm+mbc,meqn), intent(inout) :: asdq
-    double precision, dimension(1-mbc:maxm+mbc,*), intent(in) :: aux1,aux2,aux3
+    double precision, dimension(meqn,1-mbc:maxm+mbc), intent(in) :: ql,qr
+    double precision, dimension(meqn,1-mbc:maxm+mbc), intent(inout) :: asdq
+    double precision, dimension(ml_maux,1-mbc:maxm+mbc), intent(in) :: aux1,aux2,aux3
     
     ! Ouput
-    double precision, dimension(1-mbc:maxm+mbc,meqn), intent(out) :: bmasdq,bpasdq
+    double precision, dimension(meqn,1-mbc:maxm+mbc), intent(out) :: bmasdq,bpasdq
     
     ! Local storage
     integer :: i,j,m,mw,n_index,t_index,info
@@ -88,26 +88,26 @@ subroutine rpt2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,aux1,aux2,aux3,imp,asdq,bmasdq
             layer_index = 3*(j-1)
             ! Solving in the left grid cell (A^-\Delta Q)
             if (imp == 1) then
-                h(j) = qr(i-1,layer_index + 1) / rho(j)
-                hu(j) = qr(i-1,layer_index + n_index) / rho(j)
-                hv(j) = qr(i-1,layer_index + t_index) / rho(j)
+                h(j) = qr(layer_index + 1,i-1) / rho(j)
+                hu(j) = qr(layer_index + n_index,i-1) / rho(j)
+                hv(j) = qr(layer_index + t_index,i-1) / rho(j)
                 
-                b(3) = aux3(i-1,1)
-                b(2) = aux2(i-1,1)
-                b(1) = aux1(i-1,1)
+                b(3) = aux3(1,i-1)
+                b(2) = aux2(1,i-1)
+                b(1) = aux1(1,i-1)
                 
-                h_hat = aux2(i-1,7:8)
+                h_hat = aux2(7:8,i-1)
             ! Solving in the right grid cell (A^+ \Delta Q)
             else
-                h(j) = ql(i,layer_index + 1) / rho(j)
-                hu(j) = ql(i,layer_index + n_index) / rho(j)
-                hv(j) = ql(i,layer_index + t_index) / rho(j)
+                h(j) = ql(layer_index + 1,i) / rho(j)
+                hu(j) = ql(layer_index + n_index,i) / rho(j)
+                hv(j) = ql(layer_index + t_index,i) / rho(j)
                 
-                b(3) = aux3(i,1)
-                b(2) = aux2(i,1)
-                b(1) = aux1(i,1)
+                b(3) = aux3(1,i)
+                b(2) = aux2(1,i)
+                b(1) = aux1(1,i)
                 
-                h_hat = aux2(i,7:8)
+                h_hat = aux2(7:8,i)
             endif
                 
             if (h(j) < drytolerance) then
@@ -139,21 +139,21 @@ subroutine rpt2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,aux1,aux2,aux3,imp,asdq,bmasdq
         !  This is if we are right next to a wall, use single layer solver
         if ((h(2) < drytolerance)) then
             ! Storage for single layer rpt2
-            ql_sl = ql(i,1:3) / rho(1)
-            qr_sl = qr(i-1,1:3) / rho(1)
-            aux1_sl = aux1(i-1:i,1:3)
-            aux2_sl = aux2(i-1:i,1:3)
-            aux3_sl = aux3(i-1:i,1:3)
-            asdq_sl = asdq(i,1:3) / rho(1)
+            ql_sl = ql(1:3,i) / rho(1)
+            qr_sl = qr(1:3,i-1) / rho(1)
+            aux1_sl = aux1(1:3,i-1:i)
+            aux2_sl = aux2(1:3,i-1:i)
+            aux3_sl = aux3(1:3,i-1:i)
+            asdq_sl = asdq(1:3,i) / rho(1)
             
             ! Call solve
             call rpt2_single_layer(ixy,ql_sl,qr_sl,aux1_sl,aux2_sl, &
                                    aux3_sl,imp,asdq_sl,bmasdq_sl,bpasdq_sl)
             
-            bmasdq(i,1:3) = bmasdq_sl * rho(1)
-            bmasdq(i,4:6) = 0.d0
-            bpasdq(i,1:3) = bpasdq_sl * rho(1)
-            bpasdq(i,4:6) = 0.d0
+            bmasdq(1:3,i) = bmasdq_sl * rho(1)
+            bmasdq(4:6,i) = 0.d0
+            bpasdq(1:3,i) = bpasdq_sl * rho(1)
+            bpasdq(4:6,i) = 0.d0
             cycle
         endif
         
@@ -209,11 +209,11 @@ subroutine rpt2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,aux1,aux2,aux3,imp,asdq,bmasdq
                 dxdcm = dxdcp
             else
                 if (imp == 1) then
-                    dxdcp = Rearth*pi*cos(aux3(i-1,3))/180.d0
-                    dxdcm = Rearth*pi*cos(aux1(i-1,3))/180.d0
+                    dxdcp = Rearth*pi*cos(aux3(3,i-1))/180.d0
+                    dxdcm = Rearth*pi*cos(aux1(3,i-1))/180.d0
                 else
-                    dxdcp = Rearth*pi*cos(aux3(i,3))/180.d0
-                    dxdcm = Rearth*pi*cos(aux1(i,3))/180.d0
+                    dxdcp = Rearth*pi*cos(aux3(3,i))/180.d0
+                    dxdcm = Rearth*pi*cos(aux1(3,i))/180.d0
                 endif
             endif
         else
@@ -228,15 +228,15 @@ subroutine rpt2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,aux1,aux2,aux3,imp,asdq,bmasdq
         do mw=1,mwaves
             if (s(mw) > 0.d0) then
                 if (h(2) + b(2) < b(3)) then
-                    bpasdq(i,1:3) = bpasdq(i,1:3) + dxdcp * s(mw) * delta(mw) * eig_vec(1:3,mw)
+                    bpasdq(1:3,i) = bpasdq(1:3,i) + dxdcp * s(mw) * delta(mw) * eig_vec(1:3,mw)
                 else
-                    bpasdq(i,:) = bpasdq(i,:) + dxdcp * s(mw) * delta(mw) * eig_vec(:,mw)
+                    bpasdq(:,i) = bpasdq(:,i) + dxdcp * s(mw) * delta(mw) * eig_vec(:,mw)
                 endif
             else if (s(mw) < 0.d0) then
                 if (h(2) + b(2) < b(1)) then
-                    bmasdq(i,1:3) = bmasdq(i,1:3) + dxdcm * s(mw) * delta(mw) * eig_vec(1:3,mw)
+                    bmasdq(1:3,i) = bmasdq(1:3,i) + dxdcm * s(mw) * delta(mw) * eig_vec(1:3,mw)
                 else
-                    bmasdq(i,:) = bmasdq(i,:) + dxdcm * s(mw) * delta(mw) * eig_vec(:,mw)
+                    bmasdq(:,i) = bmasdq(:,i) + dxdcm * s(mw) * delta(mw) * eig_vec(:,mw)
                 endif
             endif
         enddo
