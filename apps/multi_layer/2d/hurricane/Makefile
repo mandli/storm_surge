@@ -63,7 +63,7 @@ SOURCES = \
 	$(ML_PATH)/src/2d/tick.f \
 	$(ML_PATH)/src/2d/stepgrid.f \
 	$(ML_PATH)/src/2d/flux2fw.f \
-    $(ML_PATH)/src/2d/dumpgauge_ml.f \
+    $(ML_PATH)/src/2d/dumpgauge.f \
     $(GEOCLAW)/src/2d/qad.f \
     $(GEOCLAW)/src/2d/readqinit.f \
     $(GEOCLAW)/src/2d/movetopo.f \
