@@ -23,8 +23,8 @@ import glob
 
 import numpy as np
 
-from pyclaw.runclaw import runclaw
-from pyclaw.plotters.plotclaw import plotclaw
+from runclaw import runclaw
+from visclaw.plotters.plotclaw import plotclaw
 
 def print_tests(tests):
     for (i,test) in enumerate(tests):
