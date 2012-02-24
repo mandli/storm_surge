@@ -16,21 +16,24 @@ GEOLIB = $(GEOCLAW)/src/2d
 
 # Flagging
 FC ?= gfortran
-FFLAGS += -I$(GEOLIB)
+PPFLAGS ?= 
 UNAME = $(shell uname)
 ifeq ($(UNAME), Darwin)
-	ifndef LFLAGS
-		LFLAGS = -framework veclib
-	else
-		LFLAGS += -framework veclib
-	endif
+	LAPACK_LIB = -framework veclib
 endif
 ifeq ($(UNAME), Linux)
-	ifndef LFLAGS
-		LFLAGS = -llapack
-	else
-		LFLAGS += -llapack
-	endif
+	LAPACK_LIB = -llapack
+endif
+ifeq ($(findstring gfortran,$(FC)),gfortran)
+    PPFLAGS += -cpp
+endif
+ifeq ($(findstring ifort,$(FC)),ifort)
+    PPFLAGS += -fpp
+endif
+MAKELEVEL ?= 0
+ifeq ($(MAKELEVEL),0)
+    FFLAGS += $(PPFLAGS) $(LAPACK_LIB)
+    LFLAGS += $(LAPACK_LIB)
 endif
 
 # ---------------------------------
