@@ -15,8 +15,8 @@ import re
 import matplotlib
 import matplotlib.pyplot as mpl
 
-from pyclaw.plotters import geoplot, colormaps
-from pyclaw.data import Data
+from visclaw import geoplot, colormaps
+from oldclawdata import Data
 
 # matplotlib.rcParams['figure.figsize'] = [6.0,10.0]
 
@@ -54,26 +54,26 @@ def setplot(plotdata):
     
     def eta_1(current_data):
         r"""Top surface"""
-        h_1 = current_data.q[:,0]
+        h_1 = current_data.q[0,:]
         return h_1 + eta_2(current_data)
         
     def eta_2(current_data):
         r"""Middle surface"""
-        h_2 = current_data.q[:,2]
+        h_2 = current_data.q[2,:]
         return h_2 + bathy(current_data)
         
     def u_1(current_data):
-        h_1 = current_data.q[:,0]
+        h_1 = current_data.q[0,:]
         index = np.nonzero(h_1 > problem_data.dry_tolerance)
         u_1 = np.zeros(h_1.shape)
-        u_1[index] = current_data.q[index,1]/h_1[index]
+        u_1[index] = current_data.q[1,index]/h_1[index]
         return u_1
         
     def u_2(current_data):
-        h_2 = current_data.q[:,2]
+        h_2 = current_data.q[2,:]
         index = np.nonzero(h_2 > problem_data.dry_tolerance)
         u_2 = np.zeros(h_2.shape)
-        u_2[index] = current_data.q[index,3] / h_2[index]
+        u_2[index] = current_data.q[3,index] / h_2[index]
         return u_2
 
     plotdata.clearfigures()  # clear any old figures,axes,items data
@@ -180,7 +180,7 @@ def setplot(plotdata):
         fig = mpl.gcf()
         fig.clf()
         
-        x = cd.grid.dimensions[0].center
+        x = cd.patch.dimensions[0].centers
         
         # Draw fill plot
         ax1 = fig.add_subplot(211)
@@ -217,7 +217,7 @@ def setplot(plotdata):
         top_layer = ax1.plot(x,u_1(cd),'b-',label="Top Layer velocity")#,color=(0.2,0.8,1.0))
         
         # Kappa
-        # kappa_line = ax2.plot(x,cd.q[:,5],color='r',label="Kappa")
+        # kappa_line = ax2.plot(x,cd.q[5,:],color='r',label="Kappa")
         # ax2.plot(x,np.ones(x.shape),'r--')
         
         for ref_line in bathy_ref_lines:

@@ -24,7 +24,7 @@ import glob
 import numpy as np
 
 from runclaw import runclaw
-from visclaw.plotters.plotclaw import plotclaw
+from visclaw.plotclaw import plotclaw
 
 def print_tests(tests):
     for (i,test) in enumerate(tests):
@@ -49,7 +49,7 @@ def run_tests(tests,plot=True,tar=False,max_processes=None,parallel=True,
     
     process_queue = []
     RUNCLAW_CMD = "python $CLAWUTIL/src/python/runclaw.py"
-    PLOTCLAW_CMD = "python $VISCLAW/src/python/visclaw/plotters/plotclaw.py"
+    PLOTCLAW_CMD = "python $VISCLAW/src/python/visclaw/plotclaw.py"
     
     # Run tests
     for (i,test) in enumerate(tests):

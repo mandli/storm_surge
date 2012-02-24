@@ -9,7 +9,7 @@ that will be read in by the Fortran code.
 import os
 import numpy as np
 
-import pyclaw.data as data
+import oldclawdata as data
 from multilayer_data import MultilayerData
 
 wave_family = 3

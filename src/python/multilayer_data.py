@@ -8,7 +8,7 @@ import sys
 
 import numpy as np
 
-from pyclaw import data 
+from oldclawdata import data 
 
 # Multilayer settings
 class MultilayerData(data.Data):

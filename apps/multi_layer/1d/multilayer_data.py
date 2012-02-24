@@ -17,7 +17,7 @@ Data class for multilayer runs in 1d
 import sys
 import os
 
-import pyclaw.data as data
+import oldclawdata as data
 
 # Simple hurricane data format
 class MultilayerData(data.Data):

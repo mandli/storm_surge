@@ -15,8 +15,8 @@ import re
 import matplotlib
 import matplotlib.pyplot as mpl
 
-from pyclaw.plotters import geoplot, colormaps
-from pyclaw.data import Data
+from visclaw import geoplot, colormaps
+from oldclawdata import Data
 
 # matplotlib.rcParams['figure.figsize'] = [6.0,10.0]
 
