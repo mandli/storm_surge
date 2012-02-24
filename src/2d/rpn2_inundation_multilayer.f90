@@ -164,8 +164,8 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             
             ! Completely dry cell
             if (dry_state_l(1).and.dry_state_r(1)) then
-                s(i,:) = 0.d0
-                fwave(i,:,:) = 0.d0
+                s(:,i) = 0.d0
+                fwave(:,:,i) = 0.d0
                 cycle
             endif
             
@@ -534,7 +534,7 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
     !  Compute fluctuations 
     do i=2-mbc,mx+mbc
         do mw=1,mwaves
-            if (s(i,mw) > 0.d0) then
+            if (s(mw,i) > 0.d0) then
                 apdq(:,i) = apdq(:,i) + fwave(:,mw,i)
             else
                 amdq(:,i) = amdq(:,i) + fwave(:,mw,i)

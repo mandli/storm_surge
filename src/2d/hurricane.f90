@@ -194,7 +194,7 @@ contains
     !     t = Current time
     !
     ! Output:
-    !     wind = Velocity of wind (m/s)
+    !     wind = Velocity of wind (m/s) (aux array 4 (x) and 5 (y))
     !
     ! Hurricane parameters:
     !     A,B = fit parameters for the hurricane
@@ -202,18 +202,18 @@ contains
     !     Pn = Ambient atmospheric pressure
     !     Pc = Central pressure of hurricane
     ! ========================================================================
-    subroutine hurricane_wind(maxmx,maxmy,mbc,mx,my,xlower,ylower,dx,dy,t,wind)
+    subroutine hurricane_wind(maxmx,maxmy,maux,mbc,mx,my,xlower,ylower,dx,dy,t,aux)
 
         use geoclaw_module, only: icoriolis,icoordsys,pi
 
         implicit none
 
         ! Input arguments
-        integer, intent(in) :: maxmx,maxmy,mbc,mx,my
+        integer, intent(in) :: maxmx,maxmy,mbc,mx,my,maux
         double precision, intent(in) :: xlower,ylower,dx,dy,t
 
         ! Output
-        double precision, intent(inout) :: wind(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc,2)
+        double precision, intent(inout) :: aux(maux,1-mbc:maxmx+mbc,1-mbc:maxmy+mbc)
     
         ! Local variables
         integer :: i,j
@@ -221,7 +221,7 @@ contains
         
         ! If wind forcing is turned off, then set the aux array to zeros
         if (.not.wind_forcing) then
-            wind(:,:,:) = 0.d0
+            aux(4:5,:,:) = 0.d0
             return
         endif
         
@@ -245,13 +245,13 @@ contains
                     r = sqrt(x**2+y**2) * 1d-3
                 
                     if (abs(r) < 10d-6) then
-                        wind(:,i,j) = 0.d0
+                        aux(4:5,i,j) = 0.d0
                     else
                         w = sqrt(C * exp(-A/r**B) / r**B + r**2 * f**2 / 4.0) &
                                  - r * f / 2.d0
                         r = r * 1d3
-                        wind(1,i,j) = -w * y / r
-                        wind(2,i,j) =  w * x / r
+                        aux(4,i,j) = -w * y / r
+                        aux(5,i,j) =  w * x / r
                     endif
                 enddo
             enddo
@@ -263,14 +263,14 @@ contains
             L = my*dy
             do j=1-mbc,my+mbc
                 y = ylower + (j-0.5d0) * dy
-                wind(:,j,1) = -A * cos(pi*y/L)
+                aux(4:5,j,1) = -A * cos(pi*y/L)
             enddo
-            wind(:,:,2) = 0.d0
+            aux(4:5,:,2) = 0.d0
         endif
         
         ! Ramp up
         if (t < 0.d0) then
-            wind = wind * exp(-(t/(ramp_up_time*0.45d0))**2)
+            aux(4:5,:,:) = aux(4:5,:,:) * exp(-(t/(ramp_up_time*0.45d0))**2)
         endif
         
     end subroutine hurricane_wind
@@ -325,7 +325,7 @@ contains
     !     R_eye_Y = Location of the eye of the hurricane in y
     !
     ! Output:
-    !     pressure = Atmospheric pressure (mb)
+    !     pressure = Atmospheric pressure (mb) (aux array 6)
     !
     ! Hurricane parameters:
     !     A,B = fit parameters for the hurricane
@@ -333,16 +333,16 @@ contains
     !     Pn = Ambient atmospheric pressure
     !     Pc = Central pressure of hurricane
     ! ========================================================================
-    subroutine hurricane_pressure(maxmx,maxmy,mbc,mx,my,xlower,ylower,dx,dy,t,pressure)
+    subroutine hurricane_pressure(maxmx,maxmy,maux,mbc,mx,my,xlower,ylower,dx,dy,t,aux)
 
         implicit none
 
         ! Input arguments
-        integer, intent(in) :: maxmx,maxmy,mbc,mx,my
+        integer, intent(in) :: maxmx,maxmy,mbc,mx,my,maux
         double precision, intent(in) :: xlower,ylower,dx,dy,t
     
         ! Output
-        double precision, intent(inout) :: pressure(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc)
+        double precision, intent(inout) :: aux(maux,1-mbc:maxmx+mbc,1-mbc:maxmy+mbc)
 
         ! Local variables
         integer :: i,j
@@ -350,7 +350,7 @@ contains
     
         ! If pressure forcing is turned off, then set the aux array to Pn
         if (.not.pressure_forcing) then
-            pressure(:,:) = Pn
+            aux(6,:,:) = Pn
             return
         endif
     
@@ -364,20 +364,20 @@ contains
                 r = sqrt(x**2+y**2)
                 
                 if (abs(r) < 10d-3) then
-                    pressure(i,j) = Pn
+                    aux(6,i,j) = Pn
                 else
-                    pressure(i,j) = Pc + (Pn-Pc) * exp(-1.d3**B*A/abs(r)**B)
+                    aux(6,i,j) = Pc + (Pn-Pc) * exp(-1.d3**B*A/abs(r)**B)
                 endif
             enddo
         enddo
         
         ! Ramp up
         if (t < 0.d0) then
-            pressure = Pn  + (pressure - Pn) * exp(-(t/(ramp_up_time*0.45d0))**2)
+            aux(6,:,:) = Pn  + (aux(6,:,:) - Pn) * exp(-(t/(ramp_up_time*0.45d0))**2)
         endif
         
         ! Convert to Pa instead of millibars
-        pressure  = pressure * 100.d0 
+        aux(6,:,:)  = aux(6,:,:) * 100.d0 
     end subroutine hurricane_pressure
     
     ! ========================================================================

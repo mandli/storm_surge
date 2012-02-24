@@ -22,12 +22,15 @@ c     Also calls movetopo if topography might be moving.
       implicit double precision (a-h,o-z)
 
       dimension q(meqn,1-mbc:maxmx+mbc,1-mbc:maxmy+mbc)
-      dimension aux(maux,1-mbc:maxmx+mbc,1-mbc:maxmy+mbc)
       dimension vel(2,1-mbc:maxmx+mbc,1-mbc:maxmy+mbc)
+      double precision :: aux(maux,1-mbc:maxmx+mbc,1-mbc:maxmy+mbc)
       
       integer :: layer,layer_index
       double precision :: h(2),u(2),v(2),g,kappa
       logical :: dry_state(2)
+      
+      double precision, pointer, dimension(:,:,:) :: wind
+      double precision, pointer, dimension(:,:) :: pressure
       
       g = grav
       
@@ -45,10 +48,10 @@ c     # set hu = hv = 0 in all these cells
         do j=1-mbc,my+mbc
             do m=1,layers
               index = 3*(m-1)
-              if (q(i,j,index+1) / rho(m) < drytolerance) then
-                 q(i,j,index+1) = max(q(i,j,index+1),0.d0)
-                 q(i,j,index+2) = 0.d0
-                 q(i,j,index+3) = 0.d0
+              if (q(index+1,i,j) / rho(m) < drytolerance) then
+                 q(index+1,i,j) = max(q(index+1,i,j),0.d0)
+                 q(index+2,i,j) = 0.d0
+                 q(index+3,i,j) = 0.d0
               endif
             enddo
         enddo
@@ -67,10 +70,10 @@ c     # set hu = hv = 0 in all these cells
     
       ! Set wind and pressure aux variables for this grid
       write(26,*) "B4STEP2:  Setting aux array for wind and pressure"
-      call hurricane_wind(maxmx,maxmy,mbc,mx,my,xlower,ylower,dx,dy,t,
-     & aux(4:5,:,:))
-      call hurricane_pressure(maxmx,maxmy,mbc,mx,my,xlower,ylower,dx,
-     & dy,t,aux(6,:,:))
+      call hurricane_wind(maxmx,maxmy,maux,mbc,mx,my,xlower,ylower,dx,
+     &                      dy,t,aux)
+      call hurricane_pressure(maxmx,maxmy,maux,mbc,mx,my,xlower,ylower,
+     &                         dx,dy,t,aux)
      
       ! Check Richardson number
       if (layers > 1) then
@@ -96,7 +99,7 @@ c     # set hu = hv = 0 in all these cells
                       write(kappa_file,100) i,j,kappa
                       print 100,i,j,kappa
                   endif
-                  aux(i,j,10)=(v(1) - v(2))**2 / (g*one_minus_r*sum(h))
+                  aux(10,i,j)=(v(1) - v(2))**2 / (g*one_minus_r*sum(h))
                   if ((kappa > richardson_tolerance)
      &                  .and.(.not.dry_state(2))) then
                       write(kappa_file,100),i,j,kappa

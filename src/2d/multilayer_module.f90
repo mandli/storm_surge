@@ -33,6 +33,9 @@ module multilayer_module
     
     ! Simple bathy states
     integer :: bathy_type
+    double precision :: bathy_left, bathy_right, bathy_location
+    double precision :: bathy_x0,bathy_x1,bathy_x2,bathy_basin_depth
+    double precision :: bathy_shelf_depth,bathy_shelf_slope,bathy_beach_slope
     
     ! Output files
     integer, parameter :: kappa_file = 42
@@ -112,6 +115,25 @@ contains
         
         ! Bathymetry
         read(13,*) bathy_type
+        if (bathy_type == 0) then
+            continue
+        else if (bathy_type == 1) then 
+            read(13,"(d16.8)") bathy_location
+            read(13,"(d16.8)") bathy_left
+            read(13,"(d16.8)") bathy_right
+        else if (bathy_type == 2 .or. bathy_type == 3) then
+            read(13,"(d16.8)") bathy_x0
+            read(13,"(d16.8)") bathy_x1
+            read(13,"(d16.8)") bathy_x2
+            read(13,"(d16.8)") bathy_basin_depth
+            read(13,"(d16.8)") bathy_shelf_depth
+            read(13,"(d16.8)") bathy_beach_slope
+            bathy_shelf_slope = (bathy_basin_depth - bathy_shelf_depth) &
+                                        / (bathy_x0 - bathy_x1)
+        else
+            print *,"Invalid bathymetry type ",bathy_type
+            stop
+        endif
         
         close(13)
 

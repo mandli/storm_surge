@@ -185,7 +185,7 @@ subroutine rpt2(ixy,maxm,meqn,mwaves,mbc,mx,ql,qr,aux1,aux2,aux3,imp,asdq,bmasdq
         !    LDB - (int) - Leading dimension of B (6)
         !    INFO - (int) - Status of result
         !  Note that the solution (betas) are in delta after the call
-        delta = asdq(i,:) ! This is what we are splitting up
+        delta = asdq(:,i) ! This is what we are splitting up
         A = eig_vec ! We need to do this as the return matrix is modified and
                     ! we have to use eig_vec again to compute fwaves
         call dgesv(6,1,A,6,pivot,delta,6,info)

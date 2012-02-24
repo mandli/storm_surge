@@ -43,7 +43,7 @@ subroutine qinit(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
             ! Test perturbations - these only work in the x-direction
             if (init_type == 1 .or. init_type == 2) then
                 ! Calculate wave family for perturbation
-                gamma = aux(i,j,8) / aux(i,j,7)
+                gamma = aux(8,i,j) / aux(7,i,j)
                 select case(wave_family)
                     case(1) ! Shallow water, left-going
                         alpha = 0.5d0 * (gamma - 1.d0 + sqrt((gamma-1.d0)**2+4.d0*r*gamma))

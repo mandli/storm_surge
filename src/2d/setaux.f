@@ -25,7 +25,10 @@ c     # aux(i,j,7:8) = Initial depths
       
       implicit double precision (a-h,o-z)
 
-      dimension aux(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc, maux)
+      double precision :: aux(maux,1-mbc:maxmx+mbc,1-mbc:maxmy+mbc)
+      
+      double precision, pointer, dimension(:,:,:) :: wind
+      double precision, pointer, dimension(:,:) :: pressure
 
       if (icoordsys.eq.2) then
          if (mcapa .ne. 2 .or. maux.lt.3) then
@@ -52,46 +55,70 @@ c     Hack for maux passing
             if (icoordsys.eq.2) then
 c           # for lat-lon grid on sphere:
                deg2rad = pi/180.d0
-               aux(i,j,2)= deg2rad*Rearth**2*
+               aux(2,i,j)= deg2rad*Rearth**2*
      &               (sin(yjp*deg2rad)-sin(yjm*deg2rad))/dy
-               aux(i,j,3)= yjm*deg2rad
+               aux(3,i,j)= yjm*deg2rad
             else
-               aux(i,j,2) = 1.d0
-               aux(i,j,3) = 1.d0
-	            endif
+               aux(2,i,j) = 1.d0
+               aux(3,i,j) = 1.d0
+	        endif
 	        
-            if (mtopofiles.gt.0) then
+            if (bathy_type == 0) then
+               if (mtopofiles.gt.0) then
                topoint=0.d0
                call cellgridintegrate(topoint,xim,xcell,xip,yjm,ycell,
      &	        yjp,xlowtopo,ylowtopo,xhitopo,yhitopo,dxtopo,dytopo,
      &	        mxtopo,mytopo,mtopo,i0topo,mtopoorder,
      &	        mtopofiles,mtoposize,topowork)
-               aux(i,j,1) = topoint/(dx*dy*aux(i,j,2))
+               aux(1,i,j) = topoint/(dx*dy*aux(2,i,j))
+               else
+                   print *,"Bathy type == 0 but no topo files."
+                   stop
+               endif
+            else if (bathy_type == 1) then
+                    if (xcell < bathy_location) then
+                        aux(1,i,j) = bathy_left
+                    else
+                        aux(1,i,j) = bathy_right
+                    endif
+            else if (bathy_type == 2) then
+                    if (xcell < bathy_x0) then
+                        aux(1,i,j) = bathy_basin_depth
+                    else if (bathy_x0 <= xcell .and.
+     &                       xcell < bathy_x1) then
+                        aux(1,i,j) = bathy_shelf_slope
+     &                      * (xcell-bathy_x0) + bathy_basin_depth
+                    else if (bathy_x1 <= xcell .and.
+     &                       xcell < bathy_x2) then
+                        aux(1,i,j) = shelf_depth
+                    else
+                        aux(1,i,j) = bathy_beach_slope
+     &                      * (xcell-bathy_x2) + bathy_shelf_depth
+                    endif
             else
-                stop "No topography files found!"
+                print *,"Invalid bathy type requested", bathy_type
+                stop
             endif
             
-            enddo
-         enddo
-         
-         
-
+          enddo
+      enddo
+              
 c     Initialize wind and pressure auxillary variables
-      call hurricane_wind(maxmx,maxmy,mbc,mx,my,xlower,ylower,dx,dy,
-     &                      -ramp_up_time,aux(:,:,4:5))
-      call hurricane_pressure(maxmx,maxmy,mbc,mx,my,xlower,ylower,dx,
-     &                         dy,-ramp_up_time,aux(:,:,6))
+      call hurricane_wind(maxmx,maxmy,maux,mbc,mx,my,xlower,ylower,dx,
+     &                    dy,-ramp_up_time,aux)
+      call hurricane_pressure(maxmx,maxmy,maux,mbc,mx,my,xlower,ylower,
+     &                        dx,dy,-ramp_up_time,aux)
 
 c     This actually only handles 2 layers right now...
       if (layers > 1) then
           do i=1-mbc,mx+mbc
               do j=1-mbc,my+mbc
-                  if (eta(2) > aux(i,j,1)) then
-                      aux(i,j,7) = eta(1) - eta(2)
-                      aux(i,j,8) = eta(2) - aux(i,j,1)
+                  if (eta(2) > aux(1,i,j)) then
+                      aux(7,i,j) = eta(1) - eta(2)
+                      aux(8,i,j) = eta(2) - aux(1,i,j)
                   else
-                      aux(i,j,7) = eta(1) - aux(i,j,1)
-                      aux(i,j,8) = 0.d0
+                      aux(7,i,j) = eta(1) - aux(1,i,j)
+                      aux(8,i,j) = 0.d0
                   endif
               enddo
           enddo
@@ -106,8 +133,8 @@ C       write(23,*) 'Setting aux arrays'
 C       write(23,*) ' '
       j = 10
       do i=1,mx
-           print *,i,j,(aux(i,j,m),m=1,1)
-           write(23,*) i,j,(aux(i,j,m),m=1,1)
+           print *,i,j,(aux(m,i,j),m=1,1)
+           write(23,*) i,j,(aux(m,i,j),m=1,1)
         enddo
  231  format(2i4,4d16.8)
       close(23)
