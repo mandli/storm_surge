@@ -23,10 +23,10 @@ subroutine qinit(maxmx,meqn,mbc,mx,xlower,dx,q,maux,aux)
         x = xlower+(i-0.5)*dx
 
         ! Set initial perturbation to zero and constant depths
-        q(i,1) = aux(3,i) * rho(1)
-        q(i,3) = aux(4,i) * rho(2)
-        q(i,2) = 0.d0
-        q(i,4) = 0.d0
+        q(1,i) = aux(3,i) * rho(1)
+        q(3,i) = aux(4,i) * rho(2)
+        q(2,i) = 0.d0
+        q(4,i) = 0.d0
         
         ! Simple Riemann problem specification
         if (init_type == 0) then
