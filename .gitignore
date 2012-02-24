@@ -34,3 +34,6 @@
 _output
 _plots
 xclaw
+.output
+.data
+.plots
