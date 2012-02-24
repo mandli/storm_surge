@@ -421,10 +421,10 @@ def set_multilayer_data():
     data.angle = 0.0
     data.sigma = 0.02
     
-    # Bathy settings
-    data.bathy_type = 0
-    data.bathy_location = 0.6
+    # Bathy settings (2D is written out as a topo file)
+    data.bathy_type = 1
     data.bathy_left = -1.0
+    data.bathy_location = 0.6
     data.bathy_right = -0.2
     
     return data

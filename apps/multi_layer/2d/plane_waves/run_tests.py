@@ -20,7 +20,7 @@ import os
 import sys
 import numpy as np
 
-import pyclaw.geotools.topotools as tt
+import topotools as tt
 import test_runs
 
 tests = []

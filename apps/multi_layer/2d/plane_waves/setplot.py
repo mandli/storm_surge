@@ -26,8 +26,8 @@ def setplot(plotdata):
     import numpy as np
     import matplotlib.pyplot as plt
 
-    from pyclaw.plotters import colormaps, geoplot
-    from pyclaw.data import Data
+    from visclaw.plotters import colormaps, geoplot
+    from oldclawdata import Data
 
     amrdata = Data(os.path.join(plotdata.outdir,'amr2ez.data'))
     hurricane_data = Data(os.path.join(plotdata.outdir,'hurricane.data'))

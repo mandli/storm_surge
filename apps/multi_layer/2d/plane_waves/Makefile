@@ -2,9 +2,6 @@
 # Local makefile for test_beach
 #
 
-# Path to storm surge specific source
-MULTILAYER_SRC = $(ML_SRC)/2d/
-
 # Adjust these variables if desired:
 # ----------------------------------
 CLAW_PKG = geoclaw
@@ -14,167 +11,160 @@ CLAW_OUTDIR = _output
 CLAW_PLOTDIR = _plots
 
 # Clawpack libraries to be used:
-CLAW_LIB = $(CLAW)/amrclaw/2d/lib
-GEOLIB = $(CLAW)/geoclaw/2d/lib
+CLAW_LIB = $(AMRCLAW)/src/2d
+GEOLIB = $(GEOCLAW)/src/2d
 
 # Flagging
 FC ?= gfortran
-FFLAGS += -I$(GEOLIB)
+PPFLAGS ?= 
 UNAME = $(shell uname)
 ifeq ($(UNAME), Darwin)
-	ifndef LFLAGS
-		LFLAGS = -framework veclib
-	else
-		LFLAGS += -framework veclib
-	endif
+	LAPACK_LIB = -framework veclib
 endif
 ifeq ($(UNAME), Linux)
-	ifndef LFLAGS
-		LFLAGS = -llapack
-	else
-		LFLAGS += -llapack
-	endif
+	LAPACK_LIB = -llapack
+endif
+ifeq ($(findstring gfortran,$(FC)),gfortran)
+    PPFLAGS += -cpp
+endif
+ifeq ($(findstring ifort,$(FC)),ifort)
+    PPFLAGS += -fpp
+endif
+MAKELEVEL ?= 0
+ifeq ($(MAKELEVEL),0)
+    FFLAGS += $(PPFLAGS) $(LAPACK_LIB)
+    LFLAGS += $(LAPACK_LIB)
 endif
 
 # ---------------------------------
 # List of sources for this program:
 # ---------------------------------
-CLAW_SOURCES = \
-	$(MULTILAYER_SRC)/multilayer_module.f90 \
-	$(MULTILAYER_SRC)/hurricane.f90 \
-	$(MULTILAYER_SRC)/setaux_geo.f \
-	$(MULTILAYER_SRC)/b4step2_geo.f \
-	$(MULTILAYER_SRC)/setprob.f90 \
-	$(MULTILAYER_SRC)/src2_geo.f90 \
-	$(MULTILAYER_SRC)/src1d_geo.f90 \
-	$(MULTILAYER_SRC)/qinit.f90 \
-	$(MULTILAYER_SRC)/valout_geo.f \
-	$(MULTILAYER_SRC)/flux2fw.f \
-	$(MULTILAYER_SRC)/flag2refine_geo.f \
-	$(MULTILAYER_SRC)/rpn2_inundation_multilayer.f90 \
-	$(MULTILAYER_SRC)/rpt2_dry_multilayer.f90 \
-	$(MULTILAYER_SRC)/multilayer_eigen.f90 \
-	$(MULTILAYER_SRC)/tick.f \
-	$(MULTILAYER_SRC)/stepgrid_geo.f \
-    $(MULTILAYER_SRC)/dumpgauge_ml.f
+MODULES = \
+    $(AMRCLAW)/src/2d/amr_module.f \
+	$(ML_PATH)/src/2d/multilayer_module.f90 \
+    $(GEOCLAW)/src/2d/geoclaw_module.f90 \
+    $(GEOCLAW)/src/2d/topo_module.f90 \
+    $(GEOCLAW)/src/2d/dtopo_module.f90 \
+    $(GEOCLAW)/src/2d/regions_module.f90 \
+    $(GEOCLAW)/src/2d/qinit_module.f90 \
+    $(GEOCLAW)/src/2d/fixedgrids_module.f90 \
+    $(GEOCLAW)/src/2d/gauges_module.f90
 
-DATA_FILES = hurricane.data topo.data multilayer.data
-	
-CLAW_LIBSOURCES = \
-	$(GEOLIB)/geoclaw_mod.f90 \
-	$(GEOLIB)/topo_mod.f90 \
-	$(GEOLIB)/dtopo_mod.f90 \
-	$(GEOLIB)/riemannsolvers_geo.f \
-	$(GEOLIB)/readqinit_geo.f \
-	$(GEOLIB)/movetopo_geo.f \
-	$(GEOLIB)/cellgridintegrate_geo.f \
-	$(GEOLIB)/topointegral_geo.f \
-	$(GEOLIB)/filval_geo.f \
-	$(GEOLIB)/bilinearintegral_geo.f \
-	$(GEOLIB)/fgridinterp_geo.f \
-	$(GEOLIB)/fgridout_geo.f \
-	$(GEOLIB)/step2_geo.f \
-	$(GEOLIB)/qad_geo.f \
-	$(GEOLIB)/filval_geo.f \
-	$(GEOLIB)/filpatch_geo.f \
-	$(GEOLIB)/bc2amr_geo.f \
-	$(GEOLIB)/update_geo.f \
-	$(GEOLIB)/amr2ez_geo.f \
-	$(GEOLIB)/setqinit_geo.f \
-	$(GEOLIB)/setregions_geo.f \
-	$(GEOLIB)/setgauges_geo.f \
-	$(GEOLIB)/setfixedgrids_geo.f \
-	$(GEOLIB)/allowflag_geo.f  \
-	$(GEOLIB)/upbnd_geo.f  \
-	$(GEOLIB)/setgrd_geo.f \
-	$(GEOLIB)/gfixup_geo.f \
-	$(GEOLIB)/ginit_geo.f \
-	$(GEOLIB)/getmaxspeed_geo.f \
-	$(CLAW_LIB)/prefilp.f \
-	$(CLAW_LIB)/quick_sort1.f \
-	$(CLAW_LIB)/advanc.f \
-	$(CLAW_LIB)/estdt.f \
-	$(CLAW_LIB)/bound.f \
-	$(CLAW_LIB)/check4nans.f \
-	$(CLAW_LIB)/spest.f  \
-	$(CLAW_LIB)/igetsp.f \
-	$(CLAW_LIB)/reclam.f \
-	$(CLAW_LIB)/birect.f \
-	$(CLAW_LIB)/cleanup.f \
-	$(CLAW_LIB)/colate.f \
-	$(CLAW_LIB)/errest.f \
-	$(CLAW_LIB)/bufnst.f \
-	$(CLAW_LIB)/errf1.f \
-	$(CLAW_LIB)/fixcapaq.f \
-	$(CLAW_LIB)/flglvl.f \
-	$(CLAW_LIB)/fluxad.f \
-	$(CLAW_LIB)/fluxsv.f \
-	$(CLAW_LIB)/grdfit.f \
-	$(CLAW_LIB)/intfil.f \
-	$(CLAW_LIB)/moment.f \
-	$(CLAW_LIB)/nestck.f \
-	$(CLAW_LIB)/prepc.f \
-	$(CLAW_LIB)/prepf.f \
-	$(CLAW_LIB)/projec.f \
-	$(CLAW_LIB)/signs.f \
-	$(CLAW_LIB)/findcut.f \
-	$(CLAW_LIB)/smartbis.f \
-	$(CLAW_LIB)/putnod.f \
-	$(CLAW_LIB)/putsp.f \
-	$(CLAW_LIB)/regrid.f \
-	$(CLAW_LIB)/setuse.f \
-	$(CLAW_LIB)/stst1.f \
-	$(CLAW_LIB)/trimbd.f \
-	$(CLAW_LIB)/nodget.f \
-	$(CLAW_LIB)/basic.f \
-	$(CLAW_LIB)/outval.f \
-	$(CLAW_LIB)/copysol.f \
-	$(CLAW_LIB)/outvar.f \
-	$(CLAW_LIB)/outmsh.f \
-	$(CLAW_LIB)/outtre.f \
-	$(CLAW_LIB)/domain.f  \
-	$(CLAW_LIB)/cellave.f \
-	$(CLAW_LIB)/fdisc.f \
-	$(CLAW_LIB)/fss.f \
-	$(CLAW_LIB)/zeroin.f \
-	$(CLAW_LIB)/setflags.f \
-	$(CLAW_LIB)/shiftset.f \
-	$(CLAW_LIB)/conck.f \
-	$(CLAW_LIB)/domshrink.f \
-	$(CLAW_LIB)/domprep.f \
-	$(CLAW_LIB)/domup.f \
-	$(CLAW_LIB)/domcopy.f \
-	$(CLAW_LIB)/coarsen.f \
-	$(CLAW_LIB)/auxcoarsen.f \
-	$(CLAW_LIB)/intcopy.f \
-	$(CLAW_LIB)/preintcopy.f \
-	$(CLAW_LIB)/icall.f \
-	$(CLAW_LIB)/preicall.f \
-	$(CLAW_LIB)/inlinelimiter.f \
-	$(CLAW_LIB)/cstore.f \
-	$(CLAW_LIB)/saveqc.f \
-	$(CLAW_LIB)/check.f \
-	$(CLAW_LIB)/restrt.f \
-	$(CLAW_LIB)/opendatafile.f \
-	$(CLAW_LIB)/init_alloc.f90 \
-	$(CLAW_LIB)/restrt_alloc.f90 \
-	$(CLAW_LIB)/resize_alloc.f90 \
-	
-	# Library files being replaced
-	# $(GEOLIB)/qinit_geo.f \
-	# $(GEOLIB)/setprob_geo.f90 \
-	# $(GEOLIB)/rpn2ez_geo.f \
-	# $(GEOLIB)/rpt2_geo.f \
-	# $(GEOLIB)/valout_geo.f \
-	# $(GEOLIB)/flag2refine_geo.f  \
-	# $(GEOLIB)/src2_geo.f \
-	# $(GEOLIB)/src1d_geo.f \
-	# $(GEOLIB)/setaux_geo.f \
-	# $(GEOLIB)/b4step2_geo.f \
+SOURCES = \
+	$(ML_PATH)/src/2d/hurricane.f90 \
+	$(ML_PATH)/src/2d/setaux.f \
+	$(ML_PATH)/src/2d/b4step2.f \
+	$(ML_PATH)/src/2d/setprob.f90 \
+	$(ML_PATH)/src/2d/src2.f90 \
+	$(ML_PATH)/src/2d/src1d.f90 \
+	$(ML_PATH)/src/2d/qinit.f90 \
+	$(ML_PATH)/src/2d/valout.f \
+	$(ML_PATH)/src/2d/flag2refine.f \
+	$(ML_PATH)/src/2d/rpn2_inundation_multilayer.f90 \
+	$(ML_PATH)/src/2d/rpt2_dry_multilayer.f90 \
+	$(ML_PATH)/src/2d/multilayer_eigen.f90 \
+	$(ML_PATH)/src/2d/tick.f \
+	$(ML_PATH)/src/2d/stepgrid.f \
+	$(ML_PATH)/src/2d/flux2fw.f \
+    $(ML_PATH)/src/2d/dumpgauge.f \
+    $(GEOCLAW)/src/2d/qad.f \
+    $(GEOCLAW)/src/2d/readqinit.f \
+    $(GEOCLAW)/src/2d/movetopo.f \
+    $(GEOCLAW)/src/2d/cellgridintegrate.f \
+    $(GEOCLAW)/src/2d/filval.f \
+    $(GEOCLAW)/src/2d/topointegral.f \
+    $(GEOCLAW)/src/2d/bilinearintegral.f \
+    $(GEOCLAW)/src/2d/fgridinterp.f \
+    $(GEOCLAW)/src/2d/fgridout.f \
+    $(GEOCLAW)/src/2d/riemannsolvers.f \
+    $(GEOCLAW)/src/2d/step2.f \
+    $(GEOCLAW)/src/2d/filpatch.f \
+    $(GEOCLAW)/src/2d/bc2amr.f \
+    $(GEOCLAW)/src/2d/update.f \
+    $(GEOCLAW)/src/2d/amr2ez.f \
+    $(GEOCLAW)/src/2d/setqinit.f \
+    $(GEOCLAW)/src/2d/setregions.f \
+    $(GEOCLAW)/src/2d/setgauges.f \
+    $(GEOCLAW)/src/2d/setfixedgrids.f \
+    $(GEOCLAW)/src/2d/allowflag.f  \
+    $(GEOCLAW)/src/2d/upbnd.f  \
+    $(GEOCLAW)/src/2d/setgrd.f \
+    $(GEOCLAW)/src/2d/gfixup.f \
+    $(GEOCLAW)/src/2d/ginit.f \
+    $(GEOCLAW)/src/2d/getmaxspeed.f \
+    $(AMRCLAW)/src/2d/prefilp.f \
+    $(AMRCLAW)/src/2d/quick_sort1.f \
+    $(AMRCLAW)/src/2d/advanc.f \
+    $(AMRCLAW)/src/2d/estdt.f \
+    $(AMRCLAW)/src/2d/bound.f \
+    $(AMRCLAW)/src/2d/check4nans.f \
+    $(AMRCLAW)/src/2d/spest.f  \
+    $(AMRCLAW)/src/2d/igetsp.f \
+    $(AMRCLAW)/src/2d/reclam.f \
+    $(AMRCLAW)/src/2d/birect.f \
+    $(AMRCLAW)/src/2d/cleanup.f \
+    $(AMRCLAW)/src/2d/colate.f \
+    $(AMRCLAW)/src/2d/errest.f \
+    $(AMRCLAW)/src/2d/bufnst.f \
+    $(AMRCLAW)/src/2d/errf1.f \
+    $(AMRCLAW)/src/2d/fixcapaq.f \
+    $(AMRCLAW)/src/2d/flglvl.f \
+    $(AMRCLAW)/src/2d/fluxad.f \
+    $(AMRCLAW)/src/2d/fluxsv.f \
+    $(AMRCLAW)/src/2d/grdfit.f \
+    $(AMRCLAW)/src/2d/intfil.f \
+    $(AMRCLAW)/src/2d/moment.f \
+    $(AMRCLAW)/src/2d/nestck.f \
+    $(AMRCLAW)/src/2d/prepc.f \
+    $(AMRCLAW)/src/2d/prepf.f \
+    $(AMRCLAW)/src/2d/projec.f \
+    $(AMRCLAW)/src/2d/signs.f \
+    $(AMRCLAW)/src/2d/findcut.f \
+    $(AMRCLAW)/src/2d/smartbis.f \
+    $(AMRCLAW)/src/2d/putnod.f \
+    $(AMRCLAW)/src/2d/putsp.f \
+    $(AMRCLAW)/src/2d/regrid.f \
+    $(AMRCLAW)/src/2d/setuse.f \
+    $(AMRCLAW)/src/2d/stst1.f \
+    $(AMRCLAW)/src/2d/trimbd.f \
+    $(AMRCLAW)/src/2d/nodget.f \
+    $(AMRCLAW)/src/2d/basic.f \
+    $(AMRCLAW)/src/2d/outval.f \
+    $(AMRCLAW)/src/2d/copysol.f \
+    $(AMRCLAW)/src/2d/outvar.f \
+    $(AMRCLAW)/src/2d/outmsh.f \
+    $(AMRCLAW)/src/2d/outtre.f \
+    $(AMRCLAW)/src/2d/domain.f  \
+    $(AMRCLAW)/src/2d/cellave.f \
+    $(AMRCLAW)/src/2d/fdisc.f \
+    $(AMRCLAW)/src/2d/fss.f \
+    $(AMRCLAW)/src/2d/zeroin.f \
+    $(AMRCLAW)/src/2d/setflags.f \
+    $(AMRCLAW)/src/2d/shiftset.f \
+    $(AMRCLAW)/src/2d/conck.f \
+    $(AMRCLAW)/src/2d/domshrink.f \
+    $(AMRCLAW)/src/2d/domprep.f \
+    $(AMRCLAW)/src/2d/domup.f \
+    $(AMRCLAW)/src/2d/domcopy.f \
+    $(AMRCLAW)/src/2d/coarsen.f \
+    $(AMRCLAW)/src/2d/auxcoarsen.f \
+    $(AMRCLAW)/src/2d/intcopy.f \
+    $(AMRCLAW)/src/2d/preintcopy.f \
+    $(AMRCLAW)/src/2d/icall.f \
+    $(AMRCLAW)/src/2d/preicall.f \
+    $(AMRCLAW)/src/2d/inlinelimiter.f \
+    $(AMRCLAW)/src/2d/cstore.f \
+    $(AMRCLAW)/src/2d/saveqc.f \
+    $(AMRCLAW)/src/2d/check.f \
+    $(AMRCLAW)/src/2d/restrt.f \
+    $(AMRCLAW)/src/2d/opendatafile.f \
+    $(AMRCLAW)/src/2d/init_alloc.f90 \
+    $(AMRCLAW)/src/2d/restrt_alloc.f90 \
+    $(AMRCLAW)/src/2d/resize_alloc.f90
 	
 #-------------------------------------------------------------------
 # Include Makefile containing standard definitions and make options:
-include $(CLAW)/util/Makefile.common
+include $(CLAWUTIL)/src/Makefile.common
 	
 ### DO NOT remove this line - make depends on it ###
     
