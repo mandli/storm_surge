@@ -123,7 +123,7 @@ contains
     end subroutine setup_parameters    
     
     ! Set wind speed based on parameters in this module
-    subroutine set_wind(maxmx,mbc,mx,xlower,dx,t,wind)
+    subroutine set_wind(maxmx,mbc,mx,xlower,dx,t,aux)
 
         implicit none
 
@@ -132,7 +132,7 @@ contains
         double precision, intent(in) :: xlower,dx,t
 
         ! Output
-        double precision, intent(inout) :: wind(1-mbc:maxmx+mbc)
+        double precision, intent(inout) :: aux(ml_maux,1-mbc:maxmx+mbc)
     
         ! Local variables
         integer :: i
@@ -154,10 +154,10 @@ contains
         select case(wind_type)
             ! No wind
             case(0)
-                wind = 0.d0
+                aux(2,1-mbc:mx+mbc) = 0.d0
             ! Constant wind
             case(1)
-                wind = A
+                aux(2,1-mbc:mx+mbc) = A
             ! Hurricane wind
             case(2)
                 ! Hurrican eye location
@@ -173,13 +173,13 @@ contains
                     r = abs(x)     
                     ! If sufficiently far from eye, calculate wind velocity
                     if (r >= 1.d-3) then
-                        wind(i) = sign(1.d0,x) * C * sqrt(exp(-1.d3**B*A/r**B)/r**B)
+                        aux(2,i) = sign(1.d0,x) * C * sqrt(exp(-1.d3**B*A/r**B)/r**B)
                     endif
                 enddo
                 
                 ! Ramp up
                 if (t < 0.d0) then
-                    wind = wind * exp(-(t/(ramp_up_time*0.45d0))**2)
+                    aux(2,1-mbc:mx+mbc) = aux(2,1-mbc:mx+mbc) * exp(-(t/(ramp_up_time*0.45d0))**2)
                 endif
         
             ! Oscillating wind field
@@ -187,14 +187,14 @@ contains
                 L = xlower + mx * dx
                 do i=1-mbc,mx+mbc
                     x = xlower + (i-0.5d0) * dx
-                    wind(i) = A * sin(PI*n*(x)/L) * sin(2*PI*omega/t_length*t)
+                    aux(2,i) = A * sin(PI*n*(x)/L) * sin(2*PI*omega/t_length*t)
                 enddo
             ! Moving gaussian wind field
             case(4)
                 R_eye = t * hurricane_velocity + R_eye_init
                 do i=1-mbc,mx+mbc
                     x = xlower + (i-0.5d0) * dx - R_eye
-                    wind(i) = A * exp(-((x-R_eye_init)/sigma)**2)
+                    aux(2,i) = A * exp(-((x-R_eye_init)/sigma)**2)
                 enddo
         end select
     

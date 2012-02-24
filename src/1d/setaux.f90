@@ -48,7 +48,7 @@ subroutine setaux(maxmx,mbc,mx,xlower,dx,maux,aux)
         
         ! Set initial states
         if (x < init_location) then
-            if (eta_left(2) > aux(i,1)) then
+            if (eta_left(2) > aux(1,i)) then
                 aux(3,i) = eta_left(1) - eta_left(2)
                 aux(4,i) = eta_left(2) - aux(1,i)
             else
@@ -67,7 +67,7 @@ subroutine setaux(maxmx,mbc,mx,xlower,dx,maux,aux)
     
     
     ! Calculate initial wind field
-    call set_wind(maxmx,mbc,mx,xlower,dx,0.d0,aux(2,:))
+    call set_wind(maxmx,mbc,mx,xlower,dx,0.d0,aux)
     
     ! Write out auxillary array
     print *,"Outputting bathymetry to 'fort.aux' file."

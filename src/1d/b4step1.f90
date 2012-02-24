@@ -25,7 +25,7 @@ subroutine b4step1(maxmx,mbc,mx,meqn,q,xlower,dx,t,dt,maux,aux)
     enddo
     
     ! Calculate wind field
-    call set_wind(maxmx,mbc,mx,xlower,dx,t,aux(2,:))
+    call set_wind(maxmx,mbc,mx,xlower,dx,t,aux)
     
     ! Calculate kappa
     do i=1,mx
