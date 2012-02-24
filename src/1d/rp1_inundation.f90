@@ -379,7 +379,7 @@ subroutine rp1(maxmx,meqn,mwaves,mbc,mx,ql,qr,auxl,auxr,fwave,s,amdq,apdq)
             else
                 ! No entropy fix needed                
                 do mw=1,mwaves
-                    if (s(i,mw) > 0.d0) then
+                    if (s(mw,i) > 0.d0) then
                         apdq(:,i) = apdq(:,i) + fwave(:,mw,i)
                     else                                     
                         amdq(:,i) = amdq(:,i) + fwave(:,mw,i)
