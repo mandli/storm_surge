@@ -21,10 +21,10 @@ c
       parameter (maux = 5)
 c       # NOTE: if maux>0 you must declare aux properly below!
 c
-      dimension q(1-mbc:maxmx+mbc, meqn)
+      dimension q(meqn,1-mbc:maxmx+mbc)
 
 C       dimension  aux(1)   !# dummy variable since no aux arrays used
-      dimension  aux(1-mbc:maxmx+mbc, maux)
+      dimension  aux(maux,1-mbc:maxmx+mbc)
 
       dimension work(mwork)
       dimension mthlim(mwaves)

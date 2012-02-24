@@ -23,6 +23,9 @@ module parameters_module
     integer, private :: wind_type
     double precision, private :: A,B,Pn,Pc,ramp_up_time,R_eye_init
     double precision, private :: hurricane_velocity,omega,N,t_length
+    
+    ! maux hack
+    integer :: ml_maux
 
 contains
 

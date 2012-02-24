@@ -9,8 +9,8 @@ subroutine src1(maxmx,meqn,mbc,mx,xlower,dx,q,maux,aux,t,dt)
     double precision, intent(in) :: xlower,dx,t,dt
     
     ! Output
-    double precision, intent(inout) :: q(1-mbc:maxmx+mbc, meqn)
-    double precision, intent(inout) :: aux(1-mbc:maxmx+mbc, maux)
+    double precision, intent(inout) :: q(meqn,1-mbc:maxmx+mbc)
+    double precision, intent(inout) :: aux(maux,1-mbc:maxmx+mbc)
     
     ! Locals
     integer :: i
@@ -20,16 +20,16 @@ subroutine src1(maxmx,meqn,mbc,mx,xlower,dx,q,maux,aux,t,dt)
     ! Friction
     if (manning > TOLERANCE) then
         do i=1,mx
-            h = q(i,3) / rho(2)
-            u = q(i,4) / rho(2)
+            h = q(3,i) / rho(2)
+            u = q(4,i) / rho(2)
     
             if (h > TOLERANCE) then
-                q(i,3) = 0.d0
-                q(i,4) = 0.d0
+                q(3,i) = 0.d0
+                q(4,i) = 0.d0
             else
                 gamma = u * g * manning**2 / h**(4/3)
                 dgamma = 1.d0 + dt * gamma
-                q(i,4) = q(i,4) / dgamma * rho(2)
+                q(4,i) = q(4,i) / dgamma * rho(2)
             endif
         enddo
     endif

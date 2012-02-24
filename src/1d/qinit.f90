@@ -8,8 +8,8 @@ subroutine qinit(maxmx,meqn,mbc,mx,xlower,dx,q,maux,aux)
     integer, intent(in) :: maxmx,meqn,mbc,mx,maux
     double precision, intent(in) :: xlower,dx
     
-    double precision, intent(inout) :: q(1-mbc:maxmx+mbc,meqn)
-    double precision, intent(inout) :: aux(1-mbc:maxmx+mbc,maux)
+    double precision, intent(inout) :: q(meqn,1-mbc:maxmx+mbc)
+    double precision, intent(inout) :: aux(maux,1-mbc:maxmx+mbc)
 
     ! Locals
     integer :: i
@@ -23,8 +23,8 @@ subroutine qinit(maxmx,meqn,mbc,mx,xlower,dx,q,maux,aux)
         x = xlower+(i-0.5)*dx
 
         ! Set initial perturbation to zero and constant depths
-        q(i,1) = aux(i,3) * rho(1)
-        q(i,3) = aux(i,4) * rho(2)
+        q(i,1) = aux(3,i) * rho(1)
+        q(i,3) = aux(4,i) * rho(2)
         q(i,2) = 0.d0
         q(i,4) = 0.d0
         
@@ -33,63 +33,63 @@ subroutine qinit(maxmx,meqn,mbc,mx,xlower,dx,q,maux,aux)
             ! Depth is already set above appropriately
             ! Need to set momentum though
             if (x < init_location) then
-                q(i,2) = u_left(1) * q(i,1)
-                q(i,4) = u_left(2) * q(i,3)
+                q(2,i) = u_left(1) * q(1,i)
+                q(4,i) = u_left(2) * q(3,i)
             else
-                q(i,2) = u_right(1) * q(i,1)
-                q(i,4) = u_right(2) * q(i,3)
+                q(2,i) = u_right(1) * q(1,i)
+                q(4,i) = u_right(2) * q(3,i)
             endif
 
         ! Riemann problem in one wave family
         else if (init_type == 1) then
             ! Calculate wave family for perturbation
-            gamma = aux(i,4) / aux(i,3)
+            gamma = aux(4,i) / aux(3,i)
             select case(wave_family)
                 case(1) ! Shallow water, left-going
                     alpha = 0.5d0 * (gamma - 1.d0 + sqrt((gamma-1.d0)**2+4.d0*r*gamma))
-                    lambda = -sqrt(g*aux(i,3)*(1.d0+alpha))
+                    lambda = -sqrt(g*aux(3,i)*(1.d0+alpha))
                 case(2) ! Internal wave, left-going
                     alpha = 0.5d0 * (gamma - 1.d0 - sqrt((gamma-1.d0)**2+4.d0*r*gamma))
-                    lambda = -sqrt(g*aux(i,3)*(1.d0+alpha))
+                    lambda = -sqrt(g*aux(3,i)*(1.d0+alpha))
                 case(3) ! Internal wave, right-going
                     alpha = 0.5d0 * (gamma - 1.d0 - sqrt((gamma-1.d0)**2+4.d0*r*gamma))
-                    lambda = sqrt(g*aux(i,3)*(1.d0+alpha))
+                    lambda = sqrt(g*aux(3,i)*(1.d0+alpha))
                 case(4) ! Shallow water, right-going
                     alpha = 0.5d0 * (gamma - 1.d0 + sqrt((gamma-1.d0)**2+4.d0*r*gamma))
-                    lambda = sqrt(g*aux(i,3)*(1.d0+alpha))
+                    lambda = sqrt(g*aux(3,i)*(1.d0+alpha))
             end select
             eigen_vector = [1.d0,lambda,alpha,lambda*alpha]
             
             ! Add perturbation
             if ((x < init_location).and.(wave_family >= 3)) then
-                q(i,1:2) = q(i,1:2) + rho(1) * epsilon * eigen_vector(1:2)
-                q(i,3:4) = q(i,3:4) + rho(2) * epsilon * eigen_vector(3:4)
+                q(1:2,i) = q(1:2,i) + rho(1) * epsilon * eigen_vector(1:2)
+                q(3:4,i) = q(3:4,i) + rho(2) * epsilon * eigen_vector(3:4)
             else if ((x > init_location).and.(wave_family < 3)) then
-                q(i,1:2) = q(i,1:2) + rho(1) * epsilon * eigen_vector(1:2)
-                q(i,3:4) = q(i,3:4) + rho(2) * epsilon * eigen_vector(3:4)
+                q(1:2,i) = q(1:2,i) + rho(1) * epsilon * eigen_vector(1:2)
+                q(3:4,i) = q(3:4,i) + rho(2) * epsilon * eigen_vector(3:4)
             endif
         ! Gaussian hump of water, shallow water style
         else if (init_type == 2) then
-            gamma = aux(i,4) / aux(i,3)
+            gamma = aux(4,i) / aux(3,i)
             alpha = 0.5d0 * (gamma - 1.d0 + sqrt((gamma-1.d0)**2+4.d0*r*gamma))
             deta = epsilon * exp(-((x-init_location)/sigma)**2)
-            q(i,1) = q(i,1) + rho(1) * deta
-            q(i,3) = q(i,3) + rho(2) * alpha * deta
+            q(1,i) = q(1,i) + rho(1) * deta
+            q(3,i) = q(3,i) + rho(2) * alpha * deta
         ! Gaussian on internal layer only
         else if (init_type == 3) then
             deta = epsilon * exp(-((x-init_location)/sigma)**2)
-            q(i,1) = q(i,1) - rho(1) * deta
-            q(i,3) = q(i,3) + rho(2) * deta
+            q(1,i) = q(1,i) - rho(1) * deta
+            q(3,i) = q(3,i) + rho(2) * deta
         ! Shelf initial condition from AN paper
         else if (init_type == 4) then
-            gamma = aux(i,4) / aux(i,3)
+            gamma = aux(4,i) / aux(3,i)
 !             alpha = 0.5d0 * (gamma - 1.d0 + sqrt((gamma-1.d0)**2+4.d0*r*gamma))
             alpha = 0.d0
             xmid = 0.5d0*(-180.e3-80.e3)
             if ((x > -130.e3).and.(x < -80.e3)) then
                 deta = epsilon * sin((x-xmid)*PI/(-80.e3-xmid))
-                q(i,3) = q(i,3) + rho(2) * alpha * deta
-                q(i,1) = q(i,1) + rho(1) * deta * (1.d0 - alpha)
+                q(3,i) = q(3,i) + rho(2) * alpha * deta
+                q(1,i) = q(1,i) + rho(1) * deta * (1.d0 - alpha)
             endif
         endif
     enddo
