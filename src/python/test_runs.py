@@ -48,8 +48,8 @@ def run_tests(tests,plot=True,tar=False,max_processes=None,parallel=True,
             max_processes = 4
     
     process_queue = []
-    RUNCLAW_CMD = "python $CLAW/python/pyclaw/runclaw.py"
-    PLOTCLAW_CMD = "python $CLAW/python/pyclaw/plotters/plotclaw.py"
+    RUNCLAW_CMD = "python $CLAWUTIL/src/python/runclaw.py"
+    PLOTCLAW_CMD = "python $VISCLAW/src/python/visclaw/plotters/plotclaw.py"
     
     # Run tests
     for (i,test) in enumerate(tests):

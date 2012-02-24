@@ -94,7 +94,8 @@ def generate_profiles():
     #  3: (28°59'47.14"N, 88°59'53.19"W)   --   -188 m   --    467.59957 km
     #  4: ( 29° 4'6.90"N,  89° 4'11.39"W)    --   0 m   --   479.10557 km
 
-    bathy_profiles = {"simple_shelf":[(xlower,basin_depth),
+    bathy_profiles = {
+                      "simple_shelf":[(xlower,basin_depth),
                                       (x0,basin_depth),
                                       (x1,shelf_depth),
                                       (x2,shelf_depth),
