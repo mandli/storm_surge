@@ -48,12 +48,16 @@ def set_h_hat(state,init_location,eta_left,eta_right):
 def set_q_quiescent(state):
     r"""Set state variables to a stationary state (quiescent)."""
     
-    for layer in xrange(0,num_layers+2,2):
-        state.q[layer,:] = state.aux[layer+4,:] * state.prob_data['rho'][layer]
-        state.q[layer+1,:] = 0.0
+    for layer in xrange(state.problem_data['num_layers']):
+        layer_index = 2*layer
+        state.q[layer_index,:] = state.aux[layer+3,:] * state.problem_data['rho'][layer]
+        state.q[layer_index+1,:] = 0.0
     
 def set_q_nonzero_velocity(state,location,u_left,u_right):
-    r"""Add a jump perturbation to quiescent background state."""
+    r"""Add a jump perturbation to quiescent background state.
+    
+    init_type == 0
+    """
     
     # TODO:  Arbitray number of layer support
     
@@ -61,22 +65,30 @@ def set_q_nonzero_velocity(state,location,u_left,u_right):
     set_q_quiescent(state)
     
     # Non-zero velocity
-    state.q[1,:] = ((x < init_location) * u_left[0] + (x >= init_location) * u_right[0])) * state.q[0,:]
-    state.q[3,:] = ((x < init_location) * u_left[1] + (x >= init_location) * u_right[1])) * state.q[2,:]
+    x = state.grid.x.centers
+    state.q[1,:] = ((x < init_location) * u_left[0] + (x >= init_location) * u_right[0]) * state.q[0,:]
+    state.q[3,:] = ((x < init_location) * u_left[1] + (x >= init_location) * u_right[1]) * state.q[2,:]
     
     
-def set_q_simple_wave(state,wave_family,epsilon):
+def set_q_simple_wave(state,wave_family,init_location,epsilon):
     r"""Add a perturbation in one wave family to a quiescent background state.
     
     wave_family (int)
+    init_location (float)
     epsilon (float)
+    
+    This used to be init_type == 1
     """
     # TODO:  Arbitray number of layer support
     
     # Set quiescent background state
     set_q_quiescent(state)
 
+    x = state.grid.x.centers
     h_hat = state.aux[-2:,:]
+    r = state.problem_data['r']
+    g = state.problem_data['g']
+    rho = state.problem_data['rho']
 
     # Riemann problem in one wave family
     gamma = h_hat[1,:] / h_hat[0,:]
@@ -107,7 +119,10 @@ def set_q_simple_wave(state,wave_family,epsilon):
     
 
 def set_q_swe_hump(state,epsilon,location,sigma):
-    r""""""
+    r"""
+    
+    init_type == 2
+    """
     # TODO:  Arbitray number of layer support
     
     # Set quiescent background state
@@ -122,7 +137,10 @@ def set_q_swe_hump(state,epsilon,location,sigma):
     state.q[2,:] = state.q[2,:] + rho[1] * alpha * deta
             
 def set_q_internal_hump(state,epsilon,location,sigma):
-    r""""""
+    r"""
+    
+    init_type == 3
+    """
 
     # TODO:  Arbitray number of layer support
     
@@ -136,7 +154,10 @@ def set_q_internal_hump(state,epsilon,location,sigma):
     state.q[2,:] = state.q[2,:] + rho[1] * deta
             
 def set_q_acta_numerica(state):
-    r"""Set q as in the Acta Numerica paper."""
+    r"""Set q as in the Acta Numerica paper.
+    
+    init_type == 4
+    """
 
     # TODO:  Arbitray number of layer support
     

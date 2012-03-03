@@ -22,12 +22,12 @@ def set_oscillatory_wind(state,A,N,omega,t_length):
 
 def wind_drag(wind_speed):
     r"""Calculate wind drag coefficient"""
-    if wind_speed <= 11.0 then
+    if wind_speed <= 11.0:
         wind_drag = 1.20
-    elif wind_speed > 11.0 and wind_speed <= 25.0 then
+    elif wind_speed > 11.0 and wind_speed <= 25.0:
         wind_drag = 0.49 + 0.065 * wind_speed
-    else
+    else:
         wind_drag = 0.49 + 0.065 * 25.0
         
-    return wind_drag * 10.d-3
+    return wind_drag * 10.e-3
     
