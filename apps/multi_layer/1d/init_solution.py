@@ -11,7 +11,7 @@ def set_jump_bathymetry(state,location,depths):
     depths (list(float)) - Depth to the left (0) and right (1) of the jump
     """
     x = state.grid.x.centers
-    state.aux[0,:] = (x < x) * depths[0] + (x >= location) * depths[1]
+    state.aux[0,:] = (x < location) * depths[0] + (x >= location) * depths[1]
     
 def set_shelf_bathymetry(state,x0,basin_depth,x1,shelf_depth):
     r"""Set simple shelf like bathymetry
@@ -33,15 +33,19 @@ def set_h_hat(state,init_location,eta_left,eta_right):
     """
      
     x = state.grid.x.centers
+    bathy = state.aux[0,:]
     
     left_index = x < init_location
     right_index = x >= init_location
-    bottom_layer_dry = left_index * (eta_left[1] > bathy) + right_index * (eta_right[1] > bathy)
-    bottom_layer_wet = left_index * (eta_left[1] <= bathy) + right_index * (eta_right[1] <= bathy)
-    hstate.aux[-2,:] = bottom_layer_wet * (eta_left[0] - eta_left[1])
+    
+    bottom_layer_dry = left_index * (eta_left[1] <= bathy) + right_index * (eta_right[1] <= bathy)
+    bottom_layer_wet = left_index * (eta_left[1] > bathy) + right_index * (eta_right[1] > bathy)
+    
+    state.aux[-2,:] = bottom_layer_wet * (eta_left[0] - eta_left[1])
     state.aux[-1,:] = bottom_layer_wet * (eta_left[1] - bathy)
-    state.aux[-2,:] = bottom_layer_dry * (eta_left[0] - bathy)
-    state.aux[-1,:] = 0.0
+    state.aux[-2,:] = state.aux[-2,:] + bottom_layer_dry * (eta_left[0] - bathy)
+    state.aux[-1,:] = state.aux[-1,:] + bottom_layer_dry * 0.0
+    
 
 # =============================================================================
 #  Q Init functions
@@ -52,6 +56,7 @@ def set_q_quiescent(state):
         layer_index = 2*layer
         state.q[layer_index,:] = state.aux[layer+3,:] * state.problem_data['rho'][layer]
         state.q[layer_index+1,:] = 0.0
+        
     
 def set_q_nonzero_velocity(state,location,u_left,u_right):
     r"""Add a jump perturbation to quiescent background state.
@@ -104,18 +109,18 @@ def set_q_simple_wave(state,wave_family,init_location,epsilon):
     elif wave_family == 4:  # Shallow water, right-going
         alpha = 0.5 * (gamma - 1.0 + np.sqrt((gamma - 1.0)**2 + 4.0 * r * gamma))
         eig_value = np.sqrt(g * h_hat[0,:] * (1.0 + alpha))
-            
+
     # Add perturbation
     index = (x < init_location) * (wave_family >= 3)
-    state.q[0,:] = index * (state.q[0,:] + rho[0] * epsilon * np.ones((state.q.shape[1])))
-    state.q[1,:] = index * (state.q[1,:] + rho[0] * epsilon * eig_value)
-    state.q[2,:] = index * (state.q[2,:] + rho[1] * epsilon * alpha)
-    state.q[3,:] = index * (state.q[3,:] + rho[1] * epsilon * alpha * eig_value)
+    state.q[0,index] = state.q[0,index] + rho[0] * epsilon * np.ones((state.q.shape[1]))[index]
+    state.q[1,index] = state.q[1,index] + rho[0] * epsilon * eig_value[index]
+    state.q[2,index] = state.q[2,index] + rho[1] * epsilon * alpha[index]
+    state.q[3,index] = state.q[3,index] + rho[1] * epsilon * alpha[index] * eig_value[index]
     index = (x > init_location) * (wave_family < 3)
-    state.q[0,:] = index * (state.q[0,:] + rho[0] * epsilon * np.ones((state.q.shape[1])))
-    state.q[1,:] = index * (state.q[1,:] + rho[0] * epsilon * eig_value)
-    state.q[2,:] = index * (state.q[2,:] + rho[1] * epsilon * alpha)
-    state.q[3,:] = index * (state.q[3,:] + rho[1] * epsilon * alpha * eig_value)
+    state.q[0,index] = state.q[0,index] + rho[0] * epsilon * np.ones((state.q.shape[1]))[index]
+    state.q[1,index] = state.q[1,index] + rho[0] * epsilon * eig_value[index]
+    state.q[2,index] = state.q[2,index] + rho[1] * epsilon * alpha[index]
+    state.q[3,index] = state.q[3,index] + rho[1] * epsilon * alpha[index] * eig_value[index]
     
 
 def set_q_swe_hump(state,epsilon,location,sigma):
